@@ -1,22 +1,40 @@
 import Phaser from 'phaser';
 import { ARENA, ASSETS, COLORS } from './theme';
-import {
-  resetM0Hud,
-  setDash,
-  setHp,
-  setObjective,
-  setRules,
-  setTimer,
-  showRuleToast
-} from '../ui/hud';
+import { resetM0Hud, setBuild, setDash, setHp, setObjective, setTimer, showRuleToast } from '../ui/hud';
 import { audio } from './audio';
+import {
+  applyRuleOffer,
+  buildLevelSum,
+  cloneBuild,
+  createEmptyBuild,
+  getBuildCombo,
+  getImpactProfile,
+  getRuleDef,
+  getRuleOffers,
+  getSpreadAngles,
+  getTrajectoryProfile,
+  mergeBurn,
+  mergeFrost,
+  selectChainTargets,
+  TriggerBudget,
+  type ChainCandidate,
+  type ImpactKey,
+  type ImpactProfile,
+  type PlayerBuild,
+  type RuleKey,
+  type RuleLevel,
+  type RuleOffer,
+  type TrajectoryKey,
+  type TrajectoryProfile
+} from './rules';
 
 type EnemyKind = 'beetle' | 'bat';
 type RunState = 'idle' | 'playing' | 'ended';
-type RuleKey = 'chain' | 'blast';
 type EnemyState = 'approach' | 'telegraph' | 'charge' | 'recover' | 'idle' | 'cast';
+type TrainingRuleKey = 'chain' | 'blast';
 
 interface EnemyUnit {
+  id: number;
   kind: EnemyKind;
   root: Phaser.GameObjects.Container;
   sprite: Phaser.GameObjects.Image;
@@ -36,15 +54,30 @@ interface EnemyUnit {
   chargeDir: Phaser.Math.Vector2;
   hasHitThisCharge: boolean;
   hpFill: Phaser.GameObjects.Rectangle;
+  burnTime: number;
+  burnDps: number;
+  burnTick: number;
+  frostTime: number;
+  frostSlow: number;
 }
 
 interface PlayerBolt {
   root: Phaser.GameObjects.Container;
+  mode: 'homing' | 'pierce' | 'spread';
   target: EnemyUnit | null;
+  direction: Phaser.Math.Vector2;
   damage: number;
   speed: number;
   radius: number;
   life: number;
+  distance: number;
+  maxDistance: number;
+  maxHits: number;
+  hitEnemies: Set<EnemyUnit>;
+  budget: TriggerBudget;
+  chainJumps: number;
+  chainRange: number;
+  chainMultiplier: number;
   dead: boolean;
 }
 
@@ -61,7 +94,7 @@ interface EnemyBolt {
 interface Pickup {
   root: Phaser.GameObjects.Container;
   kind: 'rule' | 'heal';
-  ruleKey?: RuleKey;
+  ruleKey?: TrainingRuleKey;
   age: number;
   dead: boolean;
 }
@@ -71,6 +104,8 @@ export interface RunEndPayload {
   time: number;
   kills: number;
   rules: number;
+  combo: string;
+  levelSum: number;
 }
 
 const RUN_DURATION = 180;
@@ -83,10 +118,10 @@ const DASH_COOLDOWN = 4;
 const DASH_DURATION = 0.18;
 const DASH_IFRAME = 0.3;
 const BOLT_SPEED = 620;
-const CHAIN_DAMAGE = 12;
-const BLAST_DAMAGE = 7;
-const BLAST_RADIUS = 74;
-const CHAIN_RADIUS = 255;
+const IMPACT_TRIGGER_BUDGET = 3;
+const ALTAR_KILL_INTERVAL = 15;
+const SPREAD_COLOR = 0xffb3d9;
+const PIERCE_COLOR = 0xb69bff;
 
 export class M0Scene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Container;
@@ -116,9 +151,14 @@ export class M0Scene extends Phaser.Scene {
   private spawnCd = 2.5;
   private hudTick = 0;
   private runToken = 0;
+  private nextEnemyId = 1;
 
-  private rules: Record<RuleKey, boolean> = { chain: false, blast: false };
-  private shardDropped: Record<RuleKey, boolean> = { chain: false, blast: false };
+  private build: PlayerBuild = createEmptyBuild();
+  private acquired = new Set<RuleKey>();
+  private shardDropped: Record<TrainingRuleKey, boolean> = { chain: false, blast: false };
+  private nextAltarKills = ALTAR_KILL_INTERVAL;
+  private altarOpen = false;
+  private altarPending = false;
 
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
@@ -221,8 +261,13 @@ export class M0Scene extends Phaser.Scene {
     this.dashRemaining = 0;
     this.dashQueued = false;
     this.joystick.set(0, 0);
-    this.rules = { chain: false, blast: false };
+    this.nextEnemyId = 1;
+    this.build = createEmptyBuild();
+    this.acquired.clear();
     this.shardDropped = { chain: false, blast: false };
+    this.nextAltarKills = ALTAR_KILL_INTERVAL;
+    this.altarOpen = false;
+    this.altarPending = false;
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
@@ -230,7 +275,7 @@ export class M0Scene extends Phaser.Scene {
     resetM0Hud();
     setTimer(RUN_DURATION);
     setObjective(0, RUN_DURATION, 0);
-    setRules(this.rules);
+    setBuild(this.build, this.acquired);
     setDash(1, 0);
     this.spawnPortal('beetle', 590, 402);
     this.spawnPortal('bat', 660, 286);
@@ -254,12 +299,48 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugGrantRule(rule: RuleKey): void {
-    this.grantRule(rule);
+    const def = getRuleDef(rule);
+    const next = {
+      trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
+      impact: this.build.impact ? { ...this.build.impact } : null
+    };
+    if (def.slot === 'trajectory' && (rule === 'pierce' || rule === 'chain' || rule === 'spread')) {
+      const level =
+        next.trajectory?.key === rule
+          ? (Math.min(3, next.trajectory.level + 1) as RuleLevel)
+          : 1;
+      next.trajectory = { key: rule, level };
+    } else if (def.slot === 'impact' && (rule === 'burn' || rule === 'frost' || rule === 'blast')) {
+      const level =
+        next.impact?.key === rule ? (Math.min(3, next.impact.level + 1) as RuleLevel) : 1;
+      next.impact = { key: rule, level };
+    }
+    this.applyBuildState(next, {
+      key: rule,
+      title: '掠夺规则',
+      sub: `${def.name} Lv.${def.slot === 'trajectory' ? next.trajectory?.level : next.impact?.level}`
+    });
   }
 
   public debugGrantAll(): void {
-    this.grantRule('chain');
-    this.grantRule('blast');
+    this.debugSetBuild('chain', 'blast', 1, 1);
+  }
+
+  public debugSetBuild(
+    trajectory: TrajectoryKey | null,
+    impact: ImpactKey | null,
+    trajectoryLevel: RuleLevel = 1,
+    impactLevel: RuleLevel = 1
+  ): void {
+    const next: PlayerBuild = {
+      trajectory: trajectory ? { key: trajectory, level: trajectoryLevel } : null,
+      impact: impact ? { key: impact, level: impactLevel } : null
+    };
+    this.applyBuildState(next);
+  }
+
+  public debugOpenAltar(): void {
+    this.openRuleAltar();
   }
 
   public debugDamagePlayer(amount: number): void {
@@ -296,12 +377,20 @@ export class M0Scene extends Phaser.Scene {
     setObjective(this.elapsed, RUN_DURATION, this.kills);
   }
 
-  public debugPoseCombat(): void {
+  public debugPoseCombat(build?: {
+    trajectory?: TrajectoryKey | null;
+    impact?: ImpactKey | null;
+    trajectoryLevel?: RuleLevel;
+    impactLevel?: RuleLevel;
+  }): void {
     if (this.runState !== 'playing') return;
+    this.debugSetBuild(
+      build?.trajectory ?? 'chain',
+      build?.impact ?? 'blast',
+      build?.trajectoryLevel ?? 2,
+      build?.impactLevel ?? 1
+    );
     this.attackCd = 99;
-    this.rules.chain = true;
-    this.rules.blast = true;
-    setRules(this.rules);
     this.playerRoot.setPosition(300, 500);
     for (const enemy of [...this.enemies]) {
       this.destroyEnemy(enemy);
@@ -317,46 +406,73 @@ export class M0Scene extends Phaser.Scene {
       bolt.root.destroy(true);
     }
     this.enemyBolts = [];
-    this.spawnEnemy('beetle', 580, 410);
-    this.spawnEnemy('bat', 660, 280);
-    this.spawnEnemy('bat', 600, 570);
+    this.spawnEnemy('beetle', 511, 411);
+    this.spawnEnemy('bat', 630, 361);
+    this.spawnEnemy('bat', 731, 318);
     const targets = this.enemies;
     targets.forEach((target) => {
       target.attackCd = 99;
+      this.tweens.killTweensOf(target.root);
+      target.root.setScale(1).setAlpha(1);
     });
-    const points = targets.map((target) => ({
-      x: target.root.x,
-      y: target.root.y - 10
-    }));
-    this.drawLightning(
-      this.playerRoot.x + 22,
-      this.playerRoot.y - 22,
-      points[0].x,
-      points[0].y
-    );
-    for (let i = 0; i < points.length - 1; i += 1) {
-      this.drawLightning(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+
+    this.attackCd = 0;
+    this.fireAttack(targets[0]);
+    this.attackCd = 99;
+    for (const bolt of this.bolts) {
+      bolt.speed = 0;
+      bolt.life = 99;
     }
-    targets.forEach((target, index) => {
-      this.spawnExplosion(points[index].x, points[index].y);
-      this.spawnPoseBlast(points[index].x, points[index].y, index);
-      this.spawnDamageNumber(
-        points[index].x + Phaser.Math.Between(-8, 8),
-        points[index].y - 34,
-        String(18 + index * 4),
-        index === 1 ? '#65dcf0' : '#ffe399'
-      );
+    const originX = this.playerRoot.x;
+    const originY = this.playerRoot.y - 14;
+    const impact = this.build.impact?.key;
+    const mode = this.bolts[0]?.mode ?? 'homing';
+    const reach = Phaser.Math.Distance.Between(
+      originX,
+      originY,
+      targets[0].root.x,
+      targets[0].root.y - 10
+    );
+    const lead = reach * (mode === 'pierce' ? 0.72 : 0.5);
+
+    this.time.delayedCall(160, () => {
+      this.bolts.forEach((bolt, index) => {
+        const travel = mode === 'spread' ? reach * 0.5 + index * 20 : lead + index * 52;
+        bolt.root.x = originX + bolt.direction.x * travel;
+        bolt.root.y = originY + bolt.direction.y * travel;
+      });
+      targets.forEach((target, index) => {
+        const px = target.root.x;
+        const py = target.root.y - 10;
+        if (impact === 'blast') {
+          this.spawnPoseBlast(px, py, index);
+        } else if (impact === 'burn') {
+          this.applyBurn(target, { duration: 4, dps: 5, tick: 0.5 });
+          this.spawnStatusSpark(px, py, COLORS.orange);
+          this.spawnStatusSpark(px + 12, py - 9, COLORS.yellow);
+        } else if (impact === 'frost') {
+          this.applyFrost(target, { duration: 2, slow: 0.5 });
+          this.spawnStatusSpark(px, py, COLORS.cyan);
+          this.spawnStatusSpark(px - 11, py + 8, 0xffffff);
+        }
+        this.spawnDamageNumber(
+          px + Phaser.Math.Between(-8, 8),
+          py - 34,
+          String(18 + index * 4),
+          impact === 'frost' ? '#65dcf0' : '#ffe399'
+        );
+      });
+      this.scene.pause();
     });
-    this.time.delayedCall(160, () => this.scene.pause());
   }
 
   private spawnPoseBlast(x: number, y: number, index: number): void {
     const color = index === 1 ? COLORS.cyan : COLORS.orange;
     const glow = this.add
       .image(x, y, 'glow')
-      .setDisplaySize(132, 132)
+      .setDisplaySize(96, 96)
       .setTint(color)
-      .setAlpha(0.3)
+      .setAlpha(0.2)
       .setBlendMode(Phaser.BlendModes.ADD);
     const outer = this.add
       .circle(x, y, 30, 0x000000, 0)
@@ -389,7 +505,11 @@ export class M0Scene extends Phaser.Scene {
       elapsed: this.elapsed,
       timeLeft: this.timeLeft,
       kills: this.kills,
-      rules: { ...this.rules },
+      build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild,
+      acquired: [...this.acquired] as RuleKey[],
+      altarOpen: this.altarOpen,
+      altarPending: this.altarPending,
+      nextAltarKills: this.nextAltarKills,
       enemies: this.enemies.length,
       bolts: this.bolts.length,
       enemyBolts: this.enemyBolts.length,
@@ -894,7 +1014,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.attackCd <= 0) {
       const target = this.findNearestEnemy(this.playerRoot.x, this.playerRoot.y);
       if (target) {
-        this.fireBolt(target);
+        this.fireAttack(target);
         this.attackCd = ATTACK_INTERVAL;
       } else {
         this.attackCd = 0;
@@ -916,44 +1036,131 @@ export class M0Scene extends Phaser.Scene {
     return best;
   }
 
-  private fireBolt(target: EnemyUnit): void {
-    const angle = Math.atan2(target.root.y - this.playerRoot.y, target.root.x - this.playerRoot.x);
-    const startX = this.playerRoot.x + Math.cos(angle) * 24;
-    const startY = this.playerRoot.y - 14 + Math.sin(angle) * 24;
+  private fireAttack(target: EnemyUnit): void {
+    const baseAngle = Math.atan2(
+      target.root.y - (this.playerRoot.y - 14),
+      target.root.x - this.playerRoot.x
+    );
+    const budget = new TriggerBudget(IMPACT_TRIGGER_BUDGET);
+    const trajectory = this.build.trajectory;
+    const profile = trajectory
+      ? getTrajectoryProfile(trajectory.key, trajectory.level)
+      : null;
+    const color =
+      profile?.kind === 'pierce'
+        ? PIERCE_COLOR
+        : profile?.kind === 'spread'
+          ? SPREAD_COLOR
+          : COLORS.cyan;
+
+    if (profile?.kind === 'spread') {
+      const angles = getSpreadAngles(baseAngle, profile.bolts, profile.spreadDeg);
+      for (const angle of angles) {
+        this.spawnBolt({
+          mode: 'spread',
+          angle,
+          damage: profile.damage,
+          speed: profile.speed,
+          maxDistance: profile.range,
+          budget,
+          color
+        });
+      }
+    } else if (profile?.kind === 'pierce') {
+      this.spawnBolt({
+        mode: 'pierce',
+        angle: baseAngle,
+        damage: BASE_DAMAGE,
+        speed: profile.speed,
+        maxDistance: profile.range,
+        maxHits: profile.targets,
+        budget,
+        color
+      });
+    } else {
+      this.spawnBolt({
+        mode: 'homing',
+        target,
+        angle: baseAngle,
+        damage: BASE_DAMAGE,
+        speed: profile?.kind === 'chain' ? profile.speed : BOLT_SPEED,
+        maxDistance: ARENA * 1.6,
+        budget,
+        chainJumps: profile?.kind === 'chain' ? profile.jumps : 0,
+        chainRange: profile?.kind === 'chain' ? profile.range : 0,
+        chainMultiplier: profile?.kind === 'chain' ? profile.damageMultiplier : 1,
+        color
+      });
+    }
+    this.spawnMuzzle(color);
+    audio.play('shoot');
+  }
+
+  private spawnBolt(options: {
+    mode: PlayerBolt['mode'];
+    target?: EnemyUnit | null;
+    angle: number;
+    damage: number;
+    speed: number;
+    maxDistance: number;
+    maxHits?: number;
+    budget: TriggerBudget;
+    chainJumps?: number;
+    chainRange?: number;
+    chainMultiplier?: number;
+    color: number;
+  }): void {
+    const startX = this.playerRoot.x + Math.cos(options.angle) * 24;
+    const startY = this.playerRoot.y - 14 + Math.sin(options.angle) * 24;
+    const wide = options.mode === 'pierce';
     const glow = this.add
       .image(0, 0, 'glow')
-      .setDisplaySize(44, 44)
-      .setTint(COLORS.cyan)
-      .setAlpha(0.65)
+      .setDisplaySize(wide ? 62 : options.mode === 'spread' ? 34 : 44, wide ? 18 : 44)
+      .setTint(options.color)
+      .setAlpha(0.7)
       .setBlendMode(Phaser.BlendModes.ADD);
-    const core = this.add.circle(0, 0, 5, 0xdffcff, 1).setBlendMode(Phaser.BlendModes.ADD);
+    const core = this.add
+      .circle(0, 0, wide ? 4 : options.mode === 'spread' ? 4 : 5, 0xffffff, 1)
+      .setBlendMode(Phaser.BlendModes.ADD);
     const root = this.add.container(startX, startY, [glow, core]);
+    root.setRotation(options.angle);
     this.addFx(root);
     this.bolts.push({
       root,
-      target,
-      damage: BASE_DAMAGE,
-      speed: BOLT_SPEED,
-      radius: 7,
-      life: 1.7,
+      mode: options.mode,
+      target: options.target ?? null,
+      direction: new Phaser.Math.Vector2(Math.cos(options.angle), Math.sin(options.angle)),
+      damage: options.damage,
+      speed: options.speed,
+      radius: wide ? 9 : 7,
+      life: options.maxDistance / options.speed + 0.25,
+      distance: 0,
+      maxDistance: options.maxDistance,
+      maxHits: options.maxHits ?? 1,
+      hitEnemies: new Set(),
+      budget: options.budget,
+      chainJumps: options.chainJumps ?? 0,
+      chainRange: options.chainRange ?? 0,
+      chainMultiplier: options.chainMultiplier ?? 1,
       dead: false
     });
+  }
 
+  private spawnMuzzle(color: number): void {
     const muzzle = this.add
-      .image(startX, startY, 'glow')
-      .setDisplaySize(30, 30)
-      .setTint(COLORS.cyan)
+      .image(this.playerRoot.x + 22, this.playerRoot.y - 18, 'glow')
+      .setDisplaySize(34, 34)
+      .setTint(color)
       .setAlpha(0.55)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.addFx(muzzle);
     this.tweens.add({
       targets: muzzle,
       alpha: 0,
-      scale: 1.6,
+      scale: 1.7,
       duration: 140,
       onComplete: () => muzzle.destroy()
     });
-    audio.play('shoot');
   }
 
   private updateBolts(dt: number): void {
@@ -961,110 +1168,296 @@ export class M0Scene extends Phaser.Scene {
       if (bolt.dead) continue;
       bolt.life -= dt;
       if (bolt.life <= 0) {
-        bolt.dead = true;
-        bolt.root.destroy(true);
+        this.destroyBolt(bolt);
         continue;
       }
-      if (bolt.target && (bolt.target.dead || !bolt.target.root.active)) {
-        bolt.target = this.findNearestEnemy(bolt.root.x, bolt.root.y);
-      }
-      if (!bolt.target) {
-        const angle = Math.atan2(bolt.root.y - this.playerRoot.y, bolt.root.x - this.playerRoot.x);
-        bolt.root.x += Math.cos(angle) * bolt.speed * dt;
-        bolt.root.y += Math.sin(angle) * bolt.speed * dt;
-        continue;
-      }
-      const angle = Math.atan2(bolt.target.root.y - bolt.root.y, bolt.target.root.x - bolt.root.x);
-      bolt.root.x += Math.cos(angle) * bolt.speed * dt;
-      bolt.root.y += Math.sin(angle) * bolt.speed * dt;
-
-      let hit: EnemyUnit | null = null;
-      for (const enemy of this.enemies) {
-        if (enemy.dead) continue;
-        const dist = Phaser.Math.Distance.Between(bolt.root.x, bolt.root.y, enemy.root.x, enemy.root.y);
-        if (dist <= enemy.radius + bolt.radius) {
-          hit = enemy;
-          break;
-        }
-      }
-      if (hit) {
-        bolt.dead = true;
-        bolt.root.destroy(true);
-        this.hitEnemyWithBolt(hit, bolt.damage);
-      }
-      if (bolt.root.x < -40 || bolt.root.x > ARENA + 40 || bolt.root.y < -40 || bolt.root.y > ARENA + 40) {
-        bolt.dead = true;
-        bolt.root.destroy(true);
+      if (bolt.mode === 'homing') {
+        this.updateHomingBolt(bolt, dt);
+      } else {
+        this.updateDirectionalBolt(bolt, dt);
       }
     }
     this.bolts = this.bolts.filter((bolt) => !bolt.dead);
   }
 
-  private hitEnemyWithBolt(enemy: EnemyUnit, damage: number): void {
-    this.applyDamage(enemy, damage, true);
+  private updateHomingBolt(bolt: PlayerBolt, dt: number): void {
+    if (bolt.target && (bolt.target.dead || !bolt.target.root.active)) {
+      bolt.target = this.findNearestEnemy(bolt.root.x, bolt.root.y);
+    }
+    if (!bolt.target) {
+      this.destroyBolt(bolt);
+      return;
+    }
+    const angle = Math.atan2(
+      bolt.target.root.y - bolt.root.y,
+      bolt.target.root.x - bolt.root.x
+    );
+    bolt.direction.set(Math.cos(angle), Math.sin(angle));
+    bolt.root.setRotation(angle);
+    bolt.root.x += bolt.direction.x * bolt.speed * dt;
+    bolt.root.y += bolt.direction.y * bolt.speed * dt;
+    bolt.distance += bolt.speed * dt;
+    if (bolt.distance >= bolt.maxDistance) {
+      this.destroyBolt(bolt);
+      return;
+    }
+    const hit = this.findCollidingEnemy(bolt, null);
+    if (hit) {
+      this.handleBoltHit(bolt, hit);
+      this.destroyBolt(bolt);
+    }
+  }
 
-    if (this.rules.blast) {
-      this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy);
+  private updateDirectionalBolt(bolt: PlayerBolt, dt: number): void {
+    bolt.root.x += bolt.direction.x * bolt.speed * dt;
+    bolt.root.y += bolt.direction.y * bolt.speed * dt;
+    bolt.distance += bolt.speed * dt;
+    for (const enemy of [...this.enemies]) {
+      if (enemy.dead || bolt.hitEnemies.has(enemy)) continue;
+      const dist = Phaser.Math.Distance.Between(
+        bolt.root.x,
+        bolt.root.y,
+        enemy.root.x,
+        enemy.root.y
+      );
+      if (dist <= enemy.radius + bolt.radius) {
+        bolt.hitEnemies.add(enemy);
+        this.handleBoltHit(bolt, enemy);
+        if (bolt.hitEnemies.size >= bolt.maxHits) {
+          this.destroyBolt(bolt);
+          return;
+        }
+        if (bolt.mode === 'spread') {
+          this.destroyBolt(bolt);
+          return;
+        }
+      }
+    }
+    if (bolt.distance >= bolt.maxDistance) {
+      this.destroyBolt(bolt);
+    }
+  }
+
+  private findCollidingEnemy(bolt: PlayerBolt, exclude: EnemyUnit | null): EnemyUnit | null {
+    for (const enemy of this.enemies) {
+      if (enemy.dead || enemy === exclude || bolt.hitEnemies.has(enemy)) continue;
+      const dist = Phaser.Math.Distance.Between(
+        bolt.root.x,
+        bolt.root.y,
+        enemy.root.x,
+        enemy.root.y
+      );
+      if (dist <= enemy.radius + bolt.radius) return enemy;
+    }
+    return null;
+  }
+
+  private destroyBolt(bolt: PlayerBolt): void {
+    if (bolt.dead) return;
+    bolt.dead = true;
+    this.tweens.killTweensOf(bolt.root);
+    bolt.root.destroy(true);
+  }
+
+  private handleBoltHit(bolt: PlayerBolt, enemy: EnemyUnit): void {
+    this.applyDamage(enemy, bolt.damage, 'hit');
+    if (this.build.impact && bolt.budget.tryConsume()) {
+      this.applyImpact(enemy, bolt.damage);
+    }
+    if (bolt.chainJumps > 0) {
+      this.resolveChain(
+        enemy,
+        bolt.chainJumps,
+        bolt.chainRange,
+        bolt.chainMultiplier,
+        bolt.budget
+      );
+    }
+  }
+
+  private resolveChain(
+    from: EnemyUnit,
+    jumps: number,
+    range: number,
+    multiplier: number,
+    budget: TriggerBudget
+  ): void {
+    const visited = new Set<EnemyUnit>([from]);
+    let cursor = from;
+    const chainTargets: EnemyUnit[] = [];
+    for (let i = 0; i < jumps; i += 1) {
+      const candidates: ChainCandidate[] = this.enemies
+        .filter((enemy) => !enemy.dead && !visited.has(enemy))
+        .map((enemy) => ({
+          id: enemy.id,
+          x: enemy.root.x,
+          y: enemy.root.y - 10,
+          active: true
+        }));
+      const picked = selectChainTargets(
+        { x: cursor.root.x, y: cursor.root.y - 10 },
+        candidates,
+        1,
+        range
+      )[0];
+      if (!picked) break;
+      const target = this.enemies.find((enemy) => enemy.id === picked.id);
+      if (!target) break;
+      chainTargets.push(target);
+      visited.add(target);
+      cursor = target;
     }
 
-    if (!this.rules.chain) return;
-    const hitIds = new Set<EnemyUnit>([enemy]);
-    let fromX = enemy.root.x;
-    let fromY = enemy.root.y - 10;
-    const candidates = this.enemies
-      .filter((candidate) => !candidate.dead && candidate !== enemy)
-      .map((candidate) => ({
-        enemy: candidate,
-        dist: Phaser.Math.Distance.Between(fromX, fromY, candidate.root.x, candidate.root.y)
-      }))
-      .filter((candidate) => candidate.dist <= CHAIN_RADIUS)
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 2);
-
-    candidates.forEach((candidate, index) => {
-      const target = candidate.enemy;
+    let fromX = from.root.x;
+    let fromY = from.root.y - 10;
+    chainTargets.forEach((target, index) => {
+      const sourceX = fromX;
+      const sourceY = fromY;
+      fromX = target.root.x;
+      fromY = target.root.y - 10;
       this.time.delayedCall(70 + index * 70, () => {
         if (this.runState !== 'playing' || target.dead || !target.root.active) return;
-        this.drawLightning(fromX, fromY, target.root.x, target.root.y - 10);
-        fromX = target.root.x;
-        fromY = target.root.y - 10;
-        if (hitIds.has(target)) return;
-        hitIds.add(target);
-        this.applyDamage(target, CHAIN_DAMAGE, true);
-        if (this.rules.blast) {
-          this.explodeAt(target.root.x, target.root.y - 10, target);
+        this.drawLightning(sourceX, sourceY, target.root.x, target.root.y - 10);
+        const damage = Math.round(BASE_DAMAGE * multiplier);
+        this.applyDamage(target, damage, 'hit');
+        if (this.build.impact && budget.tryConsume()) {
+          this.applyImpact(target, damage);
         }
       });
     });
   }
 
-  private explodeAt(x: number, y: number, source: EnemyUnit): void {
-    this.spawnExplosion(x, y);
+  private applyImpact(enemy: EnemyUnit, directDamage: number): void {
+    void directDamage;
+    const impact = this.build.impact;
+    if (!impact) return;
+    const profile = getImpactProfile(impact.key, impact.level);
+    if (profile.kind === 'blast') {
+      this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy, profile);
+    } else if (!enemy.dead) {
+      if (profile.kind === 'burn') {
+        this.applyBurn(enemy, profile);
+      } else {
+        this.applyFrost(enemy, profile);
+      }
+    }
+  }
+
+  private applyBurn(
+    enemy: EnemyUnit,
+    profile: { duration: number; dps: number; tick: number }
+  ): void {
+    const merged = mergeBurn(
+      { time: enemy.burnTime, dps: enemy.burnDps },
+      profile.duration,
+      profile.dps
+    );
+    enemy.burnTime = merged.time;
+    enemy.burnDps = merged.dps;
+    if (enemy.burnTick <= 0) enemy.burnTick = profile.tick;
+    enemy.burnTick = Math.min(enemy.burnTick, profile.tick);
+    enemy.aura.setTint(COLORS.orange);
+    enemy.aura.setAlpha(0.24);
+    this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.orange);
+  }
+
+  private applyFrost(
+    enemy: EnemyUnit,
+    profile: { duration: number; slow: number }
+  ): void {
+    const merged = mergeFrost(
+      { time: enemy.frostTime, slow: enemy.frostSlow },
+      profile.slow,
+      profile.duration
+    );
+    enemy.frostTime = merged.time;
+    enemy.frostSlow = merged.slow;
+    enemy.aura.setTint(COLORS.cyan);
+    enemy.aura.setAlpha(0.24);
+    this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.cyan);
+  }
+
+  private spawnStatusSpark(x: number, y: number, color: number): void {
+    const spark = this.add
+      .circle(x, y, 3, color, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(spark);
+    this.tweens.add({
+      targets: spark,
+      y: y - 28,
+      alpha: 0,
+      scale: 0,
+      duration: 360,
+      onComplete: () => spark.destroy()
+    });
+  }
+
+  private updateEnemyStatuses(enemy: EnemyUnit, dt: number): void {
+    if (enemy.burnTime > 0) {
+      enemy.burnTime = Math.max(0, enemy.burnTime - dt);
+      enemy.burnTick -= dt;
+      while (enemy.burnTick <= 0 && enemy.burnTime > 0 && !enemy.dead) {
+        enemy.burnTick += 0.5;
+        this.applyDamage(enemy, enemy.burnDps * 0.5, 'dot');
+      }
+      if (enemy.burnTime <= 0) enemy.burnDps = 0;
+    }
+    if (enemy.frostTime > 0) {
+      enemy.frostTime = Math.max(0, enemy.frostTime - dt);
+      if (enemy.frostTime <= 0) enemy.frostSlow = 0;
+    }
+    if (enemy.dead) return;
+    if (enemy.burnTime > 0) {
+      enemy.aura.setTint(COLORS.orange);
+      enemy.aura.setAlpha(0.24);
+    } else if (enemy.frostTime > 0) {
+      enemy.aura.setTint(COLORS.cyan);
+      enemy.aura.setAlpha(0.24);
+    } else {
+      this.resetEnemyAura(enemy);
+    }
+  }
+
+  private explodeAt(
+    x: number,
+    y: number,
+    source: EnemyUnit,
+    profile: { radius: number; damage: number }
+  ): void {
+    this.spawnExplosion(x, y, profile.radius);
     audio.play('explosion');
     this.cameras.main.shake(70, 0.0012);
     for (const enemy of [...this.enemies]) {
       if (enemy.dead || enemy === source) continue;
       const dist = Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y - 10);
-      if (dist <= enemy.radius + BLAST_RADIUS) {
-        this.applyDamage(enemy, BLAST_DAMAGE, false);
+      if (dist <= enemy.radius + profile.radius) {
+        this.applyDamage(enemy, profile.damage, 'blast');
       }
     }
   }
 
-  private applyDamage(enemy: EnemyUnit, amount: number, direct: boolean): void {
+  private applyDamage(
+    enemy: EnemyUnit,
+    amount: number,
+    visual: 'hit' | 'blast' | 'dot'
+  ): void {
     if (enemy.dead) return;
     enemy.hp -= amount;
     enemy.hpFill.setScale(Math.max(0, enemy.hp / enemy.maxHp), 1);
-    enemy.sprite.setTintFill(0xffe6c8);
-    this.time.delayedCall(44, () => {
-      if (!enemy.dead) enemy.sprite.clearTint();
-    });
     const x = enemy.root.x + Phaser.Math.Between(-8, 8);
     const y = enemy.root.y - (enemy.kind === 'bat' ? 44 : 58);
-    this.spawnDamageNumber(x, y, String(Math.round(amount)), direct ? '#ffe399' : '#ffb078');
-    audio.play('hit');
-    if (direct) {
+    if (visual === 'hit') {
+      enemy.sprite.setTintFill(0xffe6c8);
+      this.time.delayedCall(44, () => {
+        if (!enemy.dead) enemy.sprite.clearTint();
+      });
+      this.spawnDamageNumber(x, y, String(Math.round(amount)), '#ffe399');
+      audio.play('hit');
       this.spawnHitSpark(enemy.root.x, enemy.root.y - 10);
+    } else if (visual === 'blast') {
+      this.spawnDamageNumber(x, y, String(Math.round(amount)), '#ffb078', 18);
+    } else {
+      this.spawnDamageNumber(x, y, String(Math.round(amount)), '#ff9a5c', 15);
     }
     if (enemy.hp <= 0) {
       this.killEnemy(enemy);
@@ -1092,10 +1485,10 @@ export class M0Scene extends Phaser.Scene {
     this.kills += 1;
     setObjective(this.elapsed, RUN_DURATION, this.kills);
 
-    if (enemy.kind === 'beetle' && !this.rules.blast && !this.shardDropped.blast) {
+    if (enemy.kind === 'beetle' && !this.acquired.has('blast') && !this.shardDropped.blast) {
       this.shardDropped.blast = true;
       this.dropRuleShard('blast', x, y);
-    } else if (enemy.kind === 'bat' && !this.rules.chain && !this.shardDropped.chain) {
+    } else if (enemy.kind === 'bat' && !this.acquired.has('chain') && !this.shardDropped.chain) {
       this.shardDropped.chain = true;
       this.dropRuleShard('chain', x, y);
     }
@@ -1103,9 +1496,13 @@ export class M0Scene extends Phaser.Scene {
     if (this.kills > 0 && this.kills % 10 === 0) {
       this.dropHeal(x, y);
     }
+    if (this.kills >= this.nextAltarKills) {
+      this.nextAltarKills += ALTAR_KILL_INTERVAL;
+      this.altarPending = true;
+    }
   }
 
-  private dropRuleShard(rule: RuleKey, x: number, y: number): void {
+  private dropRuleShard(rule: TrainingRuleKey, x: number, y: number): void {
     const isBlast = rule === 'blast';
     const color = isBlast ? COLORS.orange : COLORS.cyan;
     const glow = this.add
@@ -1149,16 +1546,135 @@ export class M0Scene extends Phaser.Scene {
     this.pickups.push({ root, kind: 'heal', age: 0, dead: false });
   }
 
-  private grantRule(rule: RuleKey): void {
-    if (this.rules[rule]) return;
-    this.rules[rule] = true;
-    setRules(this.rules);
-    audio.play('rule');
-    if (rule === 'blast') {
-      showRuleToast('blast', '爆裂', '有效命中点产生范围伤害');
-    } else {
-      showRuleToast('chain', '弹射', '命中后跳跃最多 2 个其他目标');
+  private applyBuildState(
+    next: PlayerBuild,
+    notice?: { key: RuleKey; title: string; sub: string }
+  ): void {
+    const previous = this.build;
+    const trajectoryChanged = previous.trajectory?.key !== next.trajectory?.key;
+    const impactChanged = previous.impact?.key !== next.impact?.key;
+    this.build = next;
+    if (next.trajectory) this.acquired.add(next.trajectory.key);
+    if (next.impact) this.acquired.add(next.impact.key);
+    if (trajectoryChanged) {
+      this.clearPlayerBolts();
     }
+    if (impactChanged) {
+      this.clearAllStatuses();
+    }
+    setBuild(this.build, this.acquired);
+    if (notice) {
+      audio.play('rule');
+      showRuleToast(notice.key, notice.title, notice.sub);
+    }
+  }
+
+  private applyTrainingRule(rule: TrainingRuleKey): void {
+    const def = getRuleDef(rule);
+    const current = rule === 'chain' ? this.build.trajectory : this.build.impact;
+    if (!current) {
+      const next: PlayerBuild = {
+        trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
+        impact: this.build.impact ? { ...this.build.impact } : null
+      };
+      if (rule === 'chain') {
+        next.trajectory = { key: 'chain', level: 1 };
+      } else {
+        next.impact = { key: 'blast', level: 1 };
+      }
+      this.applyBuildState(next, {
+        key: rule,
+        title: '掠夺规则',
+        sub: `${def.name} Lv.1`
+      });
+      return;
+    }
+    if (current.key === rule && current.level < 3) {
+      const nextLevel = (current.level + 1) as RuleLevel;
+      const next: PlayerBuild = {
+        trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
+        impact: this.build.impact ? { ...this.build.impact } : null
+      };
+      if (rule === 'chain') {
+        next.trajectory = { key: 'chain', level: nextLevel };
+      } else {
+        next.impact = { key: 'blast', level: nextLevel };
+      }
+      this.applyBuildState(next, {
+        key: rule,
+        title: '规则升级',
+        sub: `${def.name} Lv.${nextLevel}`
+      });
+      return;
+    }
+    this.healPlayer(8, `规则冲突 · ${current.key === rule ? '已满级' : getRuleDef(current.key).name}`);
+  }
+
+  private healPlayer(amount: number, reason: string): void {
+    this.hp = Math.min(PLAYER_MAX_HP, this.hp + amount);
+    setHp(this.hp, PLAYER_MAX_HP);
+    audio.play('pickup');
+    showRuleToast('heal', '生命碎片', `${reason} · 恢复 ${amount} 点生命`);
+  }
+
+  private clearPlayerBolts(): void {
+    for (const bolt of this.bolts) {
+      bolt.dead = true;
+      this.tweens.killTweensOf(bolt.root);
+      bolt.root.destroy(true);
+    }
+    this.bolts = [];
+  }
+
+  private clearAllStatuses(): void {
+    for (const enemy of this.enemies) {
+      if (enemy.dead) continue;
+      enemy.burnTime = 0;
+      enemy.burnDps = 0;
+      enemy.burnTick = 0;
+      enemy.frostTime = 0;
+      enemy.frostSlow = 0;
+      this.resetEnemyAura(enemy);
+    }
+  }
+
+  private resetEnemyAura(enemy: EnemyUnit): void {
+    enemy.aura.setTint(enemy.kind === 'beetle' ? COLORS.purple : COLORS.cyan);
+    enemy.aura.setAlpha(enemy.kind === 'beetle' ? 0.08 : 0.1);
+  }
+
+  public isAltarOpen(): boolean {
+    return this.altarOpen;
+  }
+
+  public openRuleAltar(): void {    if (this.runState !== 'playing' || this.altarOpen) return;
+    const offers = getRuleOffers(this.build);
+    if (!offers.length) {
+      this.healPlayer(10, '规则已全部满级');
+      return;
+    }
+    this.altarOpen = true;
+    this.altarPending = false;
+    this.joystick.set(0, 0);
+    this.scene.pause();
+    this.game.events.emit('m1-altar', { offers });
+  }
+
+  public applyAltarOffer(offer: RuleOffer): void {
+    if (!this.altarOpen) return;
+    const next = applyRuleOffer(this.build, offer);
+    this.altarOpen = false;
+    const title =
+      offer.action === 'upgrade' ? '规则升级' : offer.action === 'replace' ? '规则替换' : '掠夺规则';
+    this.applyBuildState(next, {
+      key: offer.key,
+      title,
+      sub: `${offer.name} Lv.${offer.nextLevel}`
+    });
+  }
+
+  public skipAltar(): void {
+    this.altarOpen = false;
   }
 
   private updatePickups(dt: number): void {
@@ -1183,7 +1699,7 @@ export class M0Scene extends Phaser.Scene {
         ) {
           pickup.dead = true;
           if (pickup.kind === 'rule' && pickup.ruleKey) {
-            this.grantRule(pickup.ruleKey);
+            this.applyTrainingRule(pickup.ruleKey);
           } else {
             this.hp = Math.min(PLAYER_MAX_HP, this.hp + 12);
             setHp(this.hp, PLAYER_MAX_HP);
@@ -1305,6 +1821,7 @@ export class M0Scene extends Phaser.Scene {
     }
 
     const enemy: EnemyUnit = {
+      id: this.nextEnemyId++,
       kind,
       root,
       sprite,
@@ -1323,7 +1840,12 @@ export class M0Scene extends Phaser.Scene {
       contactCd: 0,
       chargeDir: new Phaser.Math.Vector2(1, 0),
       hasHitThisCharge: false,
-      hpFill
+      hpFill,
+      burnTime: 0,
+      burnDps: 0,
+      burnTick: 0,
+      frostTime: 0,
+      frostSlow: 0
     };
 
     this.enemies.push(enemy);
@@ -1357,6 +1879,7 @@ export class M0Scene extends Phaser.Scene {
   private updateEnemies(dt: number): void {
     const current = [...this.enemies];
     for (const enemy of current) {
+      this.updateEnemyStatuses(enemy, dt);
       if (enemy.dead) continue;
       enemy.contactCd = Math.max(0, enemy.contactCd - dt);
       if (enemy.kind === 'beetle') {
@@ -1395,12 +1918,13 @@ export class M0Scene extends Phaser.Scene {
     const dx = this.playerRoot.x - enemy.root.x;
     const dy = this.playerRoot.y - enemy.root.y;
     const dist = Math.hypot(dx, dy);
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
     enemy.attackCd = Math.max(0, enemy.attackCd - dt);
 
     if (enemy.state === 'approach') {
       if (dist > 4) {
-        enemy.root.x += (dx / dist) * enemy.speed * dt;
-        enemy.root.y += (dy / dist) * enemy.speed * dt;
+        enemy.root.x += (dx / dist) * enemy.speed * slowScale * dt;
+        enemy.root.y += (dy / dist) * enemy.speed * slowScale * dt;
       }
       if (dist < 360 && enemy.attackCd <= 0) {
         enemy.state = 'telegraph';
@@ -1421,8 +1945,8 @@ export class M0Scene extends Phaser.Scene {
       }
     } else if (enemy.state === 'charge') {
       enemy.stateTimer -= dt;
-      enemy.root.x += enemy.chargeDir.x * 520 * dt;
-      enemy.root.y += enemy.chargeDir.y * 520 * dt;
+      enemy.root.x += enemy.chargeDir.x * 520 * slowScale * dt;
+      enemy.root.y += enemy.chargeDir.y * 520 * slowScale * dt;
       if (enemy.root.x <= 64 || enemy.root.x >= ARENA - 64 || enemy.root.y <= 84 || enemy.root.y >= ARENA - 64) {
         enemy.state = 'recover';
         enemy.stateTimer = 1.0;
@@ -1486,6 +2010,7 @@ export class M0Scene extends Phaser.Scene {
     const dx = this.playerRoot.x - enemy.root.x;
     const dy = this.playerRoot.y - enemy.root.y;
     const dist = Math.hypot(dx, dy) || 1;
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
     enemy.attackCd = Math.max(0, enemy.attackCd - dt);
 
     if (enemy.state === 'cast') {
@@ -1501,15 +2026,15 @@ export class M0Scene extends Phaser.Scene {
       }
     } else {
       if (dist < 205) {
-        enemy.root.x -= (dx / dist) * enemy.speed * dt;
-        enemy.root.y -= (dy / dist) * enemy.speed * dt;
+        enemy.root.x -= (dx / dist) * enemy.speed * slowScale * dt;
+        enemy.root.y -= (dy / dist) * enemy.speed * slowScale * dt;
       } else if (dist > 330) {
-        enemy.root.x += (dx / dist) * enemy.speed * dt;
-        enemy.root.y += (dy / dist) * enemy.speed * dt;
+        enemy.root.x += (dx / dist) * enemy.speed * slowScale * dt;
+        enemy.root.y += (dy / dist) * enemy.speed * slowScale * dt;
       } else {
         const strafe = Math.sin(this.time.now * 0.0015 + enemy.root.x) > 0 ? 1 : -1;
-        enemy.root.x += (-dy / dist) * enemy.speed * 0.65 * dt * strafe;
-        enemy.root.y += (dx / dist) * enemy.speed * 0.65 * dt * strafe;
+        enemy.root.x += (-dy / dist) * enemy.speed * 0.65 * slowScale * dt * strafe;
+        enemy.root.y += (dx / dist) * enemy.speed * 0.65 * slowScale * dt * strafe;
       }
       if (enemy.attackCd <= 0 && dist < 520) {
         enemy.state = 'cast';
@@ -1646,14 +2171,17 @@ export class M0Scene extends Phaser.Scene {
       victory,
       time: victory ? RUN_DURATION : this.elapsed,
       kills: this.kills,
-      rules: Number(this.rules.chain) + Number(this.rules.blast)
+      rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
+      combo: getBuildCombo(this.build).name,
+      levelSum: buildLevelSum(this.build)
     } satisfies RunEndPayload);
   }
 
-  private spawnExplosion(x: number, y: number): void {
+  private spawnExplosion(x: number, y: number, radius = 74): void {
+    const s = radius / 74;
     const glow = this.add
       .image(x, y, 'glow')
-      .setDisplaySize(38, 38)
+      .setDisplaySize(38 * s, 38 * s)
       .setTint(COLORS.orange)
       .setAlpha(0.5)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -1668,7 +2196,7 @@ export class M0Scene extends Phaser.Scene {
     });
 
     const ring = this.add
-      .circle(x, y, 16, 0x000000, 0)
+      .circle(x, y, 16 * s, 0x000000, 0)
       .setStrokeStyle(2, COLORS.orange, 0.7)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.addFx(ring);
@@ -1683,7 +2211,7 @@ export class M0Scene extends Phaser.Scene {
 
     const core = this.add
       .image(x, y, 'glow')
-      .setDisplaySize(24, 24)
+      .setDisplaySize(24 * s, 24 * s)
       .setTint(COLORS.yellow)
       .setAlpha(0.65)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -1822,11 +2350,17 @@ export class M0Scene extends Phaser.Scene {
     });
   }
 
-  private spawnDamageNumber(x: number, y: number, text: string, color: string): void {
+  private spawnDamageNumber(
+    x: number,
+    y: number,
+    text: string,
+    color: string,
+    fontSize = 22
+  ): void {
     const label = this.add
       .text(x, y, text, {
         fontFamily: 'Bahnschrift, "Noto Sans SC", sans-serif',
-        fontSize: '22px',
+        fontSize: `${fontSize}px`,
         fontStyle: 'bold',
         color,
         stroke: '#160c07',
@@ -1866,6 +2400,10 @@ export class M0Scene extends Phaser.Scene {
     this.updatePickups(dt);
     this.updateSpawns(dt);
     this.updateHud(dt);
+    if (this.altarPending && !this.altarOpen) {
+      this.altarPending = false;
+      this.openRuleAltar();
+    }
 
     if (this.timeLeft <= 0) {
       this.endRun(true);

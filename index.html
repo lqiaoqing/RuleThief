@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05080f" />
-    <meta name="description" content="规则掠夺者 RULE THIEF · M0 可玩切片：3 分钟生存，击败敌人掠夺规则。" />
-    <title>规则掠夺者 RULE THIEF · M0 可玩切片</title>
+    <meta name="description" content="规则掠夺者 RULE THIEF · M1 规则构筑切片：3 弹道 × 3 命中 = 9 种组合，装备 / 升级 / 替换。" />
+    <title>规则掠夺者 RULE THIEF · M1 规则构筑切片</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="preload" as="image" href="./assets/art/menu-key.webp" />
   </head>
@@ -76,6 +76,21 @@
         <path d="m12 2.8 5 6.1-5 12.3L7 8.9l5-6.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
         <path d="m7 8.9 5-1.8 5 1.8M12 7.1v14.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".55" />
       </symbol>
+      <symbol id="i-pierce" viewBox="0 0 24 24">
+        <path d="M3 12h16M14 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="8" cy="12" r="2.1" fill="none" stroke="currentColor" stroke-width="1.4" />
+        <circle cx="13" cy="12" r="2.1" fill="none" stroke="currentColor" stroke-width="1.4" />
+      </symbol>
+      <symbol id="i-spread" viewBox="0 0 24 24">
+        <path d="M4 12h5M9 12 20 5M9 12l11 7M9 12h9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+        <circle cx="9" cy="12" r="1.8" fill="currentColor" />
+      </symbol>
+      <symbol id="i-burn" viewBox="0 0 24 24">
+        <path d="M13 2.8c.8 3.4-2.4 4.5-2.4 7.1 0 1.3.8 2.2 1.9 2.2 1.4 0 2.2-1.3 2.2-2.7 2.2 1.7 3.5 3.9 3.5 6.2 0 3.2-2.8 5.6-6.2 5.6s-6.2-2.4-6.2-5.6c0-3.4 3.2-5.2 4.6-8.4.6-1.4 1.3-2.9 2.6-4.4Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="i-frost" viewBox="0 0 24 24">
+        <path d="M12 2v20M3.4 7l17.2 10M20.6 7 3.4 17M12 5.2 9.5 3.4M12 5.2l2.5-1.8M12 18.8l-2.5 1.8M12 18.8l2.5 1.8M5.2 9.5 2.6 9M5.2 9.5l-.4-2.8M18.8 14.5l2.6.5M18.8 14.5l.4 2.8M5.2 14.5l-2.6.5M5.2 14.5l-.4 2.8M18.8 9.5l2.6-.5M18.8 9.5l.4-2.8" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" />
+      </symbol>
     </svg>
 
     <div id="app">
@@ -119,7 +134,7 @@
               </div>
 
               <div class="run-actions">
-                <div class="style-badge">M0<br />SLICE</div>
+                <div class="style-badge">M1<br />RULES</div>
                 <button class="icon-btn sound-btn" id="sound-btn" aria-label="静音" aria-pressed="false">
                   <svg class="sound-on"><use href="#i-sound" /></svg>
                   <svg class="sound-off" hidden><use href="#i-mute" /></svg>
@@ -131,19 +146,19 @@
             </div>
 
             <div class="mobile-build" aria-label="当前构筑">
-              <div class="mini-slot chain is-locked" id="mini-chain">
-                <span class="mini-ico"><svg><use href="#i-chain" /></svg></span>
-                <span>弹射 <b id="mini-chain-status">未掠夺</b></span>
+              <div class="mini-slot chain is-locked" id="mini-trajectory">
+                <span class="mini-ico"><svg><use id="mini-trajectory-icon" href="#i-chain" /></svg></span>
+                <span><span id="mini-trajectory-name">弹道</span> <b id="mini-trajectory-status">空槽</b></span>
               </div>
-              <div class="mini-slot blast is-locked" id="mini-blast">
-                <span class="mini-ico"><svg><use href="#i-blast" /></svg></span>
-                <span>爆裂 <b id="mini-blast-status">未掠夺</b></span>
+              <div class="mini-slot blast is-locked" id="mini-impact">
+                <span class="mini-ico"><svg><use id="mini-impact-icon" href="#i-blast" /></svg></span>
+                <span><span id="mini-impact-name">命中</span> <b id="mini-impact-status">空槽</b></span>
               </div>
             </div>
 
             <div class="mobile-boss">
               <span class="mb-eye"><svg><use href="#i-eye" /></svg></span>
-              <span class="mb-copy"><small>M0 · SURVIVAL</small><b>训练回廊</b></span>
+              <span class="mb-copy"><small>M1 · RULE BUILD</small><b>训练回廊</b></span>
               <span class="mb-phases"><i class="active"></i><i></i><i></i></span>
               <span class="mb-state" id="mobile-time">03:00</span>
             </div>
@@ -175,7 +190,7 @@
 
             <div class="boss-watch">
               <span class="boss-dot"></span>
-              M0 SLICE <b>训练回廊</b>
+              M1 SLICE <b>训练回廊</b>
             </div>
 
             <div class="rule-toast" id="rule-toast" hidden>
@@ -190,13 +205,17 @@
 
           <div class="pause-screen" id="pause-screen" hidden>
             <div class="pause-card">
-              <div class="eyebrow"><span class="eyebrow-dot"></span> PAUSED / M0 SLICE</div>
+              <div class="eyebrow"><span class="eyebrow-dot"></span> PAUSED / M1 SLICE</div>
               <h2>审判暂停</h2>
               <p>训练回廊仍在等待。准备好后继续。</p>
               <div class="pause-actions">
                 <button class="primary compact" id="resume-btn"><svg><use href="#i-play" /></svg><span>继续</span></button>
                 <button class="ghost compact" id="back-menu-btn">返回菜单</button>
               </div>
+              <button class="ghost compact pause-lab" id="open-altar-btn">
+                <span>规则祭坛</span>
+                <small>M1 RULE LAB</small>
+              </button>
             </div>
           </div>
 
@@ -207,7 +226,7 @@
             <div class="brand-mark">RT</div>
             <div class="brand-copy">
               <b>RULE THIEF</b>
-              <small>M0 可玩切片 / 0.2</small>
+              <small>M1 可玩切片 / 0.3</small>
             </div>
             <span class="brand-line"></span>
           </div>
@@ -215,22 +234,26 @@
           <section class="panel build-panel">
             <div class="panel-head">
               <span>构筑 BUILD</span>
-              <span class="panel-sub" id="build-count">掠夺 0 / 2</span>
+              <span class="panel-sub" id="build-count">等级 0 / 6</span>
             </div>
-            <div class="slot is-locked" id="slot-chain">
-              <div class="slot-ico chain"><svg><use href="#i-chain" /></svg></div>
+            <div class="slot is-locked" id="slot-trajectory">
+              <div class="slot-ico trajectory" id="slot-trajectory-ico">
+                <svg><use id="slot-trajectory-icon" href="#i-chain" /></svg>
+              </div>
               <div class="slot-copy">
                 <small>弹道规则 · TRAJECTORY</small>
-                <b>弹射 <em id="slot-chain-status">未掠夺</em></b>
-                <p>命中后跳跃最多 2 个其他目标</p>
+                <b><span id="slot-trajectory-name">未装备</span> <em id="slot-trajectory-status">空槽</em></b>
+                <p id="slot-trajectory-desc">通过规则祭坛装备一条弹道规则</p>
               </div>
             </div>
-            <div class="slot is-locked" id="slot-blast">
-              <div class="slot-ico blast"><svg><use href="#i-blast" /></svg></div>
+            <div class="slot is-locked" id="slot-impact">
+              <div class="slot-ico impact" id="slot-impact-ico">
+                <svg><use id="slot-impact-icon" href="#i-blast" /></svg>
+              </div>
               <div class="slot-copy">
                 <small>命中规则 · IMPACT</small>
-                <b>爆裂 <em id="slot-blast-status">未掠夺</em></b>
-                <p>有效命中点产生一次范围伤害</p>
+                <b><span id="slot-impact-name">未装备</span> <em id="slot-impact-status">空槽</em></b>
+                <p id="slot-impact-desc">通过规则祭坛装备一条命中规则</p>
               </div>
             </div>
             <div class="combo-banner">
@@ -243,7 +266,7 @@
           <section class="panel objective-panel">
             <div class="panel-head">
               <span>本房目标</span>
-              <span class="panel-sub">M0</span>
+              <span class="panel-sub">M1</span>
             </div>
             <div class="objective-main">
               <span>SURVIVE</span>
@@ -266,38 +289,56 @@
                 <div class="codex-side"><span class="codex-rule chain">弹射</span><em class="codex-state" id="codex-bat-state">未掠夺</em></div>
               </div>
             </div>
-            <p class="objective-note">击败携带规则的敌人，规则碎片会自动归你；攻击方式立即改变。</p>
+            <p class="objective-note">每 15 击杀开启规则祭坛；训练碎片只补空槽或升级，不会顶掉已装备的规则。</p>
           </section>
 
           <section class="panel notes-panel">
-            <div class="panel-head"><span>M0 验证</span><span class="panel-sub">QA</span></div>
+            <div class="panel-head"><span>M1 验证</span><span class="panel-sub">QA</span></div>
             <ul class="check-list">
-              <li><i></i>移动 + 闪避 + 自动攻击手感</li>
-              <li><i></i>击杀甲虫 / 雷蝠掠夺规则</li>
-              <li><i></i>生存 03:00 或死亡结算</li>
-              <li><i></i>重开后状态完全重置</li>
+              <li><i></i>3 弹道 × 3 命中 = 9 组合全部可装备</li>
+              <li><i></i>重复规则升级 · 同槽规则替换</li>
+              <li><i></i>每 15 击杀开启规则祭坛，命中结算不递归</li>
+              <li><i></i>生存 03:00 或死亡结算，重开完全重置</li>
             </ul>
           </section>
 
           <div class="sidebar-foot">
-            <span>M0 BUILD</span>
+            <span>M1 BUILD</span>
             <b>BLENDER + PROCEDURAL</b>
           </div>
         </aside>
       </main>
+
+      <div class="altar-screen" id="altar-screen" hidden>
+        <div class="altar-card">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> RULE ALTAR / M1</div>
+          <h2>掠夺一条规则</h2>
+          <p class="altar-sub">新规则装备 · 重复规则升级 · 同槽不同规则会替换</p>
+          <div class="rule-offers" id="rule-offers"></div>
+          <div class="altar-foot">
+            <span>每 15 击杀自动开启；暂停菜单可打开规则实验室。</span>
+            <button class="ghost compact" id="altar-skip-btn">暂不掠夺</button>
+          </div>
+        </div>
+      </div>
 
       <div class="result-screen" id="result-screen" hidden>
         <div class="result-card">
           <div class="result-emblem" id="result-emblem">
             <svg><use href="#i-crown" /></svg>
           </div>
-          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M0 · RUN COMPLETE</span></div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M1 · RUN COMPLETE</span></div>
           <h2 id="result-title">审判完成</h2>
           <p id="result-sub">你在训练回廊中完成了本局。</p>
           <div class="result-stats">
             <div><b id="result-time">03:00</b><span>生存时间</span></div>
             <div><b id="result-kills">0</b><span>击杀</span></div>
             <div><b id="result-rules">0 / 2</b><span>掠夺规则</span></div>
+          </div>
+          <div class="result-combo" id="result-combo">
+            <span class="combo-tag">最终组合</span>
+            <b id="result-combo-name">基础魔弹</b>
+            <small id="result-combo-level">等级 0 / 6</small>
           </div>
           <div class="result-actions">
             <button class="primary compact" id="restart-btn">
@@ -315,7 +356,7 @@
         <div class="menu-grid" aria-hidden="true"></div>
 
         <div class="menu-content">
-          <div class="eyebrow"><span class="eyebrow-dot"></span> M0 PLAYABLE / 0.2 · 2026</div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> M1 PLAYABLE / 0.3 · 2026</div>
           <h1>
             <span class="title-cn">规则</span>
             <span class="title-cn title-accent">掠夺者</span>
@@ -326,26 +367,26 @@
             <em>让每一次命中，都改写战斗。</em>
           </p>
 
-          <div class="slice-chip"><span class="slice-dot"></span>M0 · 3 分钟生存切片</div>
+          <div class="slice-chip"><span class="slice-dot"></span>M1 · 3 × 3 规则构筑切片</div>
 
           <div class="stats-row">
             <div class="stat"><b>03:00</b><span>本局目标</span></div>
             <div class="stat"><b>2</b><span>可掠夺敌人</span></div>
-            <div class="stat"><b>2</b><span>规则组合</span></div>
-            <div class="stat"><b>1</b><span>训练房间</span></div>
+            <div class="stat"><b>9</b><span>规则组合</span></div>
+            <div class="stat"><b>3</b><span>规则上限等级</span></div>
           </div>
 
           <div class="menu-actions">
             <button class="primary" id="enter-btn">
               <span class="btn-ico"><svg><use href="#i-play" /></svg></span>
-              <span class="btn-copy"><b>进入训练回廊</b><small>M0 · 3 MINUTE RUN</small></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>M1 · 3 MINUTE RUN</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
             <button class="ghost" id="menu-note-btn">这是什么？</button>
           </div>
 
           <div class="menu-foot">
-            <span>M0 可玩切片 · 非最终画面</span>
+            <span>M1 可玩切片 · 非最终画面</span>
             <span class="menu-foot-line"></span>
             <span>BLENDER + PROCEDURAL ASSETS</span>
           </div>
@@ -382,7 +423,7 @@
 
         <div class="menu-status">
           <span class="status-dot"></span>
-          M0 · 3 分钟生存 · 竖屏 / 横屏双端适配
+          M1 · 3 × 3 规则构筑 · 竖屏 / 横屏双端适配
         </div>
 
         <div class="note-modal" id="note-modal" hidden>
@@ -391,19 +432,20 @@
               <svg><use href="#i-close" /></svg>
             </button>
             <div class="eyebrow"><span class="eyebrow-dot"></span> WHAT IS THIS</div>
-            <h2>M0 可玩切片</h2>
+            <h2>M1 规则构筑切片</h2>
             <p>
-              3 分钟生存训练。先用基础魔弹战斗，击败铁刺甲虫和雷光蝠后夺取「爆裂」与「弹射」，让自动攻击立刻改变；生命归零则本局结束，可立即重开。
+              3 分钟生存训练。击败敌人掠夺规则碎片，每 15 次击杀开启「规则祭坛」三选一：新规则装备、重复规则升级、同槽不同规则替换。3 条弹道 × 3 条命中 = 9 种组合，全部可玩。
             </p>
             <ul class="note-list">
-              <li><b>目标</b>在训练回廊生存 03:00，击杀越多越好</li>
-              <li><b>敌人</b>甲虫预警冲锋、雷蝠远程雷击，各自携带一条规则</li>
-              <li><b>规则</b>爆裂产生范围伤害；弹射在目标间跳跃</li>
-              <li><b>操作</b>WASD / 摇杆移动，Space / 按钮闪避</li>
+              <li><b>目标</b>在训练回廊生存 03:00，把构筑推到等级 6 / 6</li>
+              <li><b>弹道</b>贯穿沿线穿击、弹射目标间跳跃、散射扇形多发</li>
+              <li><b>命中</b>燃烧持续掉血、冰霜减速、爆裂范围引爆</li>
+              <li><b>限制</b>单次攻击最多结算 3 次命中效果，持续与爆炸不会再触发规则</li>
+              <li><b>操作</b>WASD / 摇杆移动，Space / 按钮闪避，1 · 2 · 3 选择祭坛卡片</li>
               <li><b>音频</b>WebAudio 程序化音效与环境音，可随时静音</li>
             </ul>
             <button class="primary compact" id="note-enter-btn">
-              <span class="btn-copy"><b>进入训练回廊</b><small>M0 · 3 MINUTE RUN</small></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>M1 · 3 MINUTE RUN</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
           </div>

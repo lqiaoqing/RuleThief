@@ -1,18 +1,32 @@
+import {
+  buildLevelSum,
+  createEmptyBuild,
+  getBuildCombo,
+  getRuleDef,
+  getRuleLevelDescription,
+  type PlayerBuild,
+  type RuleKey
+} from '../game/rules';
 import { formatTime } from '../game/theme';
 
-export interface RuleState {
-  chain: boolean;
-  blast: boolean;
-}
+export type RuleToastKind = RuleKey | 'heal';
 
-export type RuleToastKind = 'chain' | 'blast' | 'heal';
+export const RULE_COLORS: Record<RuleKey | 'heal', string> = {
+  pierce: '#b69bff',
+  chain: '#65dcf0',
+  spread: '#ffb3d9',
+  burn: '#ffac68',
+  frost: '#8ceafa',
+  blast: '#ffd27a',
+  heal: '#7edca9'
+};
 
-function byId<T extends HTMLElement>(id: string): T {
+function byId<T extends Element>(id: string): T {
   const node = document.getElementById(id);
   if (!node) {
     throw new Error(`Missing HUD element: ${id}`);
   }
-  return node as T;
+  return node as unknown as T;
 }
 
 const hpText = byId<HTMLElement>('hp-text');
@@ -29,24 +43,41 @@ const objectiveKills = byId<HTMLElement>('objective-kills');
 const mobileKills = byId<HTMLElement>('mobile-kills');
 const threatLevel = byId<HTMLElement>('threat-level');
 const buildCount = byId<HTMLElement>('build-count');
-const slotChain = byId<HTMLElement>('slot-chain');
-const slotBlast = byId<HTMLElement>('slot-blast');
-const slotChainStatus = byId<HTMLElement>('slot-chain-status');
-const slotBlastStatus = byId<HTMLElement>('slot-blast-status');
-const miniChain = byId<HTMLElement>('mini-chain');
-const miniBlast = byId<HTMLElement>('mini-blast');
-const miniChainStatus = byId<HTMLElement>('mini-chain-status');
-const miniBlastStatus = byId<HTMLElement>('mini-blast-status');
+
+const slotTrajectory = byId<HTMLElement>('slot-trajectory');
+const slotImpact = byId<HTMLElement>('slot-impact');
+const slotTrajectoryIcon = byId<SVGUseElement>('slot-trajectory-icon');
+const slotImpactIcon = byId<SVGUseElement>('slot-impact-icon');
+const slotTrajectoryName = byId<HTMLElement>('slot-trajectory-name');
+const slotImpactName = byId<HTMLElement>('slot-impact-name');
+const slotTrajectoryStatus = byId<HTMLElement>('slot-trajectory-status');
+const slotImpactStatus = byId<HTMLElement>('slot-impact-status');
+const slotTrajectoryDesc = byId<HTMLElement>('slot-trajectory-desc');
+const slotImpactDesc = byId<HTMLElement>('slot-impact-desc');
+const slotTrajectoryIco = byId<HTMLElement>('slot-trajectory-ico');
+const slotImpactIco = byId<HTMLElement>('slot-impact-ico');
+
+const miniTrajectory = byId<HTMLElement>('mini-trajectory');
+const miniImpact = byId<HTMLElement>('mini-impact');
+const miniTrajectoryIcon = byId<SVGUseElement>('mini-trajectory-icon');
+const miniImpactIcon = byId<SVGUseElement>('mini-impact-icon');
+const miniTrajectoryName = byId<HTMLElement>('mini-trajectory-name');
+const miniImpactName = byId<HTMLElement>('mini-impact-name');
+const miniTrajectoryStatus = byId<HTMLElement>('mini-trajectory-status');
+const miniImpactStatus = byId<HTMLElement>('mini-impact-status');
+
 const comboKicker = byId<HTMLElement>('combo-kicker');
 const comboName = byId<HTMLElement>('combo-name');
 const comboSub = byId<HTMLElement>('combo-sub');
 const comboBanner = document.querySelector('.combo-banner') as HTMLElement;
 const mobileComboName = byId<HTMLElement>('mobile-combo-name');
 const mobileComboSub = byId<HTMLElement>('mobile-combo-sub');
+
 const codexBeetle = byId<HTMLElement>('codex-beetle');
 const codexBat = byId<HTMLElement>('codex-bat');
 const codexBeetleState = byId<HTMLElement>('codex-beetle-state');
 const codexBatState = byId<HTMLElement>('codex-bat-state');
+
 const lowHpVignette = byId<HTMLElement>('low-hp-vignette');
 const toast = byId<HTMLElement>('rule-toast');
 const toastIcon = byId<HTMLElement>('rule-toast-icon');
@@ -100,68 +131,131 @@ export function setObjective(elapsed: number, duration: number, kills: number): 
   setThreat(elapsed < 60 ? 1 : elapsed < 120 ? 2 : 3);
 }
 
-export function setRules(rules: RuleState): void {
-  const owned = Number(rules.chain) + Number(rules.blast);
-  buildCount.textContent = `掠夺 ${owned} / 2`;
-
-  slotChain.classList.toggle('is-owned', rules.chain);
-  slotChain.classList.toggle('is-locked', !rules.chain);
-  slotBlast.classList.toggle('is-owned', rules.blast);
-  slotBlast.classList.toggle('is-locked', !rules.blast);
-  slotChainStatus.textContent = rules.chain ? 'Lv.1' : '未掠夺';
-  slotBlastStatus.textContent = rules.blast ? 'Lv.1' : '未掠夺';
-
-  miniChain.classList.toggle('is-owned', rules.chain);
-  miniChain.classList.toggle('is-locked', !rules.chain);
-  miniBlast.classList.toggle('is-owned', rules.blast);
-  miniBlast.classList.toggle('is-locked', !rules.blast);
-  miniChainStatus.textContent = rules.chain ? 'Lv.1' : '未掠夺';
-  miniBlastStatus.textContent = rules.blast ? 'Lv.1' : '未掠夺';
-
-  codexBeetle.classList.toggle('is-owned', rules.blast);
-  codexBeetle.classList.toggle('is-locked', !rules.blast);
-  codexBat.classList.toggle('is-owned', rules.chain);
-  codexBat.classList.toggle('is-locked', !rules.chain);
-  codexBeetleState.textContent = rules.blast ? '已掠夺' : '未掠夺';
-  codexBatState.textContent = rules.chain ? '已掠夺' : '未掠夺';
-
-  comboBanner.classList.toggle('is-empowered', rules.chain && rules.blast);
-
-  if (rules.chain && rules.blast) {
-    comboKicker.textContent = 'CURRENT RULE COMBO';
-    comboName.textContent = '雷暴连锁';
-    comboSub.textContent = '弹射 × 爆裂 · 每个落点都会爆炸';
-    mobileComboName.textContent = '雷暴连锁';
-    mobileComboSub.textContent = '弹射 × 爆裂 · 每个落点爆炸';
-  } else if (rules.chain) {
-    comboKicker.textContent = 'CURRENT RULE COMBO';
-    comboName.textContent = '链式魔弹';
-    comboSub.textContent = '弹射 · 命中后跳跃最多 2 个其他目标';
-    mobileComboName.textContent = '链式魔弹';
-    mobileComboSub.textContent = '弹射 · 命中后跳跃最多 2 个目标';
-  } else if (rules.blast) {
-    comboKicker.textContent = 'CURRENT RULE COMBO';
-    comboName.textContent = '爆裂魔弹';
-    comboSub.textContent = '爆裂 · 有效命中点产生一次范围伤害';
-    mobileComboName.textContent = '爆裂魔弹';
-    mobileComboSub.textContent = '爆裂 · 每个命中点产生范围伤害';
-  } else {
-    comboKicker.textContent = 'CURRENT ATTACK';
-    comboName.textContent = '基础魔弹';
-    comboSub.textContent = '尚未掠夺规则 · 自动锁定最近目标';
-    mobileComboName.textContent = '基础魔弹';
-    mobileComboSub.textContent = '击败敌人，掠夺第一条规定';
+function updateSlot(
+  slot: HTMLElement,
+  icon: SVGUseElement,
+  iconBox: HTMLElement,
+  nameEl: HTMLElement,
+  statusEl: HTMLElement,
+  descEl: HTMLElement,
+  ref: PlayerBuild['trajectory'] | PlayerBuild['impact'],
+  emptyIcon: string,
+  emptyName: string,
+  emptyDesc: string,
+  slotLabel: string
+): void {
+  if (!ref) {
+    slot.classList.add('is-locked');
+    slot.classList.remove('is-owned');
+    icon.setAttribute('href', emptyIcon);
+    nameEl.textContent = emptyName;
+    statusEl.textContent = '空槽';
+    descEl.textContent = emptyDesc;
+    slot.style.setProperty('--rule-color', '#60748c');
+    iconBox.style.color = '#60748c';
+    return;
   }
+  const def = getRuleDef(ref.key);
+  const color = RULE_COLORS[ref.key];
+  slot.classList.remove('is-locked');
+  slot.classList.add('is-owned');
+  icon.setAttribute('href', def.icon);
+  nameEl.textContent = def.name;
+  statusEl.textContent = `Lv.${ref.level}`;
+  descEl.textContent = getRuleLevelDescription(ref.key, ref.level);
+  slot.style.setProperty('--rule-color', color);
+  iconBox.style.color = color;
+  iconBox.setAttribute('aria-label', `${slotLabel} ${def.name} Lv.${ref.level}`);
 }
 
-export function showRuleToast(
-  kind: RuleToastKind,
-  name: string,
-  sub: string
-): void {
+export function setBuild(build: PlayerBuild, acquired: ReadonlySet<RuleKey> = new Set()): void {
+  updateSlot(
+    slotTrajectory,
+    slotTrajectoryIcon,
+    slotTrajectoryIco,
+    slotTrajectoryName,
+    slotTrajectoryStatus,
+    slotTrajectoryDesc,
+    build.trajectory,
+    '#i-shard',
+    '未装备',
+    '通过规则祭坛装备一条弹道规则',
+    '弹道规则'
+  );
+  updateSlot(
+    slotImpact,
+    slotImpactIcon,
+    slotImpactIco,
+    slotImpactName,
+    slotImpactStatus,
+    slotImpactDesc,
+    build.impact,
+    '#i-shard',
+    '未装备',
+    '通过规则祭坛装备一条命中规则',
+    '命中规则'
+  );
+
+  const trajectoryRef = build.trajectory;
+  const impactRef = build.impact;
+  if (trajectoryRef) {
+    const color = RULE_COLORS[trajectoryRef.key];
+    miniTrajectory.classList.remove('is-locked');
+    miniTrajectory.classList.add('is-owned');
+    miniTrajectory.style.setProperty('--rule-color', color);
+    miniTrajectoryIcon.setAttribute('href', getRuleDef(trajectoryRef.key).icon);
+    miniTrajectoryName.textContent = getRuleDef(trajectoryRef.key).name;
+    miniTrajectoryStatus.textContent = `Lv.${trajectoryRef.level}`;
+  } else {
+    miniTrajectory.classList.add('is-locked');
+    miniTrajectory.classList.remove('is-owned');
+    miniTrajectory.style.setProperty('--rule-color', '#60748c');
+    miniTrajectoryIcon.setAttribute('href', '#i-shard');
+    miniTrajectoryName.textContent = '弹道';
+    miniTrajectoryStatus.textContent = '空槽';
+  }
+  if (impactRef) {
+    const color = RULE_COLORS[impactRef.key];
+    miniImpact.classList.remove('is-locked');
+    miniImpact.classList.add('is-owned');
+    miniImpact.style.setProperty('--rule-color', color);
+    miniImpactIcon.setAttribute('href', getRuleDef(impactRef.key).icon);
+    miniImpactName.textContent = getRuleDef(impactRef.key).name;
+    miniImpactStatus.textContent = `Lv.${impactRef.level}`;
+  } else {
+    miniImpact.classList.add('is-locked');
+    miniImpact.classList.remove('is-owned');
+    miniImpact.style.setProperty('--rule-color', '#60748c');
+    miniImpactIcon.setAttribute('href', '#i-shard');
+    miniImpactName.textContent = '命中';
+    miniImpactStatus.textContent = '空槽';
+  }
+
+  buildCount.textContent = `等级 ${buildLevelSum(build)} / 6`;
+  const combo = getBuildCombo(build);
+  comboKicker.textContent = combo.complete ? 'CURRENT RULE COMBO' : 'CURRENT RULE';
+  comboName.textContent = combo.name;
+  comboSub.textContent = combo.description;
+  mobileComboName.textContent = combo.name;
+  mobileComboSub.textContent = combo.description;
+  comboBanner.classList.toggle('is-empowered', combo.complete);
+
+  codexBeetle.classList.toggle('is-owned', acquired.has('blast'));
+  codexBeetle.classList.toggle('is-locked', !acquired.has('blast'));
+  codexBat.classList.toggle('is-owned', acquired.has('chain'));
+  codexBat.classList.toggle('is-locked', !acquired.has('chain'));
+  codexBeetleState.textContent = acquired.has('blast') ? '已掠夺' : '未掠夺';
+  codexBatState.textContent = acquired.has('chain') ? '已掠夺' : '未掠夺';
+}
+
+export function showRuleToast(kind: RuleToastKind, name: string, sub: string): void {
   const iconUse = toastIcon.querySelector('use');
-  const iconHref = kind === 'chain' ? '#i-chain' : kind === 'blast' ? '#i-blast' : '#i-heart';
-  iconUse?.setAttribute('href', iconHref);
+  const color = RULE_COLORS[kind];
+  const href = kind === 'heal' ? '#i-heart' : getRuleDef(kind).icon;
+  iconUse?.setAttribute('href', href);
+  toastIcon.style.color = color;
+  toastIcon.style.borderColor = color;
+  toastIcon.style.background = `${color}14`;
   toast.className = `rule-toast kind-${kind}`;
   toastName.textContent = name;
   toastSub.textContent = sub;
@@ -188,6 +282,6 @@ export function resetM0Hud(): void {
   setTimer(180);
   setKills(0);
   setObjective(0, 180, 0);
-  setRules({ chain: false, blast: false });
+  setBuild(createEmptyBuild(), new Set());
   hideRuleToast();
 }

@@ -478,6 +478,52 @@
   letter-spacing: 0.1em;
 }
 
+.result-combo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: -11px 0 20px;
+  padding: 9px 12px;
+  border: 1px solid rgba(150, 185, 215, 0.11);
+  border-radius: 9px;
+  background: rgba(5, 12, 21, 0.42);
+}
+
+.result-combo.is-complete {
+  border-color: rgba(182, 155, 255, 0.3);
+  background: linear-gradient(100deg, rgba(101, 220, 240, 0.09), rgba(182, 155, 255, 0.09));
+  box-shadow: 0 0 26px rgba(182, 155, 255, 0.08) inset;
+}
+
+.result-combo .combo-tag {
+  padding: 2px 6px;
+  border: 1px solid rgba(150, 185, 215, 0.14);
+  border-radius: 4px;
+  color: #647a93;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+}
+
+.result-combo b {
+  color: #cfe4f5;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.result-combo.is-complete b {
+  color: #d9c9ff;
+}
+
+.result-combo small {
+  color: #5c7188;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+}
+
 .result-actions {
   display: flex;
   gap: 9px;
@@ -564,4 +610,327 @@
 .run-timer.is-urgent {
   color: #ff9aa8;
   text-shadow: 0 0 18px rgba(255, 80, 110, 0.35);
+}
+
+/* ------------------------------------------------------------------ M1 rule build / altar */
+
+.slot-ico.trajectory,
+.slot-ico.impact {
+  color: var(--rule-color, var(--cyan));
+}
+
+.slot.is-owned .slot-ico.trajectory,
+.slot.is-owned .slot-ico.impact {
+  border-color: color-mix(in srgb, var(--rule-color, var(--cyan)) 38%, transparent);
+}
+
+.mini-slot.is-owned .mini-ico {
+  color: var(--rule-color, var(--cyan));
+  filter: none;
+}
+
+.pause-lab {
+  width: 100%;
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pause-lab small {
+  color: #5a7088;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.altar-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(3, 6, 11, 0.74);
+  backdrop-filter: blur(13px);
+}
+
+.altar-card {
+  width: min(940px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(182, 155, 255, 0.24);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(182, 155, 255, 0.13), transparent 42%),
+    linear-gradient(145deg, rgba(20, 30, 52, 0.97), rgba(6, 12, 22, 0.98));
+  box-shadow: 0 40px 120px #000c, 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.altar-card > .eyebrow {
+  justify-content: center;
+}
+
+.altar-card h2 {
+  margin: 10px 0 5px;
+  color: #f4f8ff;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.altar-sub {
+  margin: 0 auto 22px;
+  color: #92a6bd;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.rule-offers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rule-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 260px;
+  padding: 15px;
+  overflow: hidden;
+  border: 1px solid rgba(150, 185, 215, 0.13);
+  border-radius: 12px;
+  background:
+    linear-gradient(150deg, rgba(21, 38, 58, 0.6), rgba(7, 14, 25, 0.8)),
+    rgba(8, 15, 27, 0.75);
+  color: var(--text);
+  text-align: left;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  pointer-events: auto;
+}
+
+.rule-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rule-color, var(--cyan)), transparent);
+  opacity: 0.45;
+}
+
+.rule-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--rule-color, var(--cyan)) 48%, transparent);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 26px color-mix(in srgb, var(--rule-color, var(--cyan)) 10%, transparent);
+}
+
+.rule-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.rule-card-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid color-mix(in srgb, var(--rule-color, var(--cyan)) 36%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--rule-color, var(--cyan)) 9%, transparent);
+  color: var(--rule-color, var(--cyan));
+  font-size: 23px;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--rule-color, var(--cyan)) 9%, transparent) inset;
+}
+
+.rule-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rule-card-slot {
+  color: #63798f;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 6px;
+  letter-spacing: 0.16em;
+}
+
+.rule-card-name {
+  color: #f1f8ff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.rule-card-action {
+  margin-left: auto;
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #8fa6bc;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.rule-card-action.equip {
+  border-color: rgba(101, 220, 240, 0.28);
+  color: var(--cyan);
+}
+
+.rule-card-action.upgrade {
+  border-color: rgba(126, 220, 169, 0.28);
+  color: var(--green);
+}
+
+.rule-card-action.replace {
+  border-color: rgba(255, 172, 104, 0.3);
+  color: var(--orange);
+}
+
+.rule-card-levels {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #768ba2;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.05em;
+}
+
+.level-pip {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.level-pip.active {
+  background: var(--rule-color, var(--cyan));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rule-color, var(--cyan)) 35%, transparent);
+}
+
+.rule-card-desc {
+  margin: 0;
+  color: #8ba0b7;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.rule-card-now {
+  color: #5f748c;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.rule-card-replace {
+  color: var(--orange);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.rule-card-combo {
+  margin-top: auto;
+  padding-top: 9px;
+  border-top: 1px solid rgba(150, 185, 215, 0.09);
+  color: #697f97;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.rule-card-combo b {
+  color: #d9e9f6;
+  font-weight: 500;
+}
+
+.rule-card-key {
+  position: absolute;
+  top: 52px;
+  right: 11px;
+  display: none;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgba(150, 185, 215, 0.18);
+  border-radius: 4px;
+  color: #768ba2;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 8px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rule-card-key {
+    display: grid;
+  }
+}
+
+.altar-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+  color: #5f748d;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.altar-foot .ghost {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .altar-card {
+    padding: 21px 15px;
+    max-height: 88dvh;
+    overflow-y: auto;
+  }
+
+  .altar-card h2 {
+    font-size: 27px;
+  }
+
+  .altar-sub {
+    margin-bottom: 15px;
+  }
+
+  .rule-offers {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .rule-card {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .rule-card-name {
+    font-size: 16px;
+  }
+
+  .altar-foot {
+    position: sticky;
+    bottom: -21px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    margin-top: 12px;
+    padding-top: 10px;
+    background: linear-gradient(180deg, rgba(6, 12, 22, 0) 0%, rgba(6, 12, 22, 0.96) 34%);
+  }
+
+  .altar-foot .ghost {
+    width: 100%;
+  }
 }

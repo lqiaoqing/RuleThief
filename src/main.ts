@@ -5,6 +5,8 @@ import { M0Scene } from './game/M0Scene';
 import type { RunEndPayload } from './game/M0Scene';
 import { audio } from './game/audio';
 import { formatTime } from './game/theme';
+import type { ImpactKey, RuleKey, RuleOffer, TrajectoryKey } from './game/rules';
+import { isAltarVisible, pickAltarOffer, renderRuleOffers, setAltarVisible } from './ui/altar';
 
 declare global {
   interface Window {
@@ -12,14 +14,28 @@ declare global {
     __RT_GAME__?: Phaser.Game;
     __RT_SCENE__?: M0Scene;
     __RT_SNAPSHOT__?: () => Record<string, unknown>;
-    __RT_GRANT__?: (rule: 'chain' | 'blast') => void;
+    __RT_GRANT__?: (rule: RuleKey) => void;
     __RT_GRANT_ALL__?: () => void;
     __RT_DAMAGE__?: (amount: number) => void;
     __RT_END__?: (victory: boolean) => void;
     __RT_SPAWN__?: (kind?: 'beetle' | 'bat') => void;
     __RT_KILL_ALL__?: () => void;
-    __RT_POSE__?: () => void;
+    __RT_POSE__?: (build?: {
+      trajectory?: TrajectoryKey | null;
+      impact?: ImpactKey | null;
+      trajectoryLevel?: 1 | 2 | 3;
+      impactLevel?: 1 | 2 | 3;
+    }) => void;
     __RT_SET_STATS__?: (elapsed: number, kills: number) => void;
+    __RT_SET_BUILD__?: (
+      trajectory: TrajectoryKey | null,
+      impact: ImpactKey | null,
+      trajectoryLevel?: 1 | 2 | 3,
+      impactLevel?: 1 | 2 | 3
+    ) => void;
+    __RT_ALTAR__?: () => void;
+    __RT_ALTAR_STATE__?: () => { open: boolean; offers: RuleOffer[] };
+    __RT_PICK_ALTAR__?: (index: number) => void;
     __RT_AUDIO_STATE__?: () => { muted: boolean; unlocked: boolean; state: string };
   }
 }
@@ -76,11 +92,17 @@ const resultSub = byId<HTMLElement>('result-sub');
 const resultTime = byId<HTMLElement>('result-time');
 const resultKills = byId<HTMLElement>('result-kills');
 const resultRules = byId<HTMLElement>('result-rules');
+const resultCombo = byId<HTMLElement>('result-combo');
+const resultComboName = byId<HTMLElement>('result-combo-name');
+const resultComboLevel = byId<HTMLElement>('result-combo-level');
+const openAltarButton = byId<HTMLButtonElement>('open-altar-btn');
+const altarSkipButton = byId<HTMLButtonElement>('altar-skip-btn');
 
 let scene: M0Scene | null = null;
 let entered = false;
 let pendingArena = false;
 let pointerId: number | null = null;
+let altarOffers: RuleOffer[] = [];
 
 const autoArena = new URLSearchParams(window.location.search).get('arena') === '1';
 
@@ -96,7 +118,7 @@ function showResult(payload: RunEndPayload): void {
   resultScreen.classList.toggle('is-victory', payload.victory);
   resultScreen.classList.toggle('is-defeat', !payload.victory);
   resultEmblemUse?.setAttribute('href', payload.victory ? '#i-crown' : '#i-skull');
-  resultKicker.textContent = payload.victory ? 'M0 · RUN COMPLETE' : 'M0 · RUN ENDED';
+  resultKicker.textContent = payload.victory ? 'M1 · RUN COMPLETE' : 'M1 · RUN ENDED';
   resultTitle.textContent = payload.victory ? '审判完成' : '规则耗尽';
   resultSub.textContent = payload.victory
     ? '你在训练回廊中存活了整整 3 分钟。规则可以被夺走，也可以被驾驭。'
@@ -104,9 +126,44 @@ function showResult(payload: RunEndPayload): void {
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);
   resultRules.textContent = `${payload.rules} / 2`;
+  resultComboName.textContent = payload.combo;
+  resultComboLevel.textContent = `等级 ${payload.levelSum} / 6`;
+  resultCombo.classList.toggle('is-complete', payload.rules === 2);
   resultScreen.hidden = false;
   pauseScreen.hidden = true;
+  closeAltar();
   scene?.pauseGame();
+}
+
+function openAltar(offers: RuleOffer[]): void {
+  if (!entered) return;
+  altarOffers = offers;
+  renderRuleOffers(offers, (offer) => chooseAltarOffer(offer));
+  pauseScreen.hidden = true;
+  setAltarVisible(true);
+}
+
+function closeAltar(): void {
+  altarOffers = [];
+  setAltarVisible(false);
+}
+
+function resumeAfterAltar(): void {
+  closeAltar();
+  scene?.resumeGame();
+  void audio.resume();
+}
+
+function chooseAltarOffer(offer: RuleOffer): void {
+  if (!scene) return;
+  scene.applyAltarOffer(offer);
+  resumeAfterAltar();
+}
+
+function skipAltar(): void {
+  if (!scene) return;
+  scene.skipAltar();
+  resumeAfterAltar();
 }
 
 function enterArena(instant = false): void {
@@ -119,6 +176,7 @@ function enterArena(instant = false): void {
   noteModal.hidden = true;
   pauseScreen.hidden = true;
   resultScreen.hidden = true;
+  closeAltar();
   hud.hidden = false;
   sidebar.hidden = false;
   void audio.unlock().then(() => audio.resume());
@@ -142,6 +200,7 @@ function restartRun(): void {
   if (!scene) return;
   resultScreen.hidden = true;
   pauseScreen.hidden = true;
+  closeAltar();
   hud.hidden = false;
   sidebar.hidden = false;
   entered = true;
@@ -152,7 +211,7 @@ function restartRun(): void {
 
 function pauseGame(): void {
   if (!scene || !entered) return;
-  if (!pauseScreen.hidden || !resultScreen.hidden) return;
+  if (!pauseScreen.hidden || !resultScreen.hidden || isAltarVisible()) return;
   scene.pauseGame();
   pauseScreen.hidden = false;
   void audio.suspend();
@@ -169,6 +228,7 @@ function backToMenu(): void {
   if (!scene) return;
   scene.setPlayEnabled(false);
   scene.pauseGame();
+  closeAltar();
   pauseScreen.hidden = true;
   resultScreen.hidden = true;
   hud.hidden = true;
@@ -200,8 +260,15 @@ function handleReady(): void {
   window.__RT_END__ = (victory) => scene?.debugEndRun(victory);
   window.__RT_SPAWN__ = (kind) => scene?.debugSpawn(kind);
   window.__RT_KILL_ALL__ = () => scene?.debugKillAll();
-  window.__RT_POSE__ = () => scene?.debugPoseCombat();
+  window.__RT_POSE__ = (build) => scene?.debugPoseCombat(build);
   window.__RT_SET_STATS__ = (elapsed, kills) => scene?.debugSetStats(elapsed, kills);
+  window.__RT_SET_BUILD__ = (trajectory, impact, trajectoryLevel = 1, impactLevel = 1) =>
+    scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
+  window.__RT_ALTAR__ = () => scene?.debugOpenAltar();
+  window.__RT_ALTAR_STATE__ = () => ({ open: isAltarVisible(), offers: altarOffers });
+  window.__RT_PICK_ALTAR__ = (index) => {
+    pickAltarOffer(index);
+  };
   window.__RT_AUDIO_STATE__ = () => ({
     muted: audio.isMuted,
     unlocked: audio.isUnlocked,
@@ -217,6 +284,9 @@ function handleReady(): void {
 game.events.once('m0-ready', handleReady);
 game.events.on('m0-run-ended', (payload: RunEndPayload) => {
   showResult(payload);
+});
+game.events.on('m1-altar', ({ offers }: { offers: RuleOffer[] }) => {
+  openAltar(offers);
 });
 
 window.setTimeout(() => {
@@ -241,6 +311,16 @@ document.getElementById('resume-btn')?.addEventListener('click', resumeGame);
 document.getElementById('back-menu-btn')?.addEventListener('click', backToMenu);
 document.getElementById('restart-btn')?.addEventListener('click', restartRun);
 document.getElementById('result-menu-btn')?.addEventListener('click', backToMenu);
+altarSkipButton.addEventListener('click', skipAltar);
+openAltarButton.addEventListener('click', () => {
+  if (!scene) return;
+  pauseScreen.hidden = true;
+  scene.openRuleAltar();
+  if (!scene.isAltarOpen()) {
+    scene.resumeGame();
+    void audio.resume();
+  }
+});
 
 soundButton.addEventListener('click', async () => {
   await audio.unlock();
@@ -317,6 +397,19 @@ for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'] as const
 window.addEventListener('keydown', (event) => {
   if (event.code === 'Space') {
     event.preventDefault();
+  }
+  if (isAltarVisible()) {
+    const slot = ['Digit1', 'Digit2', 'Digit3'].indexOf(event.code);
+    if (slot >= 0) {
+      event.preventDefault();
+      pickAltarOffer(slot);
+      return;
+    }
+    if (event.code === 'Escape') {
+      event.preventDefault();
+      skipAltar();
+    }
+    return;
   }
   if (event.code === 'Escape') {
     if (!noteModal.hidden) {
