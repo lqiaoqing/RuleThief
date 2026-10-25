@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#05080f" />
+    <meta name="description" content="规则掠夺者 RULE THIEF · M0 可玩切片：3 分钟生存，击败敌人掠夺规则。" />
+    <title>规则掠夺者 RULE THIEF · M0 可玩切片</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preload" as="image" href="./assets/art/menu-key.webp" />
+  </head>
+  <body>
+    <svg class="svg-sprite" aria-hidden="true">
+      <symbol id="i-heart" viewBox="0 0 24 24">
+        <path d="M12 20.4S4.8 16.2 2.6 12.5C.8 9.5 2 6 5.3 5.3c1.9-.4 3.5.4 4.7 2 1.2-1.6 2.8-2.4 4.7-2 3.3.7 4.5 4.2 2.7 7.2C19.2 16.2 12 20.4 12 20.4Z" fill="currentColor" />
+      </symbol>
+      <symbol id="i-dash" viewBox="0 0 24 24">
+        <path d="m4 6 6 6-6 6M12 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="i-chain" viewBox="0 0 24 24">
+        <path d="M3 15.5 7.3 10l3.4 4.1L15 6.2l3.1 3.2 2.6-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="7.3" cy="10" r="1.4" fill="currentColor" />
+        <circle cx="15" cy="6.2" r="1.4" fill="currentColor" />
+      </symbol>
+      <symbol id="i-blast" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M12 2v3.6M12 18.4V22M2 12h3.6M18.4 12H22M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </symbol>
+      <symbol id="i-mutation" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <circle cx="12" cy="4.2" r="1.5" fill="currentColor" />
+        <circle cx="19.2" cy="16.2" r="1.5" fill="currentColor" />
+        <circle cx="4.8" cy="16.2" r="1.5" fill="currentColor" />
+        <path d="M12 7.4v1.4M15.4 14.2l1.2.7M8.6 14.2l-1.2.7" fill="none" stroke="currentColor" stroke-width="1.6" />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M2.8 12s3.4-6.2 9.2-6.2S21.2 12 21.2 12s-3.4 6.2-9.2 6.2S2.8 12 2.8 12Z" fill="none" stroke="currentColor" stroke-width="1.7" />
+        <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="1.7" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" />
+      </symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24">
+        <rect x="6.5" y="5" width="3.4" height="14" rx="1" fill="currentColor" />
+        <rect x="14.1" y="5" width="3.4" height="14" rx="1" fill="currentColor" />
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24">
+        <path d="M8 5.5v13l11-6.5L8 5.5Z" fill="currentColor" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+      </symbol>
+      <symbol id="i-sound" viewBox="0 0 24 24">
+        <path d="M4 9h4l5-4v14l-5-4H4V9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+        <path d="M16 8.5c1.4 1 2.2 2.1 2.2 3.5S17.4 14.5 16 15.5M18.6 6c2.3 1.7 3.4 3.7 3.4 6s-1.1 4.3-3.4 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </symbol>
+      <symbol id="i-mute" viewBox="0 0 24 24">
+        <path d="M4 9h4l5-4v14l-5-4H4V9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+        <path d="m16 9 5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </symbol>
+      <symbol id="i-crown" viewBox="0 0 24 24">
+        <path d="m3 8 5 3 4-6 4 6 5-3-2 10H5L3 8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M5 21h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </symbol>
+      <symbol id="i-skull" viewBox="0 0 24 24">
+        <path d="M12 3c-4.4 0-7.5 3-7.5 7.2 0 2.5 1.1 4.2 3 5.4V19h2.2v-2.2h4.6V19H16v-3.4c1.9-1.2 3-2.9 3-5.4C19 6 15.9 3 12 3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        <circle cx="9.2" cy="10" r="1.4" fill="currentColor" />
+        <circle cx="14.8" cy="10" r="1.4" fill="currentColor" />
+        <path d="M10.5 14h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+      </symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="i-shard" viewBox="0 0 24 24">
+        <path d="m12 2.8 5 6.1-5 12.3L7 8.9l5-6.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m7 8.9 5-1.8 5 1.8M12 7.1v14.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".55" />
+      </symbol>
+    </svg>
+
+    <div id="app">
+      <div class="app-glow app-glow-a"></div>
+      <div class="app-glow app-glow-b"></div>
+
+      <main class="shell" id="shell">
+        <section class="stage" id="stage">
+          <div id="game-canvas" aria-label="规则掠夺者竞技场"></div>
+          <div class="stage-vignette"></div>
+          <div class="stage-grid"></div>
+
+          <div class="low-hp-vignette" id="low-hp-vignette"></div>
+
+          <div class="hud" id="hud" hidden>
+            <div class="hud-top">
+              <div class="vitals">
+                <div class="vital">
+                  <div class="vital-label">
+                    <span class="vital-ico hp-ico"><svg><use href="#i-heart" /></svg></span>
+                    <span>生命</span>
+                    <b id="hp-text">100 / 100</b>
+                  </div>
+                  <div class="bar hp-bar"><i id="hp-fill" style="width: 100%"></i><span class="bar-chip"></span></div>
+                </div>
+                <div class="vital">
+                  <div class="vital-label">
+                    <span class="vital-ico dash-ico"><svg><use href="#i-dash" /></svg></span>
+                    <span>闪避</span>
+                    <b id="dash-text">就绪</b>
+                  </div>
+                  <div class="bar dash-bar"><i id="dash-fill" style="width: 100%"></i></div>
+                </div>
+              </div>
+
+              <div class="run-center">
+                <div class="run-room">ROOM <b id="room-num">01</b><span>/ 01</span></div>
+                <div class="run-timer" id="timer">03:00</div>
+                <div class="run-name">训练回廊</div>
+                <div class="run-kills">击杀 <b id="kills-text">0</b></div>
+              </div>
+
+              <div class="run-actions">
+                <div class="style-badge">M0<br />SLICE</div>
+                <button class="icon-btn sound-btn" id="sound-btn" aria-label="静音" aria-pressed="false">
+                  <svg class="sound-on"><use href="#i-sound" /></svg>
+                  <svg class="sound-off" hidden><use href="#i-mute" /></svg>
+                </button>
+                <button class="icon-btn" id="pause-btn" aria-label="暂停">
+                  <svg><use href="#i-pause" /></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="mobile-build" aria-label="当前构筑">
+              <div class="mini-slot chain is-locked" id="mini-chain">
+                <span class="mini-ico"><svg><use href="#i-chain" /></svg></span>
+                <span>弹射 <b id="mini-chain-status">未掠夺</b></span>
+              </div>
+              <div class="mini-slot blast is-locked" id="mini-blast">
+                <span class="mini-ico"><svg><use href="#i-blast" /></svg></span>
+                <span>爆裂 <b id="mini-blast-status">未掠夺</b></span>
+              </div>
+            </div>
+
+            <div class="mobile-boss">
+              <span class="mb-eye"><svg><use href="#i-eye" /></svg></span>
+              <span class="mb-copy"><small>M0 · SURVIVAL</small><b>训练回廊</b></span>
+              <span class="mb-phases"><i class="active"></i><i></i><i></i></span>
+              <span class="mb-state" id="mobile-time">03:00</span>
+            </div>
+
+            <div class="mobile-combo">
+              <div class="mc-main"><span class="mc-kicker">CURRENT COMBO</span><b id="mobile-combo-name">基础魔弹</b></div>
+              <div class="mc-sub" id="mobile-combo-sub">击败敌人，掠夺第一条规定</div>
+              <div class="mc-room"><span id="mobile-kills">0</span> KILLS</div>
+            </div>
+
+            <div class="joystick" id="joystick" aria-label="移动摇杆">
+              <div class="joystick-ring"></div>
+              <div class="joystick-stick" id="joystick-stick"></div>
+              <span class="joystick-label">移动</span>
+            </div>
+
+            <button class="dash-btn" id="dash-btn" aria-label="闪避">
+              <span class="dash-ring"></span>
+              <span class="dash-ico"><svg><use href="#i-dash" /></svg></span>
+              <b>闪避</b>
+              <small>SPACE</small>
+            </button>
+
+            <div class="pc-hints">
+              <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动</span>
+              <span><kbd>SPACE</kbd> 闪避</span>
+              <span class="hint-muted">击杀敌人夺取规则</span>
+            </div>
+
+            <div class="boss-watch">
+              <span class="boss-dot"></span>
+              M0 SLICE <b>训练回廊</b>
+            </div>
+
+            <div class="rule-toast" id="rule-toast" hidden>
+              <span class="rule-toast-icon" id="rule-toast-icon"><svg><use href="#i-shard" /></svg></span>
+              <div class="rule-toast-copy">
+                <small>RULE STOLEN / 规则掠夺</small>
+                <b id="rule-toast-name">爆裂</b>
+                <p id="rule-toast-sub">有效命中点产生范围伤害</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pause-screen" id="pause-screen" hidden>
+            <div class="pause-card">
+              <div class="eyebrow"><span class="eyebrow-dot"></span> PAUSED / M0 SLICE</div>
+              <h2>审判暂停</h2>
+              <p>训练回廊仍在等待。准备好后继续。</p>
+              <div class="pause-actions">
+                <button class="primary compact" id="resume-btn"><svg><use href="#i-play" /></svg><span>继续</span></button>
+                <button class="ghost compact" id="back-menu-btn">返回菜单</button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <aside class="sidebar" id="sidebar" hidden>
+          <div class="brand-strip">
+            <div class="brand-mark">RT</div>
+            <div class="brand-copy">
+              <b>RULE THIEF</b>
+              <small>M0 可玩切片 / 0.2</small>
+            </div>
+            <span class="brand-line"></span>
+          </div>
+
+          <section class="panel build-panel">
+            <div class="panel-head">
+              <span>构筑 BUILD</span>
+              <span class="panel-sub" id="build-count">掠夺 0 / 2</span>
+            </div>
+            <div class="slot is-locked" id="slot-chain">
+              <div class="slot-ico chain"><svg><use href="#i-chain" /></svg></div>
+              <div class="slot-copy">
+                <small>弹道规则 · TRAJECTORY</small>
+                <b>弹射 <em id="slot-chain-status">未掠夺</em></b>
+                <p>命中后跳跃最多 2 个其他目标</p>
+              </div>
+            </div>
+            <div class="slot is-locked" id="slot-blast">
+              <div class="slot-ico blast"><svg><use href="#i-blast" /></svg></div>
+              <div class="slot-copy">
+                <small>命中规则 · IMPACT</small>
+                <b>爆裂 <em id="slot-blast-status">未掠夺</em></b>
+                <p>有效命中点产生一次范围伤害</p>
+              </div>
+            </div>
+            <div class="combo-banner">
+              <span class="combo-kicker" id="combo-kicker">CURRENT ATTACK</span>
+              <b id="combo-name">基础魔弹</b>
+              <small id="combo-sub">尚未掠夺规则 · 自动锁定最近目标</small>
+            </div>
+          </section>
+
+          <section class="panel objective-panel">
+            <div class="panel-head">
+              <span>本房目标</span>
+              <span class="panel-sub">M0</span>
+            </div>
+            <div class="objective-main">
+              <span>SURVIVE</span>
+              <b id="objective-time">03:00</b>
+            </div>
+            <div class="bar objective-bar"><i id="survival-fill" style="width: 0%"></i></div>
+            <div class="objective-meta">
+              <span>击杀 <b id="objective-kills">0</b></span>
+              <span>威胁 <b id="threat-level">I</b></span>
+            </div>
+            <div class="codex-list">
+              <div class="codex-row is-locked" id="codex-beetle">
+                <div class="codex-img"><img src="./assets/sprites/beetle.png" alt="铁刺甲虫" /></div>
+                <div class="codex-copy"><b>铁刺甲虫</b><small>预警冲锋 · 接触伤害</small></div>
+                <div class="codex-side"><span class="codex-rule blast">爆裂</span><em class="codex-state" id="codex-beetle-state">未掠夺</em></div>
+              </div>
+              <div class="codex-row is-locked" id="codex-bat">
+                <div class="codex-img"><img src="./assets/sprites/bat.png" alt="雷光蝠" /></div>
+                <div class="codex-copy"><b>雷光蝠</b><small>远程雷击 · 保持距离</small></div>
+                <div class="codex-side"><span class="codex-rule chain">弹射</span><em class="codex-state" id="codex-bat-state">未掠夺</em></div>
+              </div>
+            </div>
+            <p class="objective-note">击败携带规则的敌人，规则碎片会自动归你；攻击方式立即改变。</p>
+          </section>
+
+          <section class="panel notes-panel">
+            <div class="panel-head"><span>M0 验证</span><span class="panel-sub">QA</span></div>
+            <ul class="check-list">
+              <li><i></i>移动 + 闪避 + 自动攻击手感</li>
+              <li><i></i>击杀甲虫 / 雷蝠掠夺规则</li>
+              <li><i></i>生存 03:00 或死亡结算</li>
+              <li><i></i>重开后状态完全重置</li>
+            </ul>
+          </section>
+
+          <div class="sidebar-foot">
+            <span>M0 BUILD</span>
+            <b>BLENDER + PROCEDURAL</b>
+          </div>
+        </aside>
+      </main>
+
+      <div class="result-screen" id="result-screen" hidden>
+        <div class="result-card">
+          <div class="result-emblem" id="result-emblem">
+            <svg><use href="#i-crown" /></svg>
+          </div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M0 · RUN COMPLETE</span></div>
+          <h2 id="result-title">审判完成</h2>
+          <p id="result-sub">你在训练回廊中完成了本局。</p>
+          <div class="result-stats">
+            <div><b id="result-time">03:00</b><span>生存时间</span></div>
+            <div><b id="result-kills">0</b><span>击杀</span></div>
+            <div><b id="result-rules">0 / 2</b><span>掠夺规则</span></div>
+          </div>
+          <div class="result-actions">
+            <button class="primary compact" id="restart-btn">
+              <span class="btn-ico"><svg><use href="#i-restart" /></svg></span>
+              <span class="btn-copy"><b>再来一局</b><small>RESTART RUN</small></span>
+            </button>
+            <button class="ghost compact" id="result-menu-btn">返回菜单</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="menu" id="menu" aria-label="主菜单">
+        <img class="menu-bg" src="./assets/art/menu-key.webp" alt="" aria-hidden="true" />
+        <div class="menu-shade" aria-hidden="true"></div>
+        <div class="menu-grid" aria-hidden="true"></div>
+
+        <div class="menu-content">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> M0 PLAYABLE / 0.2 · 2026</div>
+          <h1>
+            <span class="title-cn">规则</span>
+            <span class="title-cn title-accent">掠夺者</span>
+          </h1>
+          <div class="title-en">RULE <span>THIEF</span></div>
+          <p class="tagline">
+            击败敌人，夺走它的规则。<br />
+            <em>让每一次命中，都改写战斗。</em>
+          </p>
+
+          <div class="slice-chip"><span class="slice-dot"></span>M0 · 3 分钟生存切片</div>
+
+          <div class="stats-row">
+            <div class="stat"><b>03:00</b><span>本局目标</span></div>
+            <div class="stat"><b>2</b><span>可掠夺敌人</span></div>
+            <div class="stat"><b>2</b><span>规则组合</span></div>
+            <div class="stat"><b>1</b><span>训练房间</span></div>
+          </div>
+
+          <div class="menu-actions">
+            <button class="primary" id="enter-btn">
+              <span class="btn-ico"><svg><use href="#i-play" /></svg></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>M0 · 3 MINUTE RUN</small></span>
+              <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
+            </button>
+            <button class="ghost" id="menu-note-btn">这是什么？</button>
+          </div>
+
+          <div class="menu-foot">
+            <span>M0 可玩切片 · 非最终画面</span>
+            <span class="menu-foot-line"></span>
+            <span>BLENDER + PROCEDURAL ASSETS</span>
+          </div>
+
+          <figure class="menu-mobile-art">
+            <img src="./assets/art/menu-key.webp" alt="规则掠夺者视觉基调" />
+            <figcaption>
+              <span>RULE ARBITER</span>
+              <span>视觉基调 / 非最终画面</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <figure class="hero-art" aria-label="规则掠夺者视觉基调">
+          <div class="hero-frame">
+            <img src="./assets/art/menu-key.webp" alt="披风魔法师站在破碎地牢高台上" />
+            <span class="hero-tint"></span>
+            <span class="hero-scan"></span>
+            <span class="frame-corner tl"></span>
+            <span class="frame-corner tr"></span>
+            <span class="frame-corner bl"></span>
+            <span class="frame-corner br"></span>
+            <span class="hero-tag">VISUAL TARGET</span>
+          </div>
+          <figcaption>
+            <span>RULE ARBITER / 视觉基调</span>
+            <span>非最终游戏画面</span>
+          </figcaption>
+        </figure>
+
+        <div class="menu-side-mark" aria-hidden="true">
+          <span>R</span><span>U</span><span>L</span><span>E</span><span class="mark-gap"></span><span>T</span><span>H</span><span>I</span><span>E</span><span>F</span>
+        </div>
+
+        <div class="menu-status">
+          <span class="status-dot"></span>
+          M0 · 3 分钟生存 · 竖屏 / 横屏双端适配
+        </div>
+
+        <div class="note-modal" id="note-modal" hidden>
+          <div class="note-card">
+            <button class="note-close" id="note-close" aria-label="关闭">
+              <svg><use href="#i-close" /></svg>
+            </button>
+            <div class="eyebrow"><span class="eyebrow-dot"></span> WHAT IS THIS</div>
+            <h2>M0 可玩切片</h2>
+            <p>
+              3 分钟生存训练。先用基础魔弹战斗，击败铁刺甲虫和雷光蝠后夺取「爆裂」与「弹射」，让自动攻击立刻改变；生命归零则本局结束，可立即重开。
+            </p>
+            <ul class="note-list">
+              <li><b>目标</b>在训练回廊生存 03:00，击杀越多越好</li>
+              <li><b>敌人</b>甲虫预警冲锋、雷蝠远程雷击，各自携带一条规则</li>
+              <li><b>规则</b>爆裂产生范围伤害；弹射在目标间跳跃</li>
+              <li><b>操作</b>WASD / 摇杆移动，Space / 按钮闪避</li>
+              <li><b>音频</b>WebAudio 程序化音效与环境音，可随时静音</li>
+            </ul>
+            <button class="primary compact" id="note-enter-btn">
+              <span class="btn-copy"><b>进入训练回廊</b><small>M0 · 3 MINUTE RUN</small></span>
+              <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
