@@ -165,6 +165,7 @@ screenshots/              # 各阶段验收截图
 
 ## 文档
 
+- [项目状态（一页版）](docs/STATUS.md)
 - [验收矩阵（设计 → 证据）](docs/ACCEPTANCE.md)
 - [设计文档 V1](docs/RULE_THIEF_design_v1.html)
 - [可行性分析](docs/FEASIBILITY.md)
