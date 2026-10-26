@@ -856,6 +856,54 @@ try {
   check('desktop no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await page.close();
 
+  const bossPractice = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await bossPractice.goto(`${BASE}/?arena=1&boss=1`, { waitUntil: 'networkidle0' });
+  await waitReady(bossPractice);
+  await bossPractice.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(400);
+  const bossPreviewKicker = await bossPractice.$eval('#room-kicker', (el) => el.textContent);
+  check('boss practice jumps to room 13', /ROOM 13 \/ 13/.test(bossPreviewKicker ?? ''), String(bossPreviewKicker));
+  await bossPractice.tap('#room-enter-btn');
+  await sleep(800);
+  const practiceState = await snapshot(bossPractice);
+  check(
+    'boss practice starts the arbiter fight with a starter build',
+    practiceState.bossPhase === 1 &&
+      Number(practiceState.bossHp) > 1600 &&
+      Number(practiceState.bossHp) <= 1800 &&
+      practiceState.build?.trajectory?.key === 'chain',
+    JSON.stringify({ phase: practiceState.bossPhase, hp: practiceState.bossHp, build: practiceState.build })
+  );
+  await bossPractice.close();
+
+  const compact = await newPage(browser, {
+    width: 360,
+    height: 640,
+    deviceScaleFactor: 1,
+    isMobile: true,
+    hasTouch: true
+  });
+  await compact.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await waitReady(compact);
+  await compact.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(450);
+  const compactMeasure = await compact.evaluate(() => {
+    const card = document.querySelector('#room-screen .altar-card');
+    const rect = card.getBoundingClientRect();
+    return {
+      h: Math.round(rect.height),
+      vh: window.innerHeight,
+      scrollable: getComputedStyle(card).overflowY === 'auto' || card.scrollHeight <= card.clientHeight + 1,
+      overflowX: document.documentElement.scrollWidth > window.innerWidth + 1
+    };
+  });
+  check(
+    'compact portrait (360x640) room preview fits or scrolls',
+    compactMeasure.h <= compactMeasure.vh + 1 && compactMeasure.scrollable && !compactMeasure.overflowX,
+    JSON.stringify(compactMeasure)
+  );
+  await compact.close();
+
   const landscape = await newPage(browser, {
     width: 844,
     height: 390,

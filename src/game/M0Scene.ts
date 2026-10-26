@@ -909,6 +909,17 @@ export class M0Scene extends Phaser.Scene {
     return lines.join(String.fromCharCode(10));
   }
 
+  public debugJumpToBoss(): void {
+    if (this.runState !== 'playing') return;
+    this.stepIndex = Math.max(0, this.plan.length - 1);
+    this.encounter = { kind: 'room', room: ROOMS[ROOMS.length - 1] };
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.debugSetBuild('chain', 'blast', 2, 1);
+    this.openRoomPreview();
+  }
+
   public debugFreezeAttack(): void {
     this.attackCd = 99;
     this.clearPlayerBolts();

@@ -148,7 +148,9 @@ let pendingArena = false;
 let pointerId: number | null = null;
 let pendingRewards: RoomCleared['rewards'] = [];
 
-const autoArena = new URLSearchParams(window.location.search).get('arena') === '1';
+const params = new URLSearchParams(window.location.search);
+const autoArena = params.get('arena') === '1';
+const bossPractice = params.get('boss') === '1';
 const INTRO_KEY = 'rulethief.intro.v1';
 
 function maybeShowIntro(): void {
@@ -303,6 +305,9 @@ function enterArena(instant = false): void {
   void audio.unlock().then(() => audio.resume());
   scene.setPlayEnabled(true);
   scene.startNewRun();
+  if (bossPractice) {
+    scene.debugJumpToBoss();
+  }
 
   if (instant) {
     menu.hidden = true;
