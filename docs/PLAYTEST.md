@@ -73,7 +73,11 @@ copy(JSON.stringify(JSON.parse(localStorage.getItem('rulethief.runs.v1') ?? '[]'
 一句话感受：
 ```
 
-## 7. 回收后的处理
+## 7. 已回收的样本
+
+见 [PLAYTEST_RESULTS.md](./PLAYTEST_RESULTS.md)（目前 1 局：桌面通关 08:30，189 杀，散射+燃烧，敌弹承伤 60%）。
+
+## 8. 回收后的处理
 
 1. 把各人的 `player-N.json` 汇总，统计：平均到达步数、通关率、最常用组合、死亡原因分布。
 2. 对照第 5 节的假设逐条判断是否成立。

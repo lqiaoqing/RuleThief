@@ -7,8 +7,10 @@ export const PACING = {
   rewardTime: 12,
   eventTime: 12,
   bossTime: 75,
-  targetMinMinutes: 9,
-  targetMaxMinutes: 14
+  targetMinMinutes: 8,
+  targetMaxMinutes: 12,
+  /** measured (first human run: 8.5 min) / model (12.8 min) */
+  measuredCalibration: 0.7
 } as const;
 
 export function estimateRoomSeconds(room: RoomDef): number {
@@ -37,5 +39,5 @@ export function estimateRunSeconds(plan: readonly RunStep[]): number {
 }
 
 export function estimateRunMinutes(plan: readonly RunStep[]): number {
-  return estimateRunSeconds(plan) / 60;
+  return (estimateRunSeconds(plan) * PACING.measuredCalibration) / 60;
 }
