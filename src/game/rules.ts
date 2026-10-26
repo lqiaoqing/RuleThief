@@ -389,9 +389,11 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
 
 export function getRuleOffers(
   build: PlayerBuild,
-  random: () => number = Math.random
+  random: () => number = Math.random,
+  pool?: readonly RuleKey[]
 ): RuleOffer[] {
-  const candidates = ALL_RULE_KEYS.map((key) => buildOffer(build, key)).filter(
+  const keys = pool && pool.length ? ALL_RULE_KEYS.filter((key) => pool.includes(key)) : ALL_RULE_KEYS;
+  const candidates = keys.map((key) => buildOffer(build, key)).filter(
     (offer): offer is RuleOffer => Boolean(offer)
   );
   if (!candidates.length) return [];

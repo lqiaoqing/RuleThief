@@ -1,16 +1,14 @@
 import Phaser from 'phaser';
 import { ARENA, ASSETS, COLORS } from './theme';
-import { resetM0Hud, setBuild, setDash, setHp, setObjective, setTimer, showRuleToast } from '../ui/hud';
+import { resetM0Hud, setBuild, setDash, setHp, setRoomProgress, setRunClock, showRuleToast } from '../ui/hud';
 import { audio } from './audio';
 import {
   applyRuleOffer,
   buildLevelSum,
-  cloneBuild,
   createEmptyBuild,
   getBuildCombo,
   getImpactProfile,
   getRuleDef,
-  getRuleOffers,
   getSpreadAngles,
   getTrajectoryProfile,
   mergeBurn,
@@ -27,11 +25,12 @@ import {
   type TrajectoryKey,
   type TrajectoryProfile
 } from './rules';
+import { ROOMS, buildRoomRewards, pickSpawnKind, type Reward, type RoomDef, type SupportId } from './rooms';
 
 type EnemyKind = 'beetle' | 'bat';
 type RunState = 'idle' | 'playing' | 'ended';
+type RoomState = 'preview' | 'fighting' | 'reward';
 type EnemyState = 'approach' | 'telegraph' | 'charge' | 'recover' | 'idle' | 'cast';
-type TrainingRuleKey = 'chain' | 'blast';
 
 interface EnemyUnit {
   id: number;
@@ -93,8 +92,6 @@ interface EnemyBolt {
 
 interface Pickup {
   root: Phaser.GameObjects.Container;
-  kind: 'rule' | 'heal';
-  ruleKey?: TrainingRuleKey;
   age: number;
   dead: boolean;
 }
@@ -106,20 +103,21 @@ export interface RunEndPayload {
   rules: number;
   combo: string;
   levelSum: number;
+  roomsCleared: number;
+  roomsTotal: number;
 }
 
-const RUN_DURATION = 180;
 const PLAYER_MAX_HP = 100;
 const PLAYER_SPEED = 185;
 const PLAYER_RADIUS = 22;
 const ATTACK_INTERVAL = 0.65;
 const BASE_DAMAGE = 14;
 const DASH_COOLDOWN = 4;
+const DASH_MIN_COOLDOWN = 1.5;
 const DASH_DURATION = 0.18;
 const DASH_IFRAME = 0.3;
 const BOLT_SPEED = 620;
 const IMPACT_TRIGGER_BUDGET = 3;
-const ALTAR_KILL_INTERVAL = 15;
 const SPREAD_COLOR = 0xffb3d9;
 const PIERCE_COLOR = 0xb69bff;
 
@@ -143,8 +141,10 @@ export class M0Scene extends Phaser.Scene {
   private runState: RunState = 'idle';
   private playEnabled = false;
   private hp = PLAYER_MAX_HP;
+  private maxHp = PLAYER_MAX_HP;
+  private moveSpeed = PLAYER_SPEED;
+  private dashCdMax = DASH_COOLDOWN;
   private elapsed = 0;
-  private timeLeft = RUN_DURATION;
   private kills = 0;
   private invuln = 0;
   private attackCd = 0;
@@ -153,12 +153,15 @@ export class M0Scene extends Phaser.Scene {
   private runToken = 0;
   private nextEnemyId = 1;
 
+  private roomState: RoomState = 'preview';
+  private roomIndex = 0;
+  private roomKills = 0;
+  private roomSpawned = 0;
+  private pendingSpawns = 0;
+  private rewardOpen = false;
+
   private build: PlayerBuild = createEmptyBuild();
   private acquired = new Set<RuleKey>();
-  private shardDropped: Record<TrainingRuleKey, boolean> = { chain: false, blast: false };
-  private nextAltarKills = ALTAR_KILL_INTERVAL;
-  private altarOpen = false;
-  private altarPending = false;
 
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
@@ -250,12 +253,13 @@ export class M0Scene extends Phaser.Scene {
     this.runState = 'playing';
     this.playEnabled = true;
     this.hp = PLAYER_MAX_HP;
+    this.maxHp = PLAYER_MAX_HP;
+    this.moveSpeed = PLAYER_SPEED;
+    this.dashCdMax = DASH_COOLDOWN;
     this.elapsed = 0;
-    this.timeLeft = RUN_DURATION;
     this.kills = 0;
     this.invuln = 0;
     this.attackCd = 0.6;
-    this.spawnCd = 2.4;
     this.hudTick = 0;
     this.dashCooldown = 0;
     this.dashRemaining = 0;
@@ -264,21 +268,161 @@ export class M0Scene extends Phaser.Scene {
     this.nextEnemyId = 1;
     this.build = createEmptyBuild();
     this.acquired.clear();
-    this.shardDropped = { chain: false, blast: false };
-    this.nextAltarKills = ALTAR_KILL_INTERVAL;
-    this.altarOpen = false;
-    this.altarPending = false;
+    this.roomIndex = 0;
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.rewardOpen = false;
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
     this.playerSprite.setFlipX(false);
     resetM0Hud();
-    setTimer(RUN_DURATION);
-    setObjective(0, RUN_DURATION, 0);
+    setRunClock(0);
+    this.refreshRoomHud();
     setBuild(this.build, this.acquired);
     setDash(1, 0);
-    this.spawnPortal('beetle', 590, 402);
-    this.spawnPortal('bat', 660, 286);
+    this.openRoomPreview();
+  }
+
+  public getRoom(): RoomDef {
+    return ROOMS[this.roomIndex];
+  }
+
+  public isRewardOpen(): boolean {
+    return this.rewardOpen;
+  }
+
+  public isRoomPreviewOpen(): boolean {
+    return this.roomState === 'preview';
+  }
+
+  private refreshRoomHud(): void {
+    const room = this.getRoom();
+    setRoomProgress({
+      index: this.roomIndex + 1,
+      total: ROOMS.length,
+      name: room.name,
+      en: room.en,
+      cleared: this.roomKills,
+      quota: room.quota,
+      kills: this.kills,
+      hp: this.hp,
+      maxHp: this.maxHp
+    });
+  }
+
+  private openRoomPreview(): void {
+    this.roomState = 'preview';
+    this.playEnabled = false;
+    this.joystick.set(0, 0);
+    this.scene.pause();
+    this.refreshRoomHud();
+    this.game.events.emit('m2-room-preview', {
+      index: this.roomIndex,
+      total: ROOMS.length,
+      room: this.getRoom(),
+      hp: this.hp,
+      maxHp: this.maxHp,
+      kills: this.kills,
+      elapsed: this.elapsed,
+      build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild
+    });
+  }
+
+  public beginRoom(): void {
+    if (this.runState !== 'playing') return;
+    this.clearTransient();
+    this.roomState = 'fighting';
+    this.rewardOpen = false;
+    this.playEnabled = true;
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.spawnCd = 1.1;
+    this.attackCd = 0.5;
+    this.invuln = 1.0;
+    this.playerRoot.setPosition(300, 500);
+    this.playerSprite.setAlpha(1).clearTint();
+    this.refreshRoomHud();
+    this.scene.resume();
+    audio.play('spawn');
+  }
+
+  private clearRoom(): void {
+    if (this.roomState !== 'fighting') return;
+    this.roomState = 'reward';
+    this.rewardOpen = true;
+    this.playEnabled = false;
+    this.joystick.set(0, 0);
+    for (const bolt of this.bolts) {
+      bolt.dead = true;
+      bolt.root.destroy(true);
+    }
+    this.bolts = [];
+    this.scene.pause();
+    audio.play('rule');
+    const rewards = buildRoomRewards(this.build, this.getRoom());
+    this.game.events.emit('m2-room-cleared', {
+      index: this.roomIndex,
+      total: ROOMS.length,
+      room: this.getRoom(),
+      kills: this.kills,
+      elapsed: this.elapsed,
+      rewards
+    });
+  }
+
+  public applyReward(reward: Reward): void {
+    if (!this.rewardOpen) return;
+    this.rewardOpen = false;
+    if (reward.kind === 'rule') {
+      const next = applyRuleOffer(this.build, reward.offer);
+      const title =
+        reward.offer.action === 'upgrade'
+          ? '规则升级'
+          : reward.offer.action === 'replace'
+            ? '规则替换'
+            : '掠夺规则';
+      this.applyBuildState(next, {
+        key: reward.offer.key,
+        title,
+        sub: `${reward.offer.name} Lv.${reward.offer.nextLevel}`
+      });
+    } else {
+      this.applySupport(reward.support.id);
+    }
+
+    if (this.roomIndex >= ROOMS.length - 1) {
+      this.endRun(true);
+      return;
+    }
+    this.roomIndex += 1;
+    this.openRoomPreview();
+  }
+
+  private applySupport(id: SupportId): void {
+    if (id === 'max-hp') {
+      this.maxHp += 20;
+      this.hp = Math.min(this.maxHp, this.hp + 20);
+      this.refreshRoomHud();
+      audio.play('pickup');
+    } else if (id === 'heal') {
+      this.hp = Math.min(this.maxHp, this.hp + 45);
+      this.refreshRoomHud();
+      audio.play('pickup');
+    } else if (id === 'dash') {
+      this.dashCdMax = Math.max(DASH_MIN_COOLDOWN, this.dashCdMax - 0.8);
+      audio.play('pickup');
+    } else if (id === 'speed') {
+      this.moveSpeed *= 1.08;
+      audio.play('pickup');
+    }
+    setHp(this.hp, this.maxHp);
+  }
+
+  public skipPreview(): void {
+    this.beginRoom();
   }
 
   public setPlayEnabled(enabled: boolean): void {
@@ -339,15 +483,15 @@ export class M0Scene extends Phaser.Scene {
     this.applyBuildState(next);
   }
 
-  public debugOpenAltar(): void {
-    this.openRuleAltar();
+  public debugOpenReward(): void {
+    this.clearRoom();
   }
 
   public debugDamagePlayer(amount: number): void {
     if (this.runState !== 'playing') return;
     this.invuln = 0;
     this.hp = Math.max(0, this.hp - amount);
-    setHp(this.hp, PLAYER_MAX_HP);
+    setHp(this.hp, this.maxHp);
     audio.play('hurt');
     this.cameras.main.flash(90, 255, 70, 90);
     if (this.hp <= 0) this.endRun(false);
@@ -358,7 +502,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugSpawn(kind: EnemyKind = 'beetle'): void {
-    if (this.runState !== 'playing') return;
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y);
   }
@@ -370,11 +514,24 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugSetStats(elapsed: number, kills: number): void {
-    this.elapsed = Phaser.Math.Clamp(elapsed, 0, RUN_DURATION);
-    this.timeLeft = RUN_DURATION - this.elapsed;
+    this.elapsed = Math.max(0, elapsed);
     this.kills = kills;
-    setTimer(this.timeLeft);
-    setObjective(this.elapsed, RUN_DURATION, this.kills);
+    setRunClock(this.elapsed);
+    this.refreshRoomHud();
+  }
+
+  public debugSetRoomKills(kills: number): void {
+    this.roomKills = Math.max(0, Math.min(this.getRoom().quota, kills));
+    this.roomSpawned = Math.max(this.roomSpawned, this.roomKills);
+    this.refreshRoomHud();
+  }
+
+  public debugApplyReward(kind: 'rule' | 'support', index = 0): void {
+    if (!this.rewardOpen) return;
+    const rewards = buildRoomRewards(this.build, this.getRoom());
+    const filtered = rewards.filter((reward) => reward.kind === kind);
+    const reward = filtered[index] ?? rewards[0];
+    if (reward) this.applyReward(reward);
   }
 
   public debugPoseCombat(build?: {
@@ -501,15 +658,19 @@ export class M0Scene extends Phaser.Scene {
   public debugSnapshot(): Record<string, unknown> {
     return {
       runState: this.runState,
+      roomState: this.roomState,
+      roomIndex: this.roomIndex,
+      roomKills: this.roomKills,
+      roomQuota: this.getRoom().quota,
+      rewardOpen: this.rewardOpen,
       hp: this.hp,
+      maxHp: this.maxHp,
+      moveSpeed: this.moveSpeed,
+      dashCdMax: this.dashCdMax,
       elapsed: this.elapsed,
-      timeLeft: this.timeLeft,
       kills: this.kills,
       build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild,
       acquired: [...this.acquired] as RuleKey[],
-      altarOpen: this.altarOpen,
-      altarPending: this.altarPending,
-      nextAltarKills: this.nextAltarKills,
       enemies: this.enemies.length,
       bolts: this.bolts.length,
       enemyBolts: this.enemyBolts.length,
@@ -897,7 +1058,7 @@ export class M0Scene extends Phaser.Scene {
     }
 
     this.dashRemaining = DASH_DURATION;
-    this.dashCooldown = DASH_COOLDOWN;
+    this.dashCooldown = this.dashCdMax;
     this.invuln = Math.max(this.invuln, DASH_IFRAME);
     this.dashGhostClock = 0;
     setDash(0, this.dashCooldown);
@@ -970,10 +1131,10 @@ export class M0Scene extends Phaser.Scene {
       this.tryDash();
     }
 
-    let speed = PLAYER_SPEED;
+    let speed = this.moveSpeed;
     if (this.dashRemaining > 0) {
       this.dashRemaining -= dt;
-      speed = PLAYER_SPEED * 3.25;
+      speed = this.moveSpeed * 3.25;
       this.dashGhostClock -= dt;
       if (this.dashGhostClock <= 0) {
         this.dashGhostClock = 0.045;
@@ -1006,7 +1167,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (this.dashRemaining <= 0 && this.dashCooldown > 0) {
       this.dashCooldown = Math.max(0, this.dashCooldown - dt);
-      setDash(1 - this.dashCooldown / DASH_COOLDOWN, this.dashCooldown);
+      setDash(1 - this.dashCooldown / this.dashCdMax, this.dashCooldown);
       if (this.dashCooldown === 0) setDash(1, 0);
     }
 
@@ -1483,54 +1644,19 @@ export class M0Scene extends Phaser.Scene {
     });
     audio.play('death');
     this.kills += 1;
-    setObjective(this.elapsed, RUN_DURATION, this.kills);
-
-    if (enemy.kind === 'beetle' && !this.acquired.has('blast') && !this.shardDropped.blast) {
-      this.shardDropped.blast = true;
-      this.dropRuleShard('blast', x, y);
-    } else if (enemy.kind === 'bat' && !this.acquired.has('chain') && !this.shardDropped.chain) {
-      this.shardDropped.chain = true;
-      this.dropRuleShard('chain', x, y);
-    }
+    this.roomKills += 1;
+    this.refreshRoomHud();
 
     if (this.kills > 0 && this.kills % 10 === 0) {
       this.dropHeal(x, y);
     }
-    if (this.kills >= this.nextAltarKills) {
-      this.nextAltarKills += ALTAR_KILL_INTERVAL;
-      this.altarPending = true;
+    if (
+      this.roomKills >= this.getRoom().quota &&
+      this.enemies.length === 0 &&
+      this.pendingSpawns === 0
+    ) {
+      this.clearRoom();
     }
-  }
-
-  private dropRuleShard(rule: TrainingRuleKey, x: number, y: number): void {
-    const isBlast = rule === 'blast';
-    const color = isBlast ? COLORS.orange : COLORS.cyan;
-    const glow = this.add
-      .image(0, 0, 'glow')
-      .setDisplaySize(70, 70)
-      .setTint(color)
-      .setAlpha(0.34)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    const shard = this.add.image(0, 0, 'shard').setTint(color).setScale(1.8);
-    const label = this.add
-      .text(0, 24, isBlast ? '爆裂' : '弹射', {
-        fontFamily: 'Noto Sans SC, sans-serif',
-        fontSize: '10px',
-        color: isBlast ? '#ffac68' : '#65dcf0'
-      })
-      .setOrigin(0.5);
-    const root = this.add.container(x, y, [glow, shard, label]);
-    this.addFx(root);
-    this.tweens.add({
-      targets: glow,
-      alpha: 0.18,
-      scale: 0.92,
-      duration: 620,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
-    this.pickups.push({ root, kind: 'rule', ruleKey: rule, age: 0, dead: false });
   }
 
   private dropHeal(x: number, y: number): void {
@@ -1543,7 +1669,7 @@ export class M0Scene extends Phaser.Scene {
     const core = this.add.circle(0, 0, 7, COLORS.green, 0.85).setBlendMode(Phaser.BlendModes.ADD);
     const root = this.add.container(x, y, [glow, core]);
     this.addFx(root);
-    this.pickups.push({ root, kind: 'heal', age: 0, dead: false });
+    this.pickups.push({ root, age: 0, dead: false });
   }
 
   private applyBuildState(
@@ -1567,54 +1693,6 @@ export class M0Scene extends Phaser.Scene {
       audio.play('rule');
       showRuleToast(notice.key, notice.title, notice.sub);
     }
-  }
-
-  private applyTrainingRule(rule: TrainingRuleKey): void {
-    const def = getRuleDef(rule);
-    const current = rule === 'chain' ? this.build.trajectory : this.build.impact;
-    if (!current) {
-      const next: PlayerBuild = {
-        trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-        impact: this.build.impact ? { ...this.build.impact } : null
-      };
-      if (rule === 'chain') {
-        next.trajectory = { key: 'chain', level: 1 };
-      } else {
-        next.impact = { key: 'blast', level: 1 };
-      }
-      this.applyBuildState(next, {
-        key: rule,
-        title: '掠夺规则',
-        sub: `${def.name} Lv.1`
-      });
-      return;
-    }
-    if (current.key === rule && current.level < 3) {
-      const nextLevel = (current.level + 1) as RuleLevel;
-      const next: PlayerBuild = {
-        trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-        impact: this.build.impact ? { ...this.build.impact } : null
-      };
-      if (rule === 'chain') {
-        next.trajectory = { key: 'chain', level: nextLevel };
-      } else {
-        next.impact = { key: 'blast', level: nextLevel };
-      }
-      this.applyBuildState(next, {
-        key: rule,
-        title: '规则升级',
-        sub: `${def.name} Lv.${nextLevel}`
-      });
-      return;
-    }
-    this.healPlayer(8, `规则冲突 · ${current.key === rule ? '已满级' : getRuleDef(current.key).name}`);
-  }
-
-  private healPlayer(amount: number, reason: string): void {
-    this.hp = Math.min(PLAYER_MAX_HP, this.hp + amount);
-    setHp(this.hp, PLAYER_MAX_HP);
-    audio.play('pickup');
-    showRuleToast('heal', '生命碎片', `${reason} · 恢复 ${amount} 点生命`);
   }
 
   private clearPlayerBolts(): void {
@@ -1643,40 +1721,6 @@ export class M0Scene extends Phaser.Scene {
     enemy.aura.setAlpha(enemy.kind === 'beetle' ? 0.08 : 0.1);
   }
 
-  public isAltarOpen(): boolean {
-    return this.altarOpen;
-  }
-
-  public openRuleAltar(): void {    if (this.runState !== 'playing' || this.altarOpen) return;
-    const offers = getRuleOffers(this.build);
-    if (!offers.length) {
-      this.healPlayer(10, '规则已全部满级');
-      return;
-    }
-    this.altarOpen = true;
-    this.altarPending = false;
-    this.joystick.set(0, 0);
-    this.scene.pause();
-    this.game.events.emit('m1-altar', { offers });
-  }
-
-  public applyAltarOffer(offer: RuleOffer): void {
-    if (!this.altarOpen) return;
-    const next = applyRuleOffer(this.build, offer);
-    this.altarOpen = false;
-    const title =
-      offer.action === 'upgrade' ? '规则升级' : offer.action === 'replace' ? '规则替换' : '掠夺规则';
-    this.applyBuildState(next, {
-      key: offer.key,
-      title,
-      sub: `${offer.name} Lv.${offer.nextLevel}`
-    });
-  }
-
-  public skipAltar(): void {
-    this.altarOpen = false;
-  }
-
   private updatePickups(dt: number): void {
     for (const pickup of this.pickups) {
       if (pickup.dead) continue;
@@ -1698,14 +1742,11 @@ export class M0Scene extends Phaser.Scene {
           ) < 32
         ) {
           pickup.dead = true;
-          if (pickup.kind === 'rule' && pickup.ruleKey) {
-            this.applyTrainingRule(pickup.ruleKey);
-          } else {
-            this.hp = Math.min(PLAYER_MAX_HP, this.hp + 12);
-            setHp(this.hp, PLAYER_MAX_HP);
-            audio.play('pickup');
-            showRuleToast('heal', '生命碎片', '恢复 12 点生命');
-          }
+          this.hp = Math.min(this.maxHp, this.hp + 12);
+          setHp(this.hp, this.maxHp);
+          this.refreshRoomHud();
+          audio.play('pickup');
+          showRuleToast('heal', '生命碎片', '恢复 12 点生命');
           pickup.root.destroy(true);
         }
       }
@@ -1744,9 +1785,19 @@ export class M0Scene extends Phaser.Scene {
       }
     });
     audio.play('spawn');
+    this.pendingSpawns += 1;
     this.time.delayedCall(550, () => {
-      if (token !== this.runToken || this.runState !== 'playing') return;
+      this.pendingSpawns = Math.max(0, this.pendingSpawns - 1);
+      const active = token === this.runToken && this.runState === 'playing';
+      if (!active) return;
       this.spawnEnemy(kind, x, y);
+      if (
+        this.enemies.length === 0 &&
+        this.pendingSpawns === 0 &&
+        this.roomKills >= this.getRoom().quota
+      ) {
+        this.clearRoom();
+      }
     });
   }
 
@@ -2110,7 +2161,8 @@ export class M0Scene extends Phaser.Scene {
     if (this.runState !== 'playing' || this.invuln > 0) return;
     this.hp = Math.max(0, this.hp - amount);
     this.invuln = 1.0;
-    setHp(this.hp, PLAYER_MAX_HP);
+    setHp(this.hp, this.maxHp);
+    this.refreshRoomHud();
     audio.play('hurt');
     this.cameras.main.shake(130, 0.0022);
     this.cameras.main.flash(110, 255, 55, 80);
@@ -2137,27 +2189,30 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private updateSpawns(dt: number): void {
+    const room = this.getRoom();
+    if (this.roomSpawned >= room.quota) return;
     this.spawnCd -= dt;
-    const maxAlive = this.elapsed < 60 ? 5 : this.elapsed < 120 ? 7 : 9;
-    if (this.spawnCd > 0 || this.enemies.length >= maxAlive) return;
-    const kind: EnemyKind = Math.random() < 0.55 ? 'beetle' : 'bat';
+    if (this.spawnCd > 0 || this.enemies.length + this.pendingSpawns >= room.maxAlive) return;
+    const kind = pickSpawnKind(room);
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y);
-    this.spawnCd = this.elapsed < 60 ? 3.2 : this.elapsed < 120 ? 2.8 : 2.3;
+    this.roomSpawned += 1;
+    this.spawnCd = room.spawnInterval;
   }
 
   private updateHud(dt: number): void {
     this.hudTick += dt;
     if (this.hudTick >= 0.1) {
       this.hudTick = 0;
-      setTimer(this.timeLeft);
-      setObjective(this.elapsed, RUN_DURATION, this.kills);
+      setRunClock(this.elapsed);
     }
   }
 
   private endRun(victory: boolean): void {
     if (this.runState === 'ended') return;
     this.runState = 'ended';
+    this.roomState = 'fighting';
+    this.rewardOpen = false;
     this.playEnabled = false;
     this.joystick.set(0, 0);
     this.time.removeAllEvents();
@@ -2169,11 +2224,13 @@ export class M0Scene extends Phaser.Scene {
     }
     this.game.events.emit('m0-run-ended', {
       victory,
-      time: victory ? RUN_DURATION : this.elapsed,
+      time: this.elapsed,
       kills: this.kills,
       rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
       combo: getBuildCombo(this.build).name,
-      levelSum: buildLevelSum(this.build)
+      levelSum: buildLevelSum(this.build),
+      roomsCleared: victory ? ROOMS.length : this.roomIndex,
+      roomsTotal: ROOMS.length
     } satisfies RunEndPayload);
   }
 
@@ -2386,10 +2443,9 @@ export class M0Scene extends Phaser.Scene {
   }
 
   update(_time: number, deltaMs: number): void {
-    if (this.runState !== 'playing') return;
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
     const dt = Math.min(deltaMs, 50) / 1000;
-    this.elapsed = Math.min(RUN_DURATION, this.elapsed + dt);
-    this.timeLeft = Math.max(0, RUN_DURATION - this.elapsed);
+    this.elapsed += dt;
 
     this.updatePlayer(dt);
     if (this.runState !== 'playing') return;
@@ -2400,13 +2456,5 @@ export class M0Scene extends Phaser.Scene {
     this.updatePickups(dt);
     this.updateSpawns(dt);
     this.updateHud(dt);
-    if (this.altarPending && !this.altarOpen) {
-      this.altarPending = false;
-      this.openRuleAltar();
-    }
-
-    if (this.timeLeft <= 0) {
-      this.endRun(true);
-    }
   }
 }

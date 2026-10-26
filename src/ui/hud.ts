@@ -36,7 +36,13 @@ const dashFill = byId<HTMLElement>('dash-fill');
 const dashButton = byId<HTMLButtonElement>('dash-btn');
 const timer = byId<HTMLElement>('timer');
 const mobileTime = byId<HTMLElement>('mobile-time');
+const roomNum = byId<HTMLElement>('room-num');
+const roomTotal = byId<HTMLElement>('room-total');
+const roomName = byId<HTMLElement>('room-name');
+const mobileRoomName = byId<HTMLElement>('mobile-room-name');
 const objectiveTime = byId<HTMLElement>('objective-time');
+const objectiveLabel = byId<HTMLElement>('objective-label');
+const objectiveRoom = byId<HTMLElement>('objective-room');
 const survivalFill = byId<HTMLElement>('survival-fill');
 const killsText = byId<HTMLElement>('kills-text');
 const objectiveKills = byId<HTMLElement>('objective-kills');
@@ -103,32 +109,48 @@ export function setDash(progress: number, remaining = 0): void {
   dashButton.classList.toggle('is-ready', remaining <= 0.05);
 }
 
-export function setTimer(secondsRemaining: number): void {
-  const text = formatTime(Math.max(0, Math.ceil(secondsRemaining)));
+export function setRunClock(elapsedSeconds: number): void {
+  const text = formatTime(Math.max(0, Math.floor(elapsedSeconds)));
   timer.textContent = text;
-  objectiveTime.textContent = text;
   mobileTime.textContent = text;
-  timer.classList.toggle('is-urgent', secondsRemaining <= 30);
+}
+
+const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+
+export interface RoomProgress {
+  index: number;
+  total: number;
+  name: string;
+  en: string;
+  cleared: number;
+  quota: number;
+  kills: number;
+  hp: number;
+  maxHp: number;
+}
+
+export function setRoomProgress(progress: RoomProgress): void {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  roomNum.textContent = pad(progress.index);
+  roomTotal.textContent = `/ ${pad(progress.total)}`;
+  roomName.textContent = progress.name;
+  mobileRoomName.textContent = progress.name;
+  objectiveLabel.textContent = progress.en;
+  objectiveRoom.textContent = `ROOM ${progress.index} / ${progress.total}`;
+  objectiveTime.textContent = `${progress.cleared} / ${progress.quota}`;
+  survivalFill.style.width = `${Math.min(100, (progress.cleared / progress.quota) * 100)}%`;
+  threatLevel.textContent = ROMAN[progress.index - 1] ?? String(progress.index);
+  phasePips.forEach((pip, index) => {
+    pip.classList.toggle('active', index < progress.index);
+  });
+  setKills(progress.kills);
+  setHp(progress.hp, progress.maxHp);
 }
 
 export function setKills(kills: number): void {
   killsText.textContent = String(kills);
   objectiveKills.textContent = String(kills);
   mobileKills.textContent = String(kills);
-}
-
-export function setThreat(level: 1 | 2 | 3): void {
-  threatLevel.textContent = level === 1 ? 'I' : level === 2 ? 'II' : 'III';
-  phasePips.forEach((pip, index) => {
-    pip.classList.toggle('active', index < level);
-  });
-}
-
-export function setObjective(elapsed: number, duration: number, kills: number): void {
-  const pct = Math.max(0, Math.min(100, (elapsed / duration) * 100));
-  survivalFill.style.width = `${pct}%`;
-  setKills(kills);
-  setThreat(elapsed < 60 ? 1 : elapsed < 120 ? 2 : 3);
 }
 
 function updateSlot(
@@ -279,9 +301,19 @@ export function hideRuleToast(): void {
 export function resetM0Hud(): void {
   setHp(100, 100);
   setDash(1, 0);
-  setTimer(180);
+  setRunClock(0);
   setKills(0);
-  setObjective(0, 180, 0);
+  setRoomProgress({
+    index: 1,
+    total: 3,
+    name: '训戒前庭',
+    en: 'ANTECHAMBER',
+    cleared: 0,
+    quota: 8,
+    kills: 0,
+    hp: 100,
+    maxHp: 100
+  });
   setBuild(createEmptyBuild(), new Set());
   hideRuleToast();
 }

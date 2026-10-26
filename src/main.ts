@@ -5,8 +5,17 @@ import { M0Scene } from './game/M0Scene';
 import type { RunEndPayload } from './game/M0Scene';
 import { audio } from './game/audio';
 import { formatTime } from './game/theme';
-import type { ImpactKey, RuleKey, RuleOffer, TrajectoryKey } from './game/rules';
-import { isAltarVisible, pickAltarOffer, renderRuleOffers, setAltarVisible } from './ui/altar';
+import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
+import type { RoomCleared, RoomPreview, SupportId } from './game/rooms';
+import {
+  isRewardVisible,
+  isRoomVisible,
+  pickReward,
+  renderRewards,
+  renderRoomPreview,
+  setRewardVisible,
+  setRoomVisible
+} from './ui/altar';
 
 declare global {
   interface Window {
@@ -33,9 +42,11 @@ declare global {
       trajectoryLevel?: 1 | 2 | 3,
       impactLevel?: 1 | 2 | 3
     ) => void;
-    __RT_ALTAR__?: () => void;
-    __RT_ALTAR_STATE__?: () => { open: boolean; offers: RuleOffer[] };
-    __RT_PICK_ALTAR__?: (index: number) => void;
+    __RT_SET_ROOM_KILLS__?: (kills: number) => void;
+    __RT_ENTER_ROOM__?: () => void;
+    __RT_REWARD__?: () => boolean;
+    __RT_PICK_REWARD__?: (index: number) => void;
+    __RT_PICK_SUPPORT__?: (id: SupportId) => void;
     __RT_AUDIO_STATE__?: () => { muted: boolean; unlocked: boolean; state: string };
   }
 }
@@ -85,24 +96,23 @@ const soundButton = byId<HTMLButtonElement>('sound-btn');
 const soundOn = soundButton.querySelector<SVGElement>('.sound-on');
 const soundOff = soundButton.querySelector<SVGElement>('.sound-off');
 const resultEmblemUse = document.querySelector<SVGUseElement>('#result-emblem use');
+const roomEnterButton = byId<HTMLButtonElement>('room-enter-btn');
 
 const resultKicker = byId<HTMLElement>('result-kicker');
 const resultTitle = byId<HTMLElement>('result-title');
 const resultSub = byId<HTMLElement>('result-sub');
 const resultTime = byId<HTMLElement>('result-time');
 const resultKills = byId<HTMLElement>('result-kills');
-const resultRules = byId<HTMLElement>('result-rules');
+const resultRooms = byId<HTMLElement>('result-rooms');
 const resultCombo = byId<HTMLElement>('result-combo');
 const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
-const openAltarButton = byId<HTMLButtonElement>('open-altar-btn');
-const altarSkipButton = byId<HTMLButtonElement>('altar-skip-btn');
 
 let scene: M0Scene | null = null;
 let entered = false;
 let pendingArena = false;
 let pointerId: number | null = null;
-let altarOffers: RuleOffer[] = [];
+let pendingRewards: RoomCleared['rewards'] = [];
 
 const autoArena = new URLSearchParams(window.location.search).get('arena') === '1';
 
@@ -118,52 +128,59 @@ function showResult(payload: RunEndPayload): void {
   resultScreen.classList.toggle('is-victory', payload.victory);
   resultScreen.classList.toggle('is-defeat', !payload.victory);
   resultEmblemUse?.setAttribute('href', payload.victory ? '#i-crown' : '#i-skull');
-  resultKicker.textContent = payload.victory ? 'M1 · RUN COMPLETE' : 'M1 · RUN ENDED';
+  resultKicker.textContent = payload.victory ? 'M2 · RUN COMPLETE' : 'M2 · RUN ENDED';
   resultTitle.textContent = payload.victory ? '审判完成' : '规则耗尽';
   resultSub.textContent = payload.victory
-    ? '你在训练回廊中存活了整整 3 分钟。规则可以被夺走，也可以被驾驭。'
-    : '生命归零。先看懂预警，再决定什么时候闪避。下一次会更好。';
+    ? '你清空了全部三个房间。规则被夺走，也被驾驭。'
+    : '生命归零。先看懂预警，再决定什么时候闪避。';
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);
-  resultRules.textContent = `${payload.rules} / 2`;
+  resultRooms.textContent = `${payload.roomsCleared} / ${payload.roomsTotal}`;
   resultComboName.textContent = payload.combo;
   resultComboLevel.textContent = `等级 ${payload.levelSum} / 6`;
   resultCombo.classList.toggle('is-complete', payload.rules === 2);
   resultScreen.hidden = false;
   pauseScreen.hidden = true;
-  closeAltar();
+  hideOverlays();
   scene?.pauseGame();
 }
 
-function openAltar(offers: RuleOffer[]): void {
-  if (!entered) return;
-  altarOffers = offers;
-  renderRuleOffers(offers, (offer) => chooseAltarOffer(offer));
+function hideOverlays(): void {
+  setRewardVisible(false);
+  setRoomVisible(false);
+  pendingRewards = [];
+}
+
+function showRoomPreview(payload: RoomPreview): void {
+  setRewardVisible(false);
+  renderRoomPreview(payload);
+  setRoomVisible(true);
   pauseScreen.hidden = true;
-  setAltarVisible(true);
 }
 
-function closeAltar(): void {
-  altarOffers = [];
-  setAltarVisible(false);
+function showRewards(payload: RoomCleared): void {
+  pendingRewards = payload.rewards;
+  renderRewards(payload.rewards, (reward) => chooseReward(reward));
+  setRoomVisible(false);
+  setRewardVisible(true, `ROOM ${payload.index + 1} / ${payload.total} 已清空`);
+  pauseScreen.hidden = true;
 }
 
-function resumeAfterAltar(): void {
-  closeAltar();
-  scene?.resumeGame();
+function chooseReward(reward: RoomCleared['rewards'][number]): void {
+  if (!scene) return;
+  setRewardVisible(false);
+  pendingRewards = [];
+  scene.applyReward(reward);
+  if (scene.isRoomPreviewOpen()) return;
+  scene.resumeGame();
   void audio.resume();
 }
 
-function chooseAltarOffer(offer: RuleOffer): void {
+function enterRoom(): void {
   if (!scene) return;
-  scene.applyAltarOffer(offer);
-  resumeAfterAltar();
-}
-
-function skipAltar(): void {
-  if (!scene) return;
-  scene.skipAltar();
-  resumeAfterAltar();
+  setRoomVisible(false);
+  scene.beginRoom();
+  void audio.resume();
 }
 
 function enterArena(instant = false): void {
@@ -176,7 +193,7 @@ function enterArena(instant = false): void {
   noteModal.hidden = true;
   pauseScreen.hidden = true;
   resultScreen.hidden = true;
-  closeAltar();
+  hideOverlays();
   hud.hidden = false;
   sidebar.hidden = false;
   void audio.unlock().then(() => audio.resume());
@@ -200,7 +217,7 @@ function restartRun(): void {
   if (!scene) return;
   resultScreen.hidden = true;
   pauseScreen.hidden = true;
-  closeAltar();
+  hideOverlays();
   hud.hidden = false;
   sidebar.hidden = false;
   entered = true;
@@ -211,7 +228,14 @@ function restartRun(): void {
 
 function pauseGame(): void {
   if (!scene || !entered) return;
-  if (!pauseScreen.hidden || !resultScreen.hidden || isAltarVisible()) return;
+  if (
+    !pauseScreen.hidden ||
+    !resultScreen.hidden ||
+    isRewardVisible() ||
+    isRoomVisible()
+  ) {
+    return;
+  }
   scene.pauseGame();
   pauseScreen.hidden = false;
   void audio.suspend();
@@ -228,7 +252,7 @@ function backToMenu(): void {
   if (!scene) return;
   scene.setPlayEnabled(false);
   scene.pauseGame();
-  closeAltar();
+  hideOverlays();
   pauseScreen.hidden = true;
   resultScreen.hidden = true;
   hud.hidden = true;
@@ -264,10 +288,17 @@ function handleReady(): void {
   window.__RT_SET_STATS__ = (elapsed, kills) => scene?.debugSetStats(elapsed, kills);
   window.__RT_SET_BUILD__ = (trajectory, impact, trajectoryLevel = 1, impactLevel = 1) =>
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
-  window.__RT_ALTAR__ = () => scene?.debugOpenAltar();
-  window.__RT_ALTAR_STATE__ = () => ({ open: isAltarVisible(), offers: altarOffers });
-  window.__RT_PICK_ALTAR__ = (index) => {
-    pickAltarOffer(index);
+  window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
+  window.__RT_ENTER_ROOM__ = () => enterRoom();
+  window.__RT_REWARD__ = () => isRewardVisible();
+  window.__RT_PICK_REWARD__ = (index) => {
+    pickReward(index);
+  };
+  window.__RT_PICK_SUPPORT__ = (id) => {
+    const reward = pendingRewards.find(
+      (item) => item.kind === 'support' && item.support.id === id
+    );
+    if (reward) chooseReward(reward);
   };
   window.__RT_AUDIO_STATE__ = () => ({
     muted: audio.isMuted,
@@ -285,8 +316,13 @@ game.events.once('m0-ready', handleReady);
 game.events.on('m0-run-ended', (payload: RunEndPayload) => {
   showResult(payload);
 });
-game.events.on('m1-altar', ({ offers }: { offers: RuleOffer[] }) => {
-  openAltar(offers);
+game.events.on('m2-room-preview', (payload: RoomPreview) => {
+  if (!entered) return;
+  showRoomPreview(payload);
+});
+game.events.on('m2-room-cleared', (payload: RoomCleared) => {
+  if (!entered) return;
+  showRewards(payload);
 });
 
 window.setTimeout(() => {
@@ -311,16 +347,7 @@ document.getElementById('resume-btn')?.addEventListener('click', resumeGame);
 document.getElementById('back-menu-btn')?.addEventListener('click', backToMenu);
 document.getElementById('restart-btn')?.addEventListener('click', restartRun);
 document.getElementById('result-menu-btn')?.addEventListener('click', backToMenu);
-altarSkipButton.addEventListener('click', skipAltar);
-openAltarButton.addEventListener('click', () => {
-  if (!scene) return;
-  pauseScreen.hidden = true;
-  scene.openRuleAltar();
-  if (!scene.isAltarOpen()) {
-    scene.resumeGame();
-    void audio.resume();
-  }
-});
+roomEnterButton.addEventListener('click', enterRoom);
 
 soundButton.addEventListener('click', async () => {
   await audio.unlock();
@@ -398,16 +425,18 @@ window.addEventListener('keydown', (event) => {
   if (event.code === 'Space') {
     event.preventDefault();
   }
-  if (isAltarVisible()) {
+  if (isRewardVisible()) {
     const slot = ['Digit1', 'Digit2', 'Digit3'].indexOf(event.code);
     if (slot >= 0) {
       event.preventDefault();
-      pickAltarOffer(slot);
-      return;
+      pickReward(slot);
     }
-    if (event.code === 'Escape') {
+    return;
+  }
+  if (isRoomVisible()) {
+    if (event.code === 'Enter' || event.code === 'Space') {
       event.preventDefault();
-      skipAltar();
+      enterRoom();
     }
     return;
   }

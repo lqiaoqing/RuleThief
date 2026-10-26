@@ -1,6 +1,6 @@
 # 规则掠夺者 RULE THIEF
 
-状态：**M1 规则构筑切片完成**（2026-10-25）。3 条弹道 × 3 条命中 = 9 种组合全部可玩，支持装备 / 升级 / 替换。
+状态：**M2 房间与奖励闭环完成**（2026-10-25）。三个房间依次推进，清场后三选一奖励，构筑跨房保留。
 
 ## 立即查看
 
@@ -10,54 +10,52 @@ npm run dev
 ```
 
 - 主菜单：`http://127.0.0.1:5173/`
-- 直接进入训练回廊：`http://127.0.0.1:5173/?arena=1`
+- 直接进入流程：`http://127.0.0.1:5173/?arena=1`
 
-## M1 实现了什么
+## M2 实现了什么
 
-- **9 种规则组合**：贯穿 / 弹射 / 散射 × 燃烧 / 冰霜 / 爆裂，各有独立名称与战斗表现。
-  - 贯穿：一次魔弹沿直线穿透 3/4/5 个目标。
-  - 弹射：命中后在 255–305 范围内跳跃 2/3/4 次，后续伤害 86%。
-  - 散射：扇形发射 3/4/5 枚小弹，单发 10 伤害。
-  - 燃烧：持续 3–5 秒、每秒 4–6 伤害，取最大值刷新不叠加。
-  - 冰霜：减速 30%–50%（上限 50%），持续 1.2–2.0 秒。
-  - 爆裂：命中点半径 65/80/95 范围伤害 6/8/10。
-- **规则等级**：每条规则 Lv.1–3，升级改变目标数 / 跳跃数 / 弹数 / 半径 / 持续时间，不只是数值。
-- **规则祭坛**：每 15 击杀自动开启三选一；暂停菜单的「规则祭坛」可随时打开演练。
-  - 新规则 → 装备；重复规则 → 升级；同槽不同规则 → 替换（重置 Lv.1，会明确提示将失去哪条）。
-  - 键盘 `1` `2` `3` 直接选卡，`Esc` 或「暂不掠夺」跳过。
-- **统一结算**：一次基础攻击共享 `TriggerBudget(3)`，贯穿命中、散射弹、弹射跳跃合计最多触发 3 次命中效果；持续伤害与爆炸伤害不会反过来触发规则，不存在无限连锁。
-- **训练碎片**：甲虫掉「爆裂」、雷蝠掉「弹射」；只补空槽或升级，**不会顶掉**已装备的其他规则（冲突时改为回复 8 生命）。
-- HUD：双槽图标 / 等级 / 效果描述、组合名称与说明、等级 N / 6、图鉴「已掠夺」状态、规则提示条。
-- 结算显示最终组合名称与等级总和；重开完全重置构筑。
-- 战斗基础保持不变：3 分钟生存、闪避 i-frame、击退、伤害数字、低血量红晕、波次压力、WebAudio 音效。
+- **三个房间顺序推进**（约 3–4 分钟一局）：
+  | 房间 | 敌人构成 | 清场配额 | 同屏上限 | 规则池 |
+  | --- | --- | --- | --- | --- |
+  | 训戒前庭 ANTECHAMBER | 铁刺甲虫 | 8 | 5 | 爆裂 |
+  | 回声回廊 ECHO GALLERY | 甲虫 + 雷光蝠（雷蝠为主） | 12 | 7 | 爆裂 / 弹射 |
+  | 裂痕圣所 RIFT SANCTUM | 甲虫 + 雷光蝠 | 16 | 9 | 爆裂 / 弹射 |
+- **房间预览**：进入每个房间前暂停并展示房间名、敌人构成与它们携带的规则、清场配额、当前生命与累计击杀。
+- **清场奖励**：配额清空后暂停，三选一。
+  - 规则奖励只来自**本房真实敌人**携带的规则（房间 1 只会给爆裂）。
+  - 其余为**基础强化**：生命上限 +20、回复 45、闪避冷却 -0.8s、移速 +8%。
+  - 必须选一份才能进入下一房；选择后立刻生效。
+- **跨房继承**：构筑、生命、已解锁图鉴全部保留；切房时清空在飞弹体、敌人、弹幕与地面掉落，玩家回到出生点并获得 1 秒无敌。
+- **胜负条件**：清空第三个房间即胜利；生命归零失败。结算显示总用时、击杀、清空房间数与最终组合。
+- 移除了 M0/M1 的临时方案：不再有「每 15 击杀规则祭坛」，也不再掉落规则碎片；规则获取统一走房间奖励。生命碎片（每 10 击杀）保留。
+- 规则系统仍是 M1 的完整版本：9 种组合、Lv.1–3、装备/升级/替换、`TriggerBudget(3)` 单次攻击共享预算、DOT 与爆炸不触发规则。
 
 ## 验证结果
 
-- 单元测试：**22/22 通过**（`src/game/rules.test.ts` 19 项 + `theme` 3 项）。
-- 生产构建浏览器冒烟：**70/70 通过**，无 console/page error。
-- 冒烟覆盖：空构筑、训练碎片装备、祭坛暂停/选卡/跳过、升级保留另一槽、替换重置 Lv.1、9 组合名称、单槽部分名称、满级不再提供升级、15 击杀自动开启祭坛、暂停菜单规则实验室、结算组合、重开重置、手机祭坛可点选。
-- 真实 Chrome（硬件 WebGL，headed）：**平均 59.5fps，最低 59fps**（散射 Lv.3 + 燃烧 Lv.3，同屏最多 28 敌人）；音频上下文 `running`。
-- headless SwiftShader：约 30–40fps，输入时序有抖动；不代表真机。
+- 单元测试：**36/36 通过**（`rules` 19 项 + `rooms` 14 项 + `theme` 3 项）。
+- 生产构建浏览器冒烟：**64/64 通过**，无 console/page error。
+- 冒烟覆盖：房间预览与配额、进房恢复、房间进度 HUD、清场开奖励、奖励规则只能来自本房敌人、规则与强化混合、选规则装备、选强化加生命上限、奖励后接下一房、切房清弹幕、三房全清胜利、死亡失败、重开完全重置、9 组合名称、暂停无规则实验室、手机房间预览/进房/奖励点选。
+- 真实 Chrome（硬件 WebGL，headed）：散射 Lv.3 + 燃烧 Lv.3、同屏最多 24 敌人时 **平均 58.9fps（最低 58）**；音频上下文 `running`。
+- headless SwiftShader：约 30–40fps，仅用于功能验证；不代表真机。
 - 部署体积：`dist` 约 1.7MB；`public/assets` 约 364KB。
 
 截图：
-- [主菜单](screenshots/m1-menu-desktop.png)
-- [规则祭坛（桌面）](screenshots/m1-altar-desktop.png)
-- [贯穿 × 爆裂](screenshots/m1-combat-pierce-blast-desktop.png)
-- [散射 × 燃烧](screenshots/m1-combat-spread-burn-desktop.png)
-- [弹射 × 冰霜](screenshots/m1-combat-chain-frost-desktop.png)
-- [规则祭坛（手机）](screenshots/m1-altar-mobile.png)
-- [规则祭坛（横屏）](screenshots/m1-altar-landscape.png)
-- [手机战斗](screenshots/m1-combat-mobile.png)
-- [桌面胜利结算](screenshots/m1-victory-desktop.png)
-- [手机菜单](screenshots/m1-menu-mobile.png)
+- [主菜单](screenshots/m2-menu-desktop.png)
+- [房间预览](screenshots/m2-room-preview-desktop.png)
+- [清场奖励（三选一）](screenshots/m2-reward-desktop.png)
+- [战斗：贯穿 × 爆裂](screenshots/m2-combat-pierce-blast-desktop.png)
+- [战斗：散射 × 燃烧](screenshots/m2-combat-spread-burn-desktop.png)
+- [房间预览（手机）](screenshots/m2-room-preview-mobile.png)
+- [清场奖励（手机）](screenshots/m2-reward-mobile.png)
+- [手机战斗](screenshots/m2-combat-mobile.png)
+- [胜利结算](screenshots/m2-victory-desktop.png)
 
 > 战斗截图用调试钩子定格（`__RT_POSE__` 会按当前构筑真实发射弹体并冻帧），便于验收；实际游戏内由战斗自然触发。
 
 ## 控制
 
-- PC：WASD / 方向键移动，Space 闪避，Esc 暂停，祭坛中 `1/2/3` 选卡。
-- 手机：左侧虚拟摇杆移动，右侧闪避按钮，支持多点触控；祭坛卡片直接点选。
+- PC：WASD / 方向键移动，Space 闪避，Esc 暂停，奖励界面 `1/2/3` 选卡，房间预览 Enter 进入。
+- 手机：左侧虚拟摇杆移动，右侧闪避按钮，支持多点触控；房间与奖励卡片直接点按。
 - 右上角声音按钮切换静音；失焦自动暂停。
 
 ## 验证命令
@@ -65,10 +63,10 @@ npm run dev
 ```bash
 npm test
 npm run build
-npm run preview -- --port 4176
-BASE_URL=http://127.0.0.1:4176 npm run smoke
-BASE_URL=http://127.0.0.1:4176 npm run shot
-BASE_URL=http://127.0.0.1:4176 node scripts/perf.mjs   # 需要真实窗口测 fps
+npm run preview -- --port 4177
+BASE_URL=http://127.0.0.1:4177 npm run smoke
+BASE_URL=http://127.0.0.1:4177 npm run shot
+BASE_URL=http://127.0.0.1:4177 node scripts/perf.mjs   # 需要真实窗口测 fps
 ```
 
 ## 素材管线
@@ -84,33 +82,37 @@ BASE_URL=http://127.0.0.1:4176 node scripts/perf.mjs   # 需要真实窗口测 f
 
 ```text
 src/
-  main.ts                 # 菜单/HUD/结算/暂停/摇杆/祭坛流程/音频入口
-  game/M0Scene.ts         # 战斗、敌人 AI、弹道与命中结算、规则祭坛、波次、结算
-  game/rules.ts           # 纯逻辑：规则定义、等级、组合、随机三选一、结算预算
+  main.ts                 # 菜单/HUD/结算/暂停/摇杆/房间与奖励流程/音频入口
+  game/M0Scene.ts         # 战斗、敌人 AI、弹道结算、房间状态机、结算
+  game/rules.ts           # 纯逻辑：规则定义、等级、组合、三选一、结算预算
   game/rules.test.ts      # 规则引擎单测
+  game/rooms.ts           # 纯逻辑：房间定义、敌人配比、奖励生成、基础强化
+  game/rooms.test.ts      # 房间与奖励单测
   game/audio.ts           # WebAudio 音效 + 环境音
   game/theme.ts           # 调色板/尺寸/资源路径
-  ui/hud.ts               # 动态 HUD、双槽、组合、图鉴、提示
-  ui/altar.ts             # 规则祭坛卡片渲染
-  style.css / m0.css      # 菜单、竞技场 HUD、祭坛、响应式
+  ui/hud.ts               # 动态 HUD、双槽、组合、房间进度、图鉴
+  ui/altar.ts             # 房间预览与奖励卡片渲染
+  style.css / m0.css      # 菜单、竞技场 HUD、房间与奖励界面、响应式
 public/assets/            # 精灵/地砖/菜单图
 art-source/sprites/raw/   # Blender 源渲染
 scripts/                  # Blender、Pillow、截图、冒烟、性能
-docs/                     # 设计文档、可行性、风格验证、M0/M1 报告
-screenshots/              # M0/M1 验收截图；style-proof/ 为更早阶段
+docs/                     # 设计文档、可行性、风格验证、M0/M1/M2 报告
+screenshots/              # 各阶段验收截图
 ```
 
 ## 文档
 
 - [设计文档 V1](docs/RULE_THIEF_design_v1.html)
 - [可行性分析](docs/FEASIBILITY.md)
+- [M2 房间闭环报告](docs/M2_REPORT.md)
 - [M1 规则构筑报告](docs/M1_REPORT.md)
 - [M0 可玩切片报告](docs/M0_REPORT.md)
 - [风格验证报告](docs/STYLE_PROOF_REPORT.md)
-- [氛围参考](docs/art/key-art.webp) / [战斗参考](docs/art/combat-mockup.webp)
 
 ## 当前边界
 
-M1 仍然只有 1 个训练房间、2 种敌人（甲虫 → 爆裂、雷蝠 → 弹射）。按设计文档，甲虫本应掉「贯穿」，目前为了先用两种敌人覆盖两条槽位做了重映射，等 M3 敌人补齐后再改回。
-
-尚未实现：房间流程与战后奖励（M2，用于替换现在的「每 15 击杀祭坛」临时方案）、其余 4 种敌人 + 2 精英、突变系统、三阶段 BOSS、15 分钟流程、存档。**尚未做真人 3 分钟平衡试玩**，也**没有真机手机验收**。
+- 仍然只有 2 种敌人（甲虫 → 爆裂、雷蝠 → 弹射）。设计文档里甲虫本应掉「贯穿」，为在只有两种敌人时覆盖两条槽位做了重映射，M3 补齐敌人后改回。
+- 房间是固定顺序、无分支路线；没有房间事件、商店、精英房。
+- 没有突变系统与三阶段 BOSS，单局约 3–4 分钟而非设计目标的 15 分钟。
+- 规则池只有爆裂/弹射两条，因此三个房间的构筑差异仍有限。
+- **尚未做真人平衡试玩**，也**没有真机手机验收**。

@@ -1,4 +1,5 @@
 import { getRuleSlotLabel, type RuleOffer } from '../game/rules';
+import { ENEMY_LABELS, type Reward, type RoomPreview } from '../game/rooms';
 import { RULE_COLORS } from './hud';
 
 const ACTION_LABEL: Record<RuleOffer['action'], string> = {
@@ -7,12 +8,23 @@ const ACTION_LABEL: Record<RuleOffer['action'], string> = {
   replace: '替换'
 };
 
-const altarScreen = requireId<HTMLElement>('altar-screen');
+const rewardScreen = requireId<HTMLElement>('altar-screen');
 const offersWrap = requireId<HTMLElement>('rule-offers');
+const rewardRoom = requireId<HTMLElement>('reward-room');
+
+const roomScreen = requireId<HTMLElement>('room-screen');
+const roomKicker = requireId<HTMLElement>('room-kicker');
+const roomTitle = requireId<HTMLElement>('room-title');
+const roomEn = requireId<HTMLElement>('room-en');
+const roomSub = requireId<HTMLElement>('room-sub');
+const roomEnemies = requireId<HTMLElement>('room-enemies');
+const roomQuota = requireId<HTMLElement>('room-quota');
+const roomHp = requireId<HTMLElement>('room-hp');
+const roomKills = requireId<HTMLElement>('room-kills');
 
 function requireId<T extends Element>(id: string): T {
   const node = document.getElementById(id);
-  if (!node) throw new Error(`Missing altar markup: #${id}`);
+  if (!node) throw new Error(`Missing M2 markup: #${id}`);
   return node as unknown as T;
 }
 
@@ -27,24 +39,28 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-function buildCard(offer: RuleOffer, index: number, onPick: (offer: RuleOffer) => void) {
+function iconSvg(href: string, size = 22): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', href);
+  svg.append(use);
+  return svg;
+}
+
+function ruleCard(offer: RuleOffer, index: number) {
   const card = el('button', `rule-card action-${offer.action}`);
   card.type = 'button';
   card.style.setProperty('--rule-color', RULE_COLORS[offer.key]);
   card.dataset.key = offer.key;
   card.dataset.action = offer.action;
+  card.dataset.kind = 'rule';
 
   const head = el('div', 'rule-card-head');
   const iconBox = el('div', 'rule-card-icon');
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', '22');
-  svg.setAttribute('height', '22');
-  svg.setAttribute('aria-hidden', 'true');
-  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  use.setAttribute('href', offer.icon);
-  svg.append(use);
-  iconBox.append(svg);
-
+  iconBox.append(iconSvg(offer.icon));
   const title = el('div', 'rule-card-title');
   title.append(
     el('span', 'rule-card-slot', getRuleSlotLabel(offer.slot)),
@@ -86,35 +102,96 @@ function buildCard(offer: RuleOffer, index: number, onPick: (offer: RuleOffer) =
     card.append(el('div', 'rule-card-combo', '另一槽仍为空 · 组合未成型'));
   }
 
-  const keyHint = el('span', 'rule-card-key', String(index + 1));
-  card.append(keyHint);
-
-  card.addEventListener('click', () => onPick(offer));
+  card.append(el('span', 'rule-card-key', String(index + 1)));
   return card;
 }
 
-export function renderRuleOffers(offers: readonly RuleOffer[], onPick: (offer: RuleOffer) => void): void {
+function supportCard(reward: Extract<Reward, { kind: 'support' }>, index: number) {
+  const card = el('button', 'rule-card action-support');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', '#7edca9');
+  card.dataset.key = reward.support.id;
+  card.dataset.action = 'support';
+  card.dataset.kind = 'support';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(reward.support.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '基础强化 · SUPPORT'),
+    el('span', 'rule-card-name', reward.support.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action support', '强化'));
+
+  const body = el('p', 'rule-card-desc', reward.support.description);
+  const note = el('span', 'rule-card-now', reward.support.detail);
+  card.append(head, body, note, el('div', 'rule-card-combo support-note', '不占用规则槽位 · 立即生效'));
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
+export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
-  offers.forEach((offer, index) => {
-    offersWrap.append(buildCard(offer, index, onPick));
+  rewards.forEach((reward, index) => {
+    const card = reward.kind === 'rule' ? ruleCard(reward.offer, index) : supportCard(reward, index);
+    card.addEventListener('click', () => onPick(reward));
+    offersWrap.append(card);
   });
 }
 
-export function setAltarVisible(visible: boolean): void {
-  altarScreen.hidden = !visible;
-  altarScreen.dataset.open = visible ? '1' : '0';
+export function setRewardVisible(visible: boolean, roomLabel = ''): void {
+  rewardScreen.hidden = !visible;
+  if (roomLabel) rewardRoom.textContent = roomLabel;
   if (visible) {
     offersWrap.querySelector<HTMLElement>('.rule-card')?.focus({ preventScroll: true });
   }
 }
 
-export function isAltarVisible(): boolean {
-  return !altarScreen.hidden;
+export function isRewardVisible(): boolean {
+  return !rewardScreen.hidden;
 }
 
-export function pickAltarOffer(index: number): boolean {
+export function pickReward(index: number): boolean {
   const card = offersWrap.children[index] as HTMLElement | undefined;
   if (!card) return false;
   card.click();
   return true;
+}
+
+export function renderRoomPreview(payload: RoomPreview): void {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  roomKicker.textContent = `ROOM ${pad(payload.index + 1)} / ${pad(payload.total)}`;
+  roomTitle.textContent = payload.room.name;
+  roomEn.textContent = payload.room.en;
+  roomSub.textContent = payload.room.subtitle;
+  roomQuota.textContent = String(payload.room.quota);
+  roomHp.textContent = `${Math.ceil(payload.hp)} / ${payload.maxHp}`;
+  roomKills.textContent = String(payload.kills);
+
+  roomEnemies.textContent = '';
+  for (const entry of payload.room.mix) {
+    const label = ENEMY_LABELS[entry.kind];
+    const chip = el('div', 'room-enemy');
+    const img = el('img');
+    img.src = `./assets/sprites/${entry.kind}.png`;
+    img.alt = label.name;
+    const copy = el('div', 'room-enemy-copy');
+    copy.append(el('b', undefined, label.name), el('small', undefined, label.hint));
+    const rule = el('span', 'codex-rule', label.rule);
+    rule.classList.add(entry.kind === 'beetle' ? 'blast' : 'chain');
+    chip.append(img, copy, rule);
+    roomEnemies.append(chip);
+  }
+}
+
+export function setRoomVisible(visible: boolean): void {
+  roomScreen.hidden = !visible;
+  if (visible) {
+    document.getElementById('room-enter-btn')?.focus({ preventScroll: true });
+  }
+}
+
+export function isRoomVisible(): boolean {
+  return !roomScreen.hidden;
 }

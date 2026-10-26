@@ -22,7 +22,10 @@ try {
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
   await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
-  await sleep(800);
+  await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(500);
+  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await sleep(600);
 
   await page.evaluate(() => window.__RT_SET_BUILD__?.('spread', 'burn', 3, 3));
   await page.evaluate(() => window.__RT_SET_STATS__?.(30, 12));

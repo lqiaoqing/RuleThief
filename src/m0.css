@@ -889,6 +889,123 @@
   flex: 0 0 auto;
 }
 
+.room-card {
+  width: min(720px, 100%);
+}
+
+.room-en {
+  margin: -2px 0 14px;
+  color: #6b819a;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-align: center;
+}
+
+.room-card h2 {
+  margin-bottom: 2px;
+}
+
+.room-enemies {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.room-enemy {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border: 1px solid rgba(150, 185, 215, 0.12);
+  border-radius: 10px;
+  background: rgba(8, 15, 27, 0.6);
+}
+
+.room-enemy img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 9px rgba(0, 0, 0, 0.55));
+}
+
+.room-enemy-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.room-enemy-copy b {
+  color: #eaf4ff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.room-enemy-copy small {
+  color: #7b8fa6;
+  font-size: 9px;
+}
+
+.room-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(150, 185, 215, 0.11);
+  border-radius: 9px;
+  background: rgba(5, 12, 21, 0.55);
+}
+
+.room-stats > div {
+  padding: 10px 6px;
+  border-left: 1px solid rgba(150, 185, 215, 0.09);
+  text-align: center;
+}
+
+.room-stats > div:first-child {
+  border-left: 0;
+}
+
+.room-stats b {
+  display: block;
+  color: #f0f7ff;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.room-stats span {
+  display: block;
+  margin-top: 2px;
+  color: #647a93;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.room-foot {
+  margin-top: 12px;
+}
+
+.room-progress {
+  color: #7fa0c0;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.rule-card-action.support {
+  border-color: rgba(126, 220, 169, 0.3);
+  color: var(--green);
+}
+
+.rule-card-combo.support-note {
+  color: #6f8a7f;
+}
+
 @media (max-width: 760px) {
   .altar-card {
     padding: 21px 15px;

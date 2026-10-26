@@ -127,9 +127,9 @@
               </div>
 
               <div class="run-center">
-                <div class="run-room">ROOM <b id="room-num">01</b><span>/ 01</span></div>
-                <div class="run-timer" id="timer">03:00</div>
-                <div class="run-name">训练回廊</div>
+                <div class="run-room">ROOM <b id="room-num">01</b><span id="room-total">/ 03</span></div>
+                <div class="run-timer" id="timer">00:00</div>
+                <div class="run-name" id="room-name">训戒前庭</div>
                 <div class="run-kills">击杀 <b id="kills-text">0</b></div>
               </div>
 
@@ -158,9 +158,9 @@
 
             <div class="mobile-boss">
               <span class="mb-eye"><svg><use href="#i-eye" /></svg></span>
-              <span class="mb-copy"><small>M1 · RULE BUILD</small><b>训练回廊</b></span>
+              <span class="mb-copy"><small>M2 · ROOM CLEAR</small><b id="mobile-room-name">训戒前庭</b></span>
               <span class="mb-phases"><i class="active"></i><i></i><i></i></span>
-              <span class="mb-state" id="mobile-time">03:00</span>
+              <span class="mb-state" id="mobile-time">00:00</span>
             </div>
 
             <div class="mobile-combo">
@@ -205,17 +205,13 @@
 
           <div class="pause-screen" id="pause-screen" hidden>
             <div class="pause-card">
-              <div class="eyebrow"><span class="eyebrow-dot"></span> PAUSED / M1 SLICE</div>
+              <div class="eyebrow"><span class="eyebrow-dot"></span> PAUSED / M2 ROOMS</div>
               <h2>审判暂停</h2>
-              <p>训练回廊仍在等待。准备好后继续。</p>
+              <p>房间仍在等待。准备好后继续。</p>
               <div class="pause-actions">
                 <button class="primary compact" id="resume-btn"><svg><use href="#i-play" /></svg><span>继续</span></button>
                 <button class="ghost compact" id="back-menu-btn">返回菜单</button>
               </div>
-              <button class="ghost compact pause-lab" id="open-altar-btn">
-                <span>规则祭坛</span>
-                <small>M1 RULE LAB</small>
-              </button>
             </div>
           </div>
 
@@ -266,16 +262,16 @@
           <section class="panel objective-panel">
             <div class="panel-head">
               <span>本房目标</span>
-              <span class="panel-sub">M1</span>
+              <span class="panel-sub" id="objective-room">ROOM 1 / 3</span>
             </div>
             <div class="objective-main">
-              <span>SURVIVE</span>
-              <b id="objective-time">03:00</b>
+              <span id="objective-label">ANTECHAMBER</span>
+              <b id="objective-time">0 / 8</b>
             </div>
             <div class="bar objective-bar"><i id="survival-fill" style="width: 0%"></i></div>
             <div class="objective-meta">
-              <span>击杀 <b id="objective-kills">0</b></span>
-              <span>威胁 <b id="threat-level">I</b></span>
+              <span>累计击杀 <b id="objective-kills">0</b></span>
+              <span>房间 <b id="threat-level">I</b></span>
             </div>
             <div class="codex-list">
               <div class="codex-row is-locked" id="codex-beetle">
@@ -289,35 +285,57 @@
                 <div class="codex-side"><span class="codex-rule chain">弹射</span><em class="codex-state" id="codex-bat-state">未掠夺</em></div>
               </div>
             </div>
-            <p class="objective-note">每 15 击杀开启规则祭坛；训练碎片只补空槽或升级，不会顶掉已装备的规则。</p>
+            <p class="objective-note">清空本房配额后暂停战斗，三选一奖励：本房敌人的规则 + 基础强化。</p>
           </section>
 
           <section class="panel notes-panel">
-            <div class="panel-head"><span>M1 验证</span><span class="panel-sub">QA</span></div>
+            <div class="panel-head"><span>M2 验证</span><span class="panel-sub">QA</span></div>
             <ul class="check-list">
-              <li><i></i>3 弹道 × 3 命中 = 9 组合全部可装备</li>
-              <li><i></i>重复规则升级 · 同槽规则替换</li>
-              <li><i></i>每 15 击杀开启规则祭坛，命中结算不递归</li>
-              <li><i></i>生存 03:00 或死亡结算，重开完全重置</li>
+              <li><i></i>三房间推进，配额清空后结算奖励</li>
+              <li><i></i>奖励来自本房敌人规则 + 基础强化</li>
+              <li><i></i>切房清空弹幕，构筑与生命保留</li>
+              <li><i></i>生命归零失败，三房全清胜利</li>
             </ul>
           </section>
 
           <div class="sidebar-foot">
-            <span>M1 BUILD</span>
+            <span>M2 BUILD</span>
             <b>BLENDER + PROCEDURAL</b>
           </div>
         </aside>
       </main>
 
+      <div class="altar-screen" id="room-screen" hidden>
+        <div class="altar-card room-card">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="room-kicker">ROOM 01 / 03</span></div>
+          <h2 id="room-title">训戒前庭</h2>
+          <div class="room-en" id="room-en">ANTECHAMBER</div>
+          <p class="altar-sub" id="room-sub">规则在这里第一次被教导，也第一次被夺走。</p>
+          <div class="room-enemies" id="room-enemies"></div>
+          <div class="room-stats">
+            <div><b id="room-quota">8</b><span>清场配额</span></div>
+            <div><b id="room-hp">100 / 100</b><span>当前生命</span></div>
+            <div><b id="room-kills">0</b><span>累计击杀</span></div>
+          </div>
+          <div class="altar-foot room-foot">
+            <span>清空配额后进入三选一奖励，构筑与生命保留到下一房。</span>
+            <button class="primary compact" id="room-enter-btn">
+              <span class="btn-ico"><svg><use href="#i-play" /></svg></span>
+              <span class="btn-copy"><b>进入房间</b><small>ENTER ROOM</small></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="altar-screen" id="altar-screen" hidden>
         <div class="altar-card">
-          <div class="eyebrow"><span class="eyebrow-dot"></span> RULE ALTAR / M1</div>
-          <h2>掠夺一条规则</h2>
-          <p class="altar-sub">新规则装备 · 重复规则升级 · 同槽不同规则会替换</p>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> ROOM CLEAR / REWARD</div>
+          <h2>选择一份奖励</h2>
+          <p class="altar-sub">规则奖励来自本房真实敌人 · 基础强化立即生效</p>
           <div class="rule-offers" id="rule-offers"></div>
           <div class="altar-foot">
-            <span>每 15 击杀自动开启；暂停菜单可打开规则实验室。</span>
-            <button class="ghost compact" id="altar-skip-btn">暂不掠夺</button>
+            <span>必须选择一份才能继续。规则会装备 / 升级 / 替换对应槽位。</span>
+            <span class="room-progress" id="reward-room">ROOM 1 / 3</span>
           </div>
         </div>
       </div>
@@ -327,13 +345,13 @@
           <div class="result-emblem" id="result-emblem">
             <svg><use href="#i-crown" /></svg>
           </div>
-          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M1 · RUN COMPLETE</span></div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M2 · RUN COMPLETE</span></div>
           <h2 id="result-title">审判完成</h2>
           <p id="result-sub">你在训练回廊中完成了本局。</p>
           <div class="result-stats">
-            <div><b id="result-time">03:00</b><span>生存时间</span></div>
+            <div><b id="result-time">00:00</b><span>总用时</span></div>
             <div><b id="result-kills">0</b><span>击杀</span></div>
-            <div><b id="result-rules">0 / 2</b><span>掠夺规则</span></div>
+            <div><b id="result-rooms">0 / 3</b><span>清空房间</span></div>
           </div>
           <div class="result-combo" id="result-combo">
             <span class="combo-tag">最终组合</span>
