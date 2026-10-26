@@ -93,6 +93,10 @@ npm run dev
 - [胜利结算](screenshots/m3a-victory-desktop.png)
 - [手机战斗](screenshots/m3a-combat-mobile.png)
 
+## 试玩（待完成的人工验收）
+
+[试玩协议](docs/PLAYTEST.md)：5–10 人、每人 2 局、记录自动存在 localStorage，控制台一行命令即可导出。协议里列出了必须靠人判断的假设（贯穿是否偏弱、冰霜是否只值控制、弹射+爆裂是否过强、精英墙、封印可读性）。
+
 ## 平衡与试玩工具
 
 - `scripts/combo-bench.mjs`：9 种组合对 3 个聚怪木桩的 DPS 基准（写 `docs/combo-bench.json`）。
