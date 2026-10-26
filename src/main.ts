@@ -157,7 +157,7 @@ function showResult(payload: RunEndPayload): void {
   resultKicker.textContent = payload.victory ? 'M3 · RUN COMPLETE' : 'M3 · RUN ENDED';
   resultTitle.textContent = payload.victory ? '审判完成' : '规则耗尽';
   resultSub.textContent = payload.victory
-    ? '你清空了全部六个房间，也击穿了两位精英。规则被夺走，也被驾驭。'
+    ? '你走完了整条路线，击穿精英，并把规则审判者送回了审判席。'
     : '生命归零。先看懂预警，再决定什么时候闪避。';
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);
