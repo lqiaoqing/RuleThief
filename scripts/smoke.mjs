@@ -896,6 +896,25 @@ try {
   check('desktop no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await page.close();
 
+  const planForSeed = async (seed) => {
+    const seeded = await newPage(browser, { width: 1024, height: 768, deviceScaleFactor: 1 });
+    await seeded.goto(`${BASE}/?arena=1&seed=${seed}`, { waitUntil: 'networkidle0' });
+    await waitReady(seeded);
+    await seeded.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+    const plan = (await snapshot(seeded)).plan;
+    await seeded.close();
+    return JSON.stringify(plan);
+  };
+  const planA = await planForSeed('demo');
+  const planB = await planForSeed('demo');
+  check('same seed reproduces the same run plan', planA === planB, planA.slice(0, 80));
+  const otherPlans = [await planForSeed('other'), await planForSeed('third')];
+  check(
+    'different seeds can produce different plans',
+    otherPlans.some((plan) => plan !== planA),
+    JSON.stringify(otherPlans.map((plan) => plan.slice(0, 40)))
+  );
+
   const mobileBoss = await newPage(browser, {
     width: 390,
     height: 844,

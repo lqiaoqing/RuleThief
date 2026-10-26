@@ -9,6 +9,7 @@ import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
 import { formatRecordLine, saveRun, summarize } from './game/telemetry';
+import { mulberry32, seedFromString, setRandomSource } from './game/rng';
 import {
   isEventVisible,
   isRewardVisible,
@@ -152,6 +153,10 @@ const params = new URLSearchParams(window.location.search);
 const autoArena = params.get('arena') === '1';
 const bossPractice = params.get('boss') === '1';
 const buildParam = params.get('build');
+const seedParam = params.get('seed');
+if (seedParam) {
+  setRandomSource(mulberry32(seedFromString(seedParam)));
+}
 const INTRO_KEY = 'rulethief.intro.v1';
 
 function maybeShowIntro(): void {

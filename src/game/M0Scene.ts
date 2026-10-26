@@ -39,6 +39,7 @@ import {
 } from './rules';
 import { ROOMS, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, buildRunPlan, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
+import { random } from './rng';
 import {
   MUTATIONS,
   createMutationState,
@@ -381,7 +382,7 @@ export class M0Scene extends Phaser.Scene {
     this.spawnedTotal = 0;
     this.build = createEmptyBuild();
     this.acquired.clear();
-    this.plan = buildRunPlan();
+    this.plan = buildRunPlan(random);
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
@@ -739,7 +740,7 @@ export class M0Scene extends Phaser.Scene {
     setHp(this.hp, this.maxHp);
     this.pauseScene();
     audio.play('rule');
-    const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
+    const rewards = buildRoomRewards(this.build, this.getRoom(), random, {
       hasMutation: Boolean(this.mutation.id),
       bonusCards: this.roomBonusCards
     });
@@ -3537,7 +3538,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.roomSpawned >= room.quota) return;
     this.spawnCd -= dt;
     if (this.spawnCd > 0 || this.enemies.length + this.pendingSpawns >= room.maxAlive) return;
-    const kind = pickSpawnKind(room);
+    const kind = pickSpawnKind(room, random);
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y);
     this.roomSpawned += 1;
