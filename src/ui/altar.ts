@@ -1,5 +1,5 @@
 import { getRuleSlotLabel, type RuleOffer } from '../game/rules';
-import { ENEMY_LABELS, type Reward, type RoomPreview } from '../game/rooms';
+import { ENEMY_SPECS, getRoomEnemyKinds, type Reward, type RoomPreview } from '../game/rooms';
 import { RULE_COLORS } from './hud';
 
 const ACTION_LABEL: Record<RuleOffer['action'], string> = {
@@ -133,6 +133,7 @@ function supportCard(reward: Extract<Reward, { kind: 'support' }>, index: number
 
 export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
+  offersWrap.dataset.count = String(rewards.length);
   rewards.forEach((reward, index) => {
     const card = reward.kind === 'rule' ? ruleCard(reward.offer, index) : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
@@ -161,27 +162,40 @@ export function pickReward(index: number): boolean {
 
 export function renderRoomPreview(payload: RoomPreview): void {
   const pad = (value: number) => String(value).padStart(2, '0');
-  roomKicker.textContent = `ROOM ${pad(payload.index + 1)} / ${pad(payload.total)}`;
+  const elite = Boolean(payload.room.elite);
+  roomKicker.textContent = `ROOM ${pad(payload.index + 1)} / ${pad(payload.total)}${elite ? ' · ELITE' : ''}`;
   roomTitle.textContent = payload.room.name;
   roomEn.textContent = payload.room.en;
   roomSub.textContent = payload.room.subtitle;
   roomQuota.textContent = String(payload.room.quota);
   roomHp.textContent = `${Math.ceil(payload.hp)} / ${payload.maxHp}`;
   roomKills.textContent = String(payload.kills);
+  roomKicker.classList.toggle('is-elite', elite);
 
   roomEnemies.textContent = '';
-  for (const entry of payload.room.mix) {
-    const label = ENEMY_LABELS[entry.kind];
-    const chip = el('div', 'room-enemy');
+  for (const kind of getRoomEnemyKinds(payload.room)) {
+    const spec = ENEMY_SPECS[kind];
+    const chip = el('div', `room-enemy${spec.elite ? ' is-elite' : ''}`);
     const img = el('img');
-    img.src = `./assets/sprites/${entry.kind}.png`;
-    img.alt = label.name;
+    img.src = `./assets/sprites/${spec.sprite}.png`;
+    img.alt = spec.name;
     const copy = el('div', 'room-enemy-copy');
-    copy.append(el('b', undefined, label.name), el('small', undefined, label.hint));
-    const rule = el('span', 'codex-rule', label.rule);
-    rule.classList.add(entry.kind === 'beetle' ? 'blast' : 'chain');
+    copy.append(
+      el('b', undefined, `${spec.elite ? '★ ' : ''}${spec.name}`),
+      el('small', undefined, spec.hint)
+    );
+    const rule = el('span', 'codex-rule', spec.ruleName);
+    rule.style.color = RULE_COLORS[spec.rule];
+    rule.style.borderColor = `${RULE_COLORS[spec.rule]}59`;
     chip.append(img, copy, rule);
     roomEnemies.append(chip);
+  }
+
+  const foot = roomScreen.querySelector<HTMLElement>('.room-foot span');
+  if (foot) {
+    foot.textContent = elite
+      ? '精英房：清场后四选一，规则奖励 + 基础强化。构筑与生命保留到下一房。'
+      : '清空配额后进入三选一奖励，构筑与生命保留到下一房。';
   }
 }
 

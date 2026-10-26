@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { ARENA, ASSETS, COLORS } from './theme';
-import { resetM0Hud, setBuild, setDash, setHp, setRoomProgress, setRunClock, showRuleToast } from '../ui/hud';
+import { resetM0Hud, setBuild, setDash, setHp, setRoomEnemies, setRoomProgress, setRunClock, showRuleToast } from '../ui/hud';
 import { audio } from './audio';
 import {
   applyRuleOffer,
@@ -25,9 +25,8 @@ import {
   type TrajectoryKey,
   type TrajectoryProfile
 } from './rules';
-import { ROOMS, buildRoomRewards, pickSpawnKind, type Reward, type RoomDef, type SupportId } from './rooms';
+import { ROOMS, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 
-type EnemyKind = 'beetle' | 'bat';
 type RunState = 'idle' | 'playing' | 'ended';
 type RoomState = 'preview' | 'fighting' | 'reward';
 type EnemyState = 'approach' | 'telegraph' | 'charge' | 'recover' | 'idle' | 'cast';
@@ -58,6 +57,9 @@ interface EnemyUnit {
   burnTick: number;
   frostTime: number;
   frostSlow: number;
+  elite: boolean;
+  chargesLeft: number;
+  trailCd: number;
 }
 
 interface PlayerBolt {
@@ -87,6 +89,18 @@ interface EnemyBolt {
   damage: number;
   radius: number;
   life: number;
+  slowFactor: number;
+  slowDuration: number;
+  dead: boolean;
+}
+
+interface Hazard {
+  root: Phaser.GameObjects.Container;
+  x: number;
+  y: number;
+  radius: number;
+  life: number;
+  maxLife: number;
   dead: boolean;
 }
 
@@ -120,6 +134,16 @@ const BOLT_SPEED = 620;
 const IMPACT_TRIGGER_BUDGET = 3;
 const SPREAD_COLOR = 0xffb3d9;
 const PIERCE_COLOR = 0xb69bff;
+const FROST_COLOR = 0x8ceafa;
+
+const RULE_TINTS: Record<RuleKey, number> = {
+  pierce: PIERCE_COLOR,
+  chain: COLORS.cyan,
+  spread: SPREAD_COLOR,
+  burn: COLORS.orange,
+  frost: FROST_COLOR,
+  blast: 0xffd27a
+};
 
 export class M0Scene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Container;
@@ -166,7 +190,11 @@ export class M0Scene extends Phaser.Scene {
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
   private enemyBolts: EnemyBolt[] = [];
+  private hazards: Hazard[] = [];
   private pickups: Pickup[] = [];
+
+  private slowTime = 0;
+  private slowFactor = 0;
 
   private readonly onJoystickEvent = (event: Event): void => {
     const detail = (event as CustomEvent<{ x: number; y: number }>).detail;
@@ -186,6 +214,10 @@ export class M0Scene extends Phaser.Scene {
     this.load.image('player', ASSETS.player);
     this.load.image('beetle', ASSETS.beetle);
     this.load.image('bat', ASSETS.bat);
+    this.load.image('spore', ASSETS.spore);
+    this.load.image('slime', ASSETS.slime);
+    this.load.image('wisp', ASSETS.wisp);
+    this.load.image('bomber', ASSETS.bomber);
     this.load.image('boss', ASSETS.boss);
   }
 
@@ -273,6 +305,8 @@ export class M0Scene extends Phaser.Scene {
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.rewardOpen = false;
+    this.slowTime = 0;
+    this.slowFactor = 0;
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
@@ -317,6 +351,7 @@ export class M0Scene extends Phaser.Scene {
     this.playEnabled = false;
     this.joystick.set(0, 0);
     this.scene.pause();
+    setRoomEnemies(getRoomEnemyKinds(this.getRoom()));
     this.refreshRoomHud();
     this.game.events.emit('m2-room-preview', {
       index: this.roomIndex,
@@ -342,11 +377,38 @@ export class M0Scene extends Phaser.Scene {
     this.spawnCd = 1.1;
     this.attackCd = 0.5;
     this.invuln = 1.0;
+    this.slowTime = 0;
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
+    const room = this.getRoom();
+    setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
     this.scene.resume();
     audio.play('spawn');
+
+    if (room.leader) {
+      this.spawnEnemy(room.leader, ARENA * 0.5, 210);
+      this.roomSpawned += 1;
+      this.spawnLeaderBurst(ARENA * 0.5, 210);
+    }
+  }
+
+  private spawnLeaderBurst(x: number, y: number): void {
+    const ring = this.add
+      .circle(x, y, 40, 0x000000, 0)
+      .setStrokeStyle(3, COLORS.gold, 0.85)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 2.6,
+      alpha: 0,
+      duration: 620,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy()
+    });
+    this.cameras.main.shake(180, 0.003);
+    audio.play('rule');
   }
 
   private clearRoom(): void {
@@ -483,6 +545,51 @@ export class M0Scene extends Phaser.Scene {
     this.applyBuildState(next);
   }
 
+  public debugTableau(kinds: EnemyKind[], build?: {
+    trajectory?: TrajectoryKey | null;
+    impact?: ImpactKey | null;
+    trajectoryLevel?: RuleLevel;
+    impactLevel?: RuleLevel;
+  }): void {
+    if (this.runState !== 'playing') return;
+    if (build) {
+      this.debugSetBuild(
+        build.trajectory ?? null,
+        build.impact ?? null,
+        build.trajectoryLevel ?? 2,
+        build.impactLevel ?? 2
+      );
+    }
+    this.attackCd = 99;
+    this.playerRoot.setPosition(280, 560);
+    for (const enemy of [...this.enemies]) {
+      this.destroyEnemy(enemy);
+    }
+    this.enemies = [];
+    for (const bolt of this.bolts) {
+      bolt.dead = true;
+      bolt.root.destroy(true);
+    }
+    this.bolts = [];
+    const spots: [number, number][] = [
+      [530, 300],
+      [660, 250],
+      [700, 430],
+      [600, 560],
+      [480, 190],
+      [770, 560]
+    ];
+    kinds.slice(0, spots.length).forEach((kind, index) => {
+      this.spawnEnemy(kind, spots[index][0], spots[index][1]);
+    });
+    this.enemies.forEach((enemy) => {
+      enemy.attackCd = 99;
+      this.tweens.killTweensOf(enemy.root);
+      enemy.root.setScale(1).setAlpha(1);
+    });
+    this.time.delayedCall(340, () => this.scene.pause());
+  }
+
   public debugOpenReward(): void {
     this.clearRoom();
   }
@@ -505,6 +612,11 @@ export class M0Scene extends Phaser.Scene {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y);
+  }
+
+  public debugSpawnAt(kind: EnemyKind, x: number, y: number): void {
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
+    this.spawnEnemy(kind, x, y);
   }
 
   public debugKillAll(): void {
@@ -672,6 +784,10 @@ export class M0Scene extends Phaser.Scene {
       build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild,
       acquired: [...this.acquired] as RuleKey[],
       enemies: this.enemies.length,
+      hazards: this.hazards.length,
+      slowTime: this.slowTime,
+      invuln: this.invuln,
+      eliteAlive: this.enemies.filter((enemy) => enemy.elite && !enemy.dead).length,
       bolts: this.bolts.length,
       enemyBolts: this.enemyBolts.length,
       pickups: this.pickups.length,
@@ -687,13 +803,16 @@ export class M0Scene extends Phaser.Scene {
     }
     this.enemies = [];
 
-    for (const list of [this.bolts, this.enemyBolts, this.pickups]) {
+    for (const list of [this.bolts, this.enemyBolts, this.pickups, this.hazards]) {
       for (const item of list) {
         this.tweens.killTweensOf(item.root);
         item.root.destroy(true);
       }
       list.length = 0;
     }
+    this.slowTime = 0;
+    this.slowFactor = 0;
+    this.playerSprite?.clearTint();
 
     for (const child of [...this.fxLayer.list, ...this.enemyLayer.list]) {
       this.tweens.killTweensOf(child);
@@ -1131,7 +1250,16 @@ export class M0Scene extends Phaser.Scene {
       this.tryDash();
     }
 
-    let speed = this.moveSpeed;
+    if (this.slowTime > 0) {
+      this.slowTime = Math.max(0, this.slowTime - dt);
+      if (this.slowTime === 0) {
+        this.slowFactor = 0;
+        this.playerSprite.clearTint();
+        this.playerSprite.setAlpha(1);
+      }
+    }
+
+    let speed = this.slowTime > 0 ? this.moveSpeed * (1 - this.slowFactor) : this.moveSpeed;
     if (this.dashRemaining > 0) {
       this.dashRemaining -= dt;
       speed = this.moveSpeed * 3.25;
@@ -1647,6 +1775,12 @@ export class M0Scene extends Phaser.Scene {
     this.roomKills += 1;
     this.refreshRoomHud();
 
+    if (enemy.kind === 'bomber') {
+      this.detonate(enemy);
+    } else if (enemy.kind === 'slime') {
+      this.spawnFirePatch(x, y + 8, 40, 2.2);
+    }
+
     if (this.kills > 0 && this.kills % 10 === 0) {
       this.dropHeal(x, y);
     }
@@ -1717,8 +1851,8 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private resetEnemyAura(enemy: EnemyUnit): void {
-    enemy.aura.setTint(enemy.kind === 'beetle' ? COLORS.purple : COLORS.cyan);
-    enemy.aura.setAlpha(enemy.kind === 'beetle' ? 0.08 : 0.1);
+    enemy.aura.setTint(RULE_TINTS[ENEMY_SPECS[enemy.kind].rule]);
+    enemy.aura.setAlpha(enemy.elite ? 0.2 : 0.1);
   }
 
   private updatePickups(dt: number): void {
@@ -1756,7 +1890,7 @@ export class M0Scene extends Phaser.Scene {
 
   private spawnPortal(kind: EnemyKind, x: number, y: number): void {
     const token = this.runToken;
-    const color = kind === 'beetle' ? COLORS.purple : COLORS.cyan;
+    const color = RULE_TINTS[ENEMY_SPECS[kind].rule];
     const glow = this.add
       .image(x, y, 'glow')
       .setDisplaySize(150, 150)
@@ -1802,35 +1936,35 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private spawnEnemy(kind: EnemyKind, x: number, y: number): void {
-    const isBat = kind === 'bat';
-    const maxHp = isBat ? 46 : 72;
-    const radius = isBat ? 24 : 34;
-    const speed = isBat ? 58 : 68;
-    const size = isBat ? 150 : 96;
+    const spec = ENEMY_SPECS[kind];
+    const elite = Boolean(spec.elite);
+    const hover = kind === 'bat' || kind === 'wisp' || kind === 'thunder';
+    const color = RULE_TINTS[spec.rule];
+    const spriteY = hover ? -20 : -8;
 
     const shadow = this.add
-      .image(0, isBat ? 22 : 31, 'shadow')
-      .setDisplaySize(isBat ? 108 : 82, isBat ? 30 : 26)
-      .setAlpha(isBat ? 0.38 : 0.52);
+      .image(0, hover ? 22 : 31, 'shadow')
+      .setDisplaySize(hover ? 108 : 82, hover ? 30 : 26)
+      .setAlpha(hover ? 0.38 : 0.52);
     const aura = this.add
-      .image(0, isBat ? 0 : 8, 'glow')
-      .setDisplaySize(isBat ? 150 : 124, isBat ? 150 : 124)
-      .setTint(isBat ? COLORS.cyan : COLORS.purple)
-      .setAlpha(isBat ? 0.1 : 0.08)
+      .image(0, hover ? 0 : 8, 'glow')
+      .setDisplaySize(spec.displaySize * 1.08, spec.displaySize * 1.08)
+      .setTint(color)
+      .setAlpha(elite ? 0.2 : 0.1)
       .setBlendMode(Phaser.BlendModes.ADD);
     const warning = this.add.graphics();
-    const sprite = this.add.image(0, isBat ? -18 : -8, kind).setDisplaySize(size, size);
+    const sprite = this.add.image(0, spriteY, spec.sprite).setDisplaySize(spec.displaySize, spec.displaySize);
     const castRing = this.add
-      .circle(0, isBat ? 14 : 22, isBat ? 36 : 44, 0x000000, 0)
-      .setStrokeStyle(1, isBat ? COLORS.cyan : COLORS.red, 0.22);
+      .circle(0, hover ? 14 : 22, spec.radius + 12, 0x000000, 0)
+      .setStrokeStyle(1, elite ? COLORS.gold : color, elite ? 0.45 : 0.22);
 
-    const barWidth = isBat ? 44 : 52;
-    const barY = isBat ? -58 : -70;
+    const barWidth = Math.max(46, Math.round(spec.displaySize * 0.52));
+    const barY = -Math.round(spec.displaySize * 0.42) - 14;
     const hpBg = this.add
       .rectangle(0, barY, barWidth, 5, 0x0a121f, 0.82)
-      .setStrokeStyle(1, 0x2a3d55, 0.45);
+      .setStrokeStyle(1, elite ? 0x6d5326 : 0x2a3d55, 0.5);
     const hpFill = this.add
-      .rectangle(-barWidth / 2, barY, barWidth, 3, isBat ? COLORS.cyan : COLORS.red, 0.9)
+      .rectangle(-barWidth / 2, barY, barWidth, 3, elite ? COLORS.gold : color, 0.92)
       .setOrigin(0, 0.5);
 
     castRing.setVisible(false);
@@ -1843,6 +1977,24 @@ export class M0Scene extends Phaser.Scene {
       hpBg,
       hpFill
     ]);
+
+    if (elite) {
+      const halo = this.add
+        .circle(0, hover ? -4 : 4, spec.radius + 18, 0x000000, 0)
+        .setStrokeStyle(2, COLORS.gold, 0.5)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      root.addAt(halo, 1);
+      this.tweens.add({
+        targets: halo,
+        scale: 1.12,
+        alpha: 0.18,
+        duration: 1100,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
     this.enemyLayer.add(root);
 
     this.tweens.add({
@@ -1854,13 +2006,13 @@ export class M0Scene extends Phaser.Scene {
     });
     this.tweens.add({
       targets: sprite,
-      y: isBat ? -26 : -3,
-      duration: isBat ? 1700 : 1200,
+      y: hover ? spriteY - 8 : spriteY + 5,
+      duration: hover ? 1700 : 1200,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut'
     });
-    if (isBat) {
+    if (hover) {
       this.tweens.add({
         targets: sprite,
         x: 5,
@@ -1871,6 +2023,7 @@ export class M0Scene extends Phaser.Scene {
       });
     }
 
+    const startsCasting = kind === 'bat' || kind === 'wisp' || kind === 'thunder' || kind === 'spore';
     const enemy: EnemyUnit = {
       id: this.nextEnemyId++,
       kind,
@@ -1880,14 +2033,14 @@ export class M0Scene extends Phaser.Scene {
       aura,
       warning,
       castRing,
-      hp: maxHp,
-      maxHp,
-      radius,
-      speed,
+      hp: spec.hp,
+      maxHp: spec.hp,
+      radius: spec.radius,
+      speed: spec.speed,
       dead: false,
-      state: isBat ? 'idle' : 'approach',
+      state: startsCasting ? 'idle' : 'approach',
       stateTimer: 0,
-      attackCd: isBat ? 1.2 + Math.random() * 0.8 : 0.8,
+      attackCd: startsCasting ? 1.2 + Math.random() * 0.9 : 0.8,
       contactCd: 0,
       chargeDir: new Phaser.Math.Vector2(1, 0),
       hasHitThisCharge: false,
@@ -1896,7 +2049,10 @@ export class M0Scene extends Phaser.Scene {
       burnDps: 0,
       burnTick: 0,
       frostTime: 0,
-      frostSlow: 0
+      frostSlow: 0,
+      elite,
+      chargesLeft: 0,
+      trailCd: 1.2
     };
 
     this.enemies.push(enemy);
@@ -1933,10 +2089,31 @@ export class M0Scene extends Phaser.Scene {
       this.updateEnemyStatuses(enemy, dt);
       if (enemy.dead) continue;
       enemy.contactCd = Math.max(0, enemy.contactCd - dt);
-      if (enemy.kind === 'beetle') {
-        this.updateBeetle(enemy, dt);
-      } else {
-        this.updateBat(enemy, dt);
+      switch (enemy.kind) {
+        case 'beetle':
+          this.updateBeetle(enemy, dt);
+          break;
+        case 'sunder':
+          this.updateSunder(enemy, dt);
+          break;
+        case 'bat':
+          this.updateBat(enemy, dt);
+          break;
+        case 'thunder':
+          this.updateThunder(enemy, dt);
+          break;
+        case 'wisp':
+          this.updateWisp(enemy, dt);
+          break;
+        case 'spore':
+          this.updateSpore(enemy, dt);
+          break;
+        case 'slime':
+          this.updateSlime(enemy, dt);
+          break;
+        case 'bomber':
+          this.updateBomber(enemy, dt);
+          break;
       }
       enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, ARENA - 58);
       enemy.root.y = Phaser.Math.Clamp(enemy.root.y, 78, ARENA - 58);
@@ -2102,27 +2279,338 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
-  private fireEnemyBolt(enemy: EnemyUnit): void {
-    const angle = Math.atan2(
-      this.playerRoot.y - enemy.root.y,
-      this.playerRoot.x - enemy.root.x
+  private updateSunder(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const dist = Math.hypot(dx, dy);
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+
+    if (enemy.state === 'approach') {
+      if (dist > 4) {
+        enemy.root.x += (dx / dist) * enemy.speed * slowScale * dt;
+        enemy.root.y += (dy / dist) * enemy.speed * slowScale * dt;
+      }
+      if (dist < 420 && enemy.attackCd <= 0) {
+        enemy.state = 'telegraph';
+        enemy.stateTimer = 0.7;
+        enemy.chargesLeft = 2;
+        enemy.chargeDir.set(dx / (dist || 1), dy / (dist || 1));
+        enemy.warning.setVisible(true);
+        this.drawBeetleWarning(enemy);
+      }
+    } else if (enemy.state === 'telegraph') {
+      enemy.stateTimer -= dt;
+      this.drawBeetleWarning(enemy);
+      if (enemy.chargesLeft === 1) {
+        enemy.chargeDir.set(dx / (dist || 1), dy / (dist || 1));
+      }
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'charge';
+        enemy.stateTimer = 0.42;
+        enemy.hasHitThisCharge = false;
+        enemy.warning.setVisible(false);
+        audio.play('dash');
+      }
+    } else if (enemy.state === 'charge') {
+      enemy.stateTimer -= dt;
+      enemy.root.x += enemy.chargeDir.x * 560 * slowScale * dt;
+      enemy.root.y += enemy.chargeDir.y * 560 * slowScale * dt;
+      const atWall =
+        enemy.root.x <= 64 ||
+        enemy.root.x >= ARENA - 64 ||
+        enemy.root.y <= 84 ||
+        enemy.root.y >= ARENA - 64;
+      if (!enemy.hasHitThisCharge && dist < enemy.radius + PLAYER_RADIUS + 10) {
+        enemy.hasHitThisCharge = true;
+        this.hurtPlayer(14, enemy.root.x, enemy.root.y);
+      }
+      if (atWall || enemy.stateTimer <= 0) {
+        enemy.chargesLeft -= 1;
+        if (enemy.chargesLeft > 0) {
+          enemy.state = 'telegraph';
+          enemy.stateTimer = 0.42;
+          enemy.chargeDir.set(dx / (dist || 1), dy / (dist || 1));
+          enemy.warning.setVisible(true);
+          this.drawBeetleWarning(enemy);
+        } else {
+          enemy.state = 'recover';
+          enemy.stateTimer = 0.85;
+        }
+      }
+    } else if (enemy.state === 'recover') {
+      enemy.stateTimer -= dt;
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'approach';
+        enemy.attackCd = 1.2;
+      }
+    }
+
+    if (enemy.state !== 'charge' && enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(8, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private updateThunder(enemy: EnemyUnit, dt: number): void {
+    this.strafeAtRange(enemy, dt, 300, 200, 380);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+
+    if (enemy.state === 'cast') {
+      enemy.stateTimer -= dt;
+      enemy.castRing.setVisible(true);
+      enemy.castRing.setScale(1 + Math.sin(this.time.now * 0.03) * 0.12);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'idle';
+        enemy.castRing.setVisible(false);
+        enemy.sprite.clearTint();
+        const base = Math.atan2(
+          this.playerRoot.y - enemy.root.y,
+          this.playerRoot.x - enemy.root.x
+        );
+        for (const offset of [-0.2, 0, 0.2]) {
+          this.fireEnemyBolt(enemy, { angle: base + offset, speed: 250, damage: 9, tint: COLORS.cyan });
+        }
+        this.time.delayedCall(140, () => {
+          if (enemy.dead || this.runState !== 'playing') return;
+          for (const offset of [-0.1, 0.1]) {
+            this.fireEnemyBolt(enemy, { angle: base + offset, speed: 230, damage: 8, tint: COLORS.cyan });
+          }
+        });
+        enemy.attackCd = 2.7 + Math.random() * 0.5;
+      }
+    } else if (enemy.attackCd <= 0) {
+      enemy.state = 'cast';
+      enemy.stateTimer = 0.8;
+      enemy.sprite.setTint(0x9defff);
+      enemy.castRing.setVisible(true);
+      audio.play('spawn');
+    }
+
+    const contact = Phaser.Math.Distance.Between(
+      enemy.root.x,
+      enemy.root.y,
+      this.playerRoot.x,
+      this.playerRoot.y
     );
+    if (enemy.state !== 'cast' && enemy.contactCd <= 0 && contact < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(5, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private updateWisp(enemy: EnemyUnit, dt: number): void {
+    this.strafeAtRange(enemy, dt, 300, 220, 380);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+
+    if (enemy.state === 'cast') {
+      enemy.stateTimer -= dt;
+      enemy.castRing.setVisible(true);
+      enemy.castRing.setScale(1 + Math.sin(this.time.now * 0.02) * 0.08);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'idle';
+        enemy.castRing.setVisible(false);
+        enemy.sprite.clearTint();
+        this.fireEnemyBolt(enemy, {
+          speed: 170,
+          damage: 6,
+          tint: 0x8ceafa,
+          slow: 0.45,
+          slowDuration: 1.8,
+          scale: 1.2
+        });
+        enemy.attackCd = 2.5 + Math.random() * 0.6;
+      }
+    } else if (enemy.attackCd <= 0 && this.distanceToPlayer(enemy) < 520) {
+      enemy.state = 'cast';
+      enemy.stateTimer = 0.6;
+      enemy.sprite.setTint(0xbfefff);
+      enemy.castRing.setVisible(true);
+      audio.play('spawn');
+    }
+
+    if (enemy.state !== 'cast' && enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(4, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private distanceToPlayer(enemy: EnemyUnit): number {
+    return Phaser.Math.Distance.Between(
+      enemy.root.x,
+      enemy.root.y,
+      this.playerRoot.x,
+      this.playerRoot.y
+    );
+  }
+
+  private updateSpore(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+
+    if (distance < 200) {
+      enemy.root.x -= (dx / distance) * enemy.speed * dt;
+      enemy.root.y -= (dy / distance) * enemy.speed * dt;
+    }
+
+    if (enemy.state === 'cast') {
+      enemy.stateTimer -= dt;
+      enemy.castRing.setVisible(true);
+      enemy.castRing.setScale(1 + Math.sin(this.time.now * 0.025) * 0.1);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'idle';
+        enemy.castRing.setVisible(false);
+        enemy.sprite.clearTint();
+        const base = Math.atan2(dy, dx);
+        for (const offset of [-0.34, -0.17, 0, 0.17, 0.34]) {
+          this.fireEnemyBolt(enemy, {
+            angle: base + offset,
+            speed: 165,
+            damage: 5,
+            tint: 0xffb3d9,
+            scale: 0.75
+          });
+        }
+        enemy.attackCd = 2.4 + Math.random() * 0.5;
+      }
+    } else if (enemy.attackCd <= 0 && distance < 470) {
+      enemy.state = 'cast';
+      enemy.stateTimer = 0.65;
+      enemy.sprite.setTint(0xffd6ea);
+      enemy.castRing.setVisible(true);
+      audio.play('spawn');
+    }
+
+    if (enemy.contactCd <= 0 && distance < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(4, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private updateSlime(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+
+    enemy.root.x += (dx / distance) * enemy.speed * slowScale * dt;
+    enemy.root.y += (dy / distance) * enemy.speed * slowScale * dt;
+
+    enemy.trailCd -= dt;
+    if (enemy.trailCd <= 0 && distance < 300) {
+      enemy.trailCd = 1.7;
+      this.spawnFirePatch(enemy.root.x, enemy.root.y + 8, 44, 2.6);
+    }
+
+    if (enemy.contactCd <= 0 && distance < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(7, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private updateBomber(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+
+    if (enemy.state === 'telegraph') {
+      enemy.stateTimer -= dt;
+      const pulse = 1 + Math.sin(this.time.now * 0.04) * 0.16;
+      enemy.sprite.setScale(pulse * 1.06);
+      if (enemy.stateTimer <= 0) {
+        this.killEnemy(enemy);
+      }
+      return;
+    }
+
+    if (distance > 4) {
+      enemy.root.x += (dx / distance) * enemy.speed * slowScale * dt;
+      enemy.root.y += (dy / distance) * enemy.speed * slowScale * dt;
+    }
+
+    if (distance < 78) {
+      enemy.state = 'telegraph';
+      enemy.stateTimer = 0.62;
+      enemy.sprite.setTint(0xffb066);
+      audio.play('spawn');
+      return;
+    }
+
+    if (enemy.contactCd <= 0 && distance < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(6, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private strafeAtRange(
+    enemy: EnemyUnit,
+    dt: number,
+    preferred: number,
+    near: number,
+    far: number
+  ): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    const speed = enemy.speed * slowScale * dt;
+
+    if (distance < near) {
+      enemy.root.x -= (dx / distance) * speed;
+      enemy.root.y -= (dy / distance) * speed;
+    } else if (distance > far) {
+      enemy.root.x += (dx / distance) * speed;
+      enemy.root.y += (dy / distance) * speed;
+    } else if (Math.abs(distance - preferred) < 90) {
+      const strafe = Math.sin(this.time.now * 0.0015 + enemy.root.x) > 0 ? 1 : -1;
+      enemy.root.x += (-dy / distance) * speed * 0.7 * strafe;
+      enemy.root.y += (dx / distance) * speed * 0.7 * strafe;
+    } else {
+      enemy.root.x += (dx / distance) * speed * 0.6;
+      enemy.root.y += (dy / distance) * speed * 0.6;
+    }
+  }
+
+  private fireEnemyBolt(
+    enemy: EnemyUnit,
+    options: {
+      angle?: number;
+      speed?: number;
+      damage?: number;
+      tint?: number;
+      slow?: number;
+      slowDuration?: number;
+      scale?: number;
+    } = {}
+  ): void {
+    const angle =
+      options.angle ??
+      Math.atan2(this.playerRoot.y - enemy.root.y, this.playerRoot.x - enemy.root.x);
+    const tint = options.tint ?? COLORS.cyan;
+    const scale = options.scale ?? 1;
     const glow = this.add
       .image(0, 0, 'glow')
-      .setDisplaySize(36, 36)
-      .setTint(COLORS.cyan)
+      .setDisplaySize(36 * scale, 36 * scale)
+      .setTint(tint)
       .setAlpha(0.65)
       .setBlendMode(Phaser.BlendModes.ADD);
-    const core = this.add.circle(0, 0, 6, 0xd7fbff, 1).setBlendMode(Phaser.BlendModes.ADD);
+    const core = this.add
+      .circle(0, 0, 6 * scale, 0xd7fbff, 1)
+      .setBlendMode(Phaser.BlendModes.ADD);
     const root = this.add.container(enemy.root.x, enemy.root.y - 12, [glow, core]);
     this.addFx(root);
     this.enemyBolts.push({
       root,
-      vx: Math.cos(angle) * 215,
-      vy: Math.sin(angle) * 215,
-      damage: 8,
-      radius: 10,
+      vx: Math.cos(angle) * (options.speed ?? 215),
+      vy: Math.sin(angle) * (options.speed ?? 215),
+      damage: options.damage ?? 8,
+      radius: 10 * scale,
       life: 4,
+      slowFactor: options.slow ?? 0,
+      slowDuration: options.slowDuration ?? 0,
       dead: false
     });
     audio.play('spawn');
@@ -2151,10 +2639,85 @@ export class M0Scene extends Phaser.Scene {
         const hitY = bolt.root.y;
         bolt.dead = true;
         bolt.root.destroy(true);
+        if (bolt.slowFactor > 0) {
+          this.applyPlayerSlow(bolt.slowFactor, bolt.slowDuration);
+        }
         this.hurtPlayer(bolt.damage, hitX, hitY);
       }
     }
     this.enemyBolts = this.enemyBolts.filter((bolt) => !bolt.dead);
+  }
+
+  private applyPlayerSlow(factor: number, duration: number): void {
+    if (duration <= 0 || factor <= 0) return;
+    this.slowFactor = Math.max(this.slowFactor, Math.min(0.7, factor));
+    this.slowTime = Math.max(this.slowTime, duration);
+    this.playerSprite.setTint(0xbfe9ff);
+    showRuleToast('frost', '被冰霜减速', `移动速度 -${Math.round(this.slowFactor * 100)}%`);
+  }
+
+  private spawnFirePatch(x: number, y: number, radius: number, life: number): void {
+    const glow = this.add
+      .image(0, 0, 'glow')
+      .setDisplaySize(radius * 2.3, radius * 2.3)
+      .setTint(COLORS.orange)
+      .setAlpha(0.2)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const disc = this.add
+      .circle(0, 0, radius, 0xff7a34, 0.13)
+      .setStrokeStyle(1.5, COLORS.orange, 0.4);
+    const root = this.add.container(x, y, [glow, disc]);
+    this.addFx(root);
+    this.tweens.add({
+      targets: glow,
+      alpha: 0.1,
+      scale: 0.94,
+      duration: 420,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    this.hazards.push({ root, x, y, radius, life, maxLife: life, dead: false });
+  }
+
+  private updateHazards(dt: number): void {
+    for (const hazard of this.hazards) {
+      if (hazard.dead) continue;
+      hazard.life -= dt;
+      hazard.root.setAlpha(Math.max(0, hazard.life / hazard.maxLife));
+      if (hazard.life <= 0) {
+        hazard.dead = true;
+        hazard.root.destroy(true);
+        continue;
+      }
+      if (
+        this.invuln <= 0 &&
+        Phaser.Math.Distance.Between(
+          hazard.x,
+          hazard.y,
+          this.playerRoot.x,
+          this.playerRoot.y
+        ) <
+          hazard.radius + PLAYER_RADIUS * 0.55
+      ) {
+        this.hurtPlayer(5, hazard.x, hazard.y);
+      }
+    }
+    this.hazards = this.hazards.filter((hazard) => !hazard.dead);
+  }
+
+  private detonate(enemy: EnemyUnit): void {
+    const radius = 86;
+    this.spawnExplosion(enemy.root.x, enemy.root.y - 10, radius);
+    audio.play('explosion');
+    this.cameras.main.shake(130, 0.003);
+    if (
+      Phaser.Math.Distance.Between(enemy.root.x, enemy.root.y, this.playerRoot.x, this.playerRoot.y) <
+      radius + PLAYER_RADIUS
+    ) {
+      this.invuln = 0;
+      this.hurtPlayer(18, enemy.root.x, enemy.root.y);
+    }
   }
 
   private hurtPlayer(amount: number, sourceX: number, sourceY: number): void {
@@ -2314,7 +2877,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private spawnDeathBurst(x: number, y: number, kind: EnemyKind): void {
-    const color = kind === 'beetle' ? COLORS.purple : COLORS.cyan;
+    const color = RULE_TINTS[ENEMY_SPECS[kind].rule];
     const glow = this.add
       .image(x, y, 'glow')
       .setDisplaySize(80, 80)
@@ -2453,6 +3016,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.runState !== 'playing') return;
     this.updateBolts(dt);
     this.updateEnemyBolts(dt);
+    this.updateHazards(dt);
     this.updatePickups(dt);
     this.updateSpawns(dt);
     this.updateHud(dt);

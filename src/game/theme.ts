@@ -20,6 +20,10 @@ export const ASSETS = {
   player: './assets/sprites/player.png',
   beetle: './assets/sprites/beetle.png',
   bat: './assets/sprites/bat.png',
+  spore: './assets/sprites/spore.png',
+  slime: './assets/sprites/slime.png',
+  wisp: './assets/sprites/wisp.png',
+  bomber: './assets/sprites/bomber.png',
   boss: './assets/sprites/boss.png'
 } as const;
 

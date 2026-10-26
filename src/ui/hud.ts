@@ -7,6 +7,7 @@ import {
   type PlayerBuild,
   type RuleKey
 } from '../game/rules';
+import { ENEMY_SPECS, type EnemyKind } from '../game/rooms';
 import { formatTime } from '../game/theme';
 
 export type RuleToastKind = RuleKey | 'heal';
@@ -79,10 +80,7 @@ const comboBanner = document.querySelector('.combo-banner') as HTMLElement;
 const mobileComboName = byId<HTMLElement>('mobile-combo-name');
 const mobileComboSub = byId<HTMLElement>('mobile-combo-sub');
 
-const codexBeetle = byId<HTMLElement>('codex-beetle');
-const codexBat = byId<HTMLElement>('codex-bat');
-const codexBeetleState = byId<HTMLElement>('codex-beetle-state');
-const codexBatState = byId<HTMLElement>('codex-bat-state');
+const codexList = byId<HTMLElement>('codex-list');
 
 const lowHpVignette = byId<HTMLElement>('low-hp-vignette');
 const toast = byId<HTMLElement>('rule-toast');
@@ -262,12 +260,57 @@ export function setBuild(build: PlayerBuild, acquired: ReadonlySet<RuleKey> = ne
   mobileComboSub.textContent = combo.description;
   comboBanner.classList.toggle('is-empowered', combo.complete);
 
-  codexBeetle.classList.toggle('is-owned', acquired.has('blast'));
-  codexBeetle.classList.toggle('is-locked', !acquired.has('blast'));
-  codexBat.classList.toggle('is-owned', acquired.has('chain'));
-  codexBat.classList.toggle('is-locked', !acquired.has('chain'));
-  codexBeetleState.textContent = acquired.has('blast') ? '已掠夺' : '未掠夺';
-  codexBatState.textContent = acquired.has('chain') ? '已掠夺' : '未掠夺';
+  renderCodex(acquired);
+}
+
+let codexKinds: EnemyKind[] = [];
+let lastAcquired: ReadonlySet<RuleKey> = new Set();
+
+export function setRoomEnemies(kinds: EnemyKind[]): void {
+  codexKinds = kinds;
+  renderCodex(lastAcquired);
+}
+
+function renderCodex(acquired: ReadonlySet<RuleKey>): void {
+  lastAcquired = acquired;
+  codexList.textContent = '';
+  for (const kind of codexKinds.slice(0, 4)) {
+    const spec = ENEMY_SPECS[kind];
+    const owned = acquired.has(spec.rule);
+    const row = document.createElement('div');
+    row.className = `codex-row ${owned ? 'is-owned' : 'is-locked'}`;
+    row.dataset.kind = kind;
+
+    const imgBox = document.createElement('div');
+    imgBox.className = 'codex-img';
+    const img = document.createElement('img');
+    img.src = `./assets/sprites/${spec.sprite}.png`;
+    img.alt = spec.name;
+    imgBox.append(img);
+
+    const copy = document.createElement('div');
+    copy.className = 'codex-copy';
+    const name = document.createElement('b');
+    name.textContent = `${spec.elite ? '★ ' : ''}${spec.name}`;
+    const hint = document.createElement('small');
+    hint.textContent = spec.hint;
+    copy.append(name, hint);
+
+    const side = document.createElement('div');
+    side.className = 'codex-side';
+    const badge = document.createElement('span');
+    badge.className = 'codex-rule';
+    badge.textContent = spec.ruleName;
+    badge.style.color = RULE_COLORS[spec.rule];
+    badge.style.borderColor = `${RULE_COLORS[spec.rule]}59`;
+    const state = document.createElement('em');
+    state.className = 'codex-state';
+    state.textContent = owned ? '已掠夺' : '未掠夺';
+    side.append(badge, state);
+
+    row.append(imgBox, copy, side);
+    codexList.append(row);
+  }
 }
 
 export function showRuleToast(kind: RuleToastKind, name: string, sub: string): void {

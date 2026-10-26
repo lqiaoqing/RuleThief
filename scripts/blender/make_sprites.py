@@ -230,12 +230,29 @@ m_boss_pupil = material("arbiter pupil", "#05030a", roughness=0.25)
 m_boss_ring = material("arbiter ring", "#8d6a39", metallic=0.8, roughness=0.25)
 m_shard = material("shard", "#2a1d44", metallic=0.5, roughness=0.3,
                    emission="#5f3b9a", emission_strength=2.2)
+m_spore_body = material("spore bulb", "#1b3a32", roughness=0.72)
+m_spore_petal = material("spore petal", "#2f6b58", roughness=0.6)
+m_spore_glow = material("spore core", "#ffc9e2", roughness=0.2,
+                        emission="#ff8fc4", emission_strength=5.0)
+m_slime_body = material("slime body", "#3d1220", roughness=0.22, metallic=0.1)
+m_slime_core = material("slime core", "#ffb37a", roughness=0.25,
+                        emission="#ff6a1f", emission_strength=5.5)
+m_wisp_body = material("wisp cloak", "#1a2946", roughness=0.68)
+m_wisp_ice = material("wisp ice", "#cdf3ff", roughness=0.15,
+                      emission="#68d8f5", emission_strength=3.0)
+m_bomber_body = material("bomber shell", "#211a1c", metallic=0.55, roughness=0.4)
+m_bomber_sac = material("bomber sac", "#ffbf86", roughness=0.25,
+                        emission="#ff6a15", emission_strength=3.4)
 
 # collections
 c_player = collection("PLAYER")
 c_beetle = collection("BEETLE")
 c_bat = collection("BAT")
 c_boss = collection("BOSS")
+c_spore = collection("SPORE")
+c_slime = collection("SLIME")
+c_wisp = collection("WISP")
+c_bomber = collection("BOMBER")
 c_rig = collection("RIG")
 
 # ---------------------------------------------------------------------------
@@ -459,6 +476,91 @@ for i in range(9):
          rot=(math.radians(90), 0, a), vertices=8)
 
 # ---------------------------------------------------------------------------
+# SPORE FLOWER · scatter
+# ---------------------------------------------------------------------------
+cylinder("stem", (0, 0, 0.34), 0.09, 0.68, m_spore_petal, c_spore, vertices=12)
+sphere("bulb", (0, 0, 0.36), (0.5, 0.5, 0.34), m_spore_body, c_spore)
+for i in range(5):
+    a = i * math.tau / 5 + 0.3
+    cone(f"leaf {i}", (math.cos(a) * 0.36, math.sin(a) * 0.26, 0.14), 0.16, 0.008, 0.5,
+         m_spore_body, c_spore, rot=(math.radians(78), 0, a), vertices=8)
+for i in range(7):
+    a = i * math.tau / 7
+    cone(f"petal {i}", (math.cos(a) * 0.32, math.sin(a) * 0.28, 0.8), 0.2, 0.02, 0.6,
+         m_spore_petal, c_spore, rot=(math.radians(52), 0, a + math.pi / 2), vertices=10)
+sphere("spore core", (0, 0, 0.86), (0.2, 0.2, 0.2), m_spore_glow, c_spore)
+torus("spore ring", (0, 0, 0.86), 0.3, 0.016, m_spore_glow, c_spore,
+      rot=(math.radians(90), 0, 0))
+for i, (x, y, z) in enumerate([(-0.52, -0.2, 1.26), (0.44, -0.32, 1.42), (0.08, 0.34, 1.5)]):
+    sphere(f"spore mote {i}", (x, y, z), (0.05, 0.05, 0.05), m_spore_glow, c_spore,
+           segments=12, rings=6)
+
+# ---------------------------------------------------------------------------
+# FLAME SLIME · burn
+# ---------------------------------------------------------------------------
+cylinder("slime pool", (0, 0, 0.06), 0.92, 0.08, m_slime_body, c_slime, vertices=24)
+sphere("slime body", (0, 0, 0.5), (0.86, 0.8, 0.5), m_slime_body, c_slime)
+sphere("slime crown", (0, -0.06, 0.82), (0.5, 0.46, 0.3), m_slime_body, c_slime)
+for i, (x, y, h, ang) in enumerate([(-0.24, 0.02, 0.5, -0.3), (0.0, 0.08, 0.78, 0.0), (0.26, -0.02, 0.46, 0.32)]):
+    cone(f"flame {i}", (x, y, 0.92), 0.17, 0.01, h, m_slime_core, c_slime,
+         rot=(0, ang, 0), vertices=10)
+for i, (x, y) in enumerate([(-0.4, -0.32), (0.36, -0.26), (0.04, 0.12)]):
+    sphere(f"ember {i}", (x, y, 0.55), (0.09, 0.09, 0.09), m_slime_core, c_slime,
+           segments=12, rings=6)
+for x in (-0.22, 0.22):
+    sphere("slime eye", (x, -0.64, 0.68), (0.07, 0.05, 0.09), m_eye_red, c_slime,
+           segments=16, rings=8)
+
+# ---------------------------------------------------------------------------
+# FROST WISP · frost
+# ---------------------------------------------------------------------------
+cone("wisp cloak", (0, 0, 1.05), 0.18, 0.62, 1.05, m_wisp_body, c_wisp,
+     vertices=20, smooth=True)
+sphere("wisp head", (0, -0.02, 1.62), (0.33, 0.3, 0.3), m_wisp_body, c_wisp)
+for x in (-0.12, 0.12):
+    sphere("wisp eye", (x, -0.28, 1.64), (0.045, 0.03, 0.05), m_wisp_ice, c_wisp,
+           segments=16, rings=8)
+for i in range(6):
+    a = i * math.tau / 6
+    cone(f"icicle {i}", (math.cos(a) * 0.42, math.sin(a) * 0.32, 1.86), 0.09, 0.004, 0.34,
+         m_wisp_ice, c_wisp, rot=(math.radians(20), 0, a), vertices=8)
+for i in range(5):
+    a = i * math.tau / 5 + 0.5
+    cone(f"wisp shard {i}", (math.cos(a) * 0.48, math.sin(a) * 0.34, 0.78), 0.1, 0.004, 0.42,
+         m_wisp_body, c_wisp, rot=(math.radians(150), 0, a), vertices=8)
+torus("wisp halo", (0, 0, 1.96), 0.46, 0.014, m_wisp_ice, c_wisp,
+      rot=(math.radians(90), 0, 0))
+for i, (x, y, z) in enumerate([(-0.2, 0.1, 0.5), (0.18, 0.05, 0.42), (0, 0.2, 0.34)]):
+    sphere(f"wisp mote {i}", (x, y, z), (0.06, 0.06, 0.06), m_wisp_ice, c_wisp,
+           segments=12, rings=6)
+
+# ---------------------------------------------------------------------------
+# BOMBER BEETLE · blast
+# ---------------------------------------------------------------------------
+sphere("bomber body", (0, 0, 0.5), (0.86, 1.0, 0.5), m_bomber_body, c_bomber)
+sphere("bomber shell", (0, 0.08, 0.82), (0.6, 0.7, 0.2), m_bomber_body, c_bomber)
+for i, y in enumerate([-0.35, 0.05, 0.45]):
+    sphere(f"bomber plate {i}", (0, y, 0.94), (0.44 - 0.04 * i, 0.24, 0.11),
+           m_bomber_body, c_bomber)
+for i, (x, y) in enumerate([(-0.3, 0.34), (0.3, 0.34), (0, 0.64)]):
+    sphere(f"bomb sac {i}", (x, y, 0.9), (0.15, 0.15, 0.14), m_bomber_sac, c_bomber)
+sphere("bomber head", (0, -0.86, 0.54), (0.36, 0.32, 0.3), m_bomber_body, c_bomber)
+for x in (-0.15, 0.15):
+    sphere("bomber eye", (x, -1.13, 0.62), (0.05, 0.03, 0.05), m_eye_red, c_bomber,
+           segments=16, rings=8)
+cone("bomber horn", (0, -1.2, 0.72), 0.12, 0.008, 0.4, m_dark, c_bomber,
+     rot=(math.radians(90), 0, 0), vertices=10)
+for side in (-1, 1):
+    for i, y in enumerate([-0.45, 0.02, 0.48]):
+        cylinder(f"bomber leg {side} {i}", (side * 0.72, y, 0.22), 0.04, 0.55,
+                 m_darker, c_bomber, rot=(math.radians(90), math.radians(side * 55), 0),
+                 vertices=8)
+cylinder("fuse", (0, 0.5, 1.0), 0.028, 0.26, m_dark, c_bomber,
+         rot=(math.radians(28), 0, 0), vertices=8)
+sphere("fuse spark", (0, 0.56, 1.14), (0.055, 0.055, 0.055), m_bomber_sac, c_bomber,
+       segments=12, rings=6)
+
+# ---------------------------------------------------------------------------
 # camera / lights / render setup
 # ---------------------------------------------------------------------------
 cam_data = bpy.data.cameras.new("StyleCam")
@@ -515,15 +617,20 @@ ASSETS = [
     ("BEETLE", c_beetle, "beetle_raw.png", 3.2, 512, 0.75),
     ("BAT", c_bat, "bat_raw.png", 3.9, 512, 1.15),
     ("BOSS", c_boss, "boss_raw.png", 5.0, 768, 1.65),
+    ("SPORE", c_spore, "spore_raw.png", 3.2, 512, 0.75),
+    ("SLIME", c_slime, "slime_raw.png", 3.0, 512, 0.6),
+    ("WISP", c_wisp, "wisp_raw.png", 3.6, 512, 1.1),
+    ("BOMBER", c_bomber, "bomber_raw.png", 3.1, 512, 0.7),
 ]
 
 HIDE = [s.strip().lower() for s in os.environ.get("HIDE", "").split(",") if s.strip()]
 ONLY = os.environ.get("ONLY", "").strip().upper()
+ALL_COLLECTIONS = (c_player, c_beetle, c_bat, c_boss, c_spore, c_slime, c_wisp, c_bomber)
 
 for name, coll, filename, ortho, resolution, target_z in ASSETS:
     if ONLY and name != ONLY:
         continue
-    for c in (c_player, c_beetle, c_bat, c_boss):
+    for c in ALL_COLLECTIONS:
         c.hide_render = c != coll
     for obj in coll.objects:
         obj.hide_render = any(token in obj.name.lower() for token in HIDE)

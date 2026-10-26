@@ -17,6 +17,10 @@ ASSETS = [
     ("player_raw.png", "player.png", 256, 0.90, 5),
     ("beetle_raw.png", "beetle.png", 256, 0.90, 5),
     ("bat_raw.png", "bat.png", 256, 0.90, 5),
+    ("spore_raw.png", "spore.png", 256, 0.88, 5),
+    ("slime_raw.png", "slime.png", 256, 0.88, 5),
+    ("wisp_raw.png", "wisp.png", 256, 0.88, 5),
+    ("bomber_raw.png", "bomber.png", 256, 0.88, 5),
     ("boss_raw.png", "boss.png", 512, 0.92, 7),
 ]
 

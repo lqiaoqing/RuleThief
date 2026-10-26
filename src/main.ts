@@ -6,7 +6,7 @@ import type { RunEndPayload } from './game/M0Scene';
 import { audio } from './game/audio';
 import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
-import type { RoomCleared, RoomPreview, SupportId } from './game/rooms';
+import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import {
   isRewardVisible,
   isRoomVisible,
@@ -27,7 +27,8 @@ declare global {
     __RT_GRANT_ALL__?: () => void;
     __RT_DAMAGE__?: (amount: number) => void;
     __RT_END__?: (victory: boolean) => void;
-    __RT_SPAWN__?: (kind?: 'beetle' | 'bat') => void;
+    __RT_SPAWN__?: (kind?: EnemyKind) => void;
+    __RT_SPAWN_AT__?: (kind: EnemyKind, x: number, y: number) => void;
     __RT_KILL_ALL__?: () => void;
     __RT_POSE__?: (build?: {
       trajectory?: TrajectoryKey | null;
@@ -35,6 +36,15 @@ declare global {
       trajectoryLevel?: 1 | 2 | 3;
       impactLevel?: 1 | 2 | 3;
     }) => void;
+    __RT_TABLEAU__?: (
+      kinds: EnemyKind[],
+      build?: {
+        trajectory?: TrajectoryKey | null;
+        impact?: ImpactKey | null;
+        trajectoryLevel?: 1 | 2 | 3;
+        impactLevel?: 1 | 2 | 3;
+      }
+    ) => void;
     __RT_SET_STATS__?: (elapsed: number, kills: number) => void;
     __RT_SET_BUILD__?: (
       trajectory: TrajectoryKey | null,
@@ -128,10 +138,10 @@ function showResult(payload: RunEndPayload): void {
   resultScreen.classList.toggle('is-victory', payload.victory);
   resultScreen.classList.toggle('is-defeat', !payload.victory);
   resultEmblemUse?.setAttribute('href', payload.victory ? '#i-crown' : '#i-skull');
-  resultKicker.textContent = payload.victory ? 'M2 · RUN COMPLETE' : 'M2 · RUN ENDED';
+  resultKicker.textContent = payload.victory ? 'M3 · RUN COMPLETE' : 'M3 · RUN ENDED';
   resultTitle.textContent = payload.victory ? '审判完成' : '规则耗尽';
   resultSub.textContent = payload.victory
-    ? '你清空了全部三个房间。规则被夺走，也被驾驭。'
+    ? '你清空了全部六个房间，也击穿了两位精英。规则被夺走，也被驾驭。'
     : '生命归零。先看懂预警，再决定什么时候闪避。';
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);
@@ -283,8 +293,10 @@ function handleReady(): void {
   window.__RT_DAMAGE__ = (amount) => scene?.debugDamagePlayer(amount);
   window.__RT_END__ = (victory) => scene?.debugEndRun(victory);
   window.__RT_SPAWN__ = (kind) => scene?.debugSpawn(kind);
+  window.__RT_SPAWN_AT__ = (kind, x, y) => scene?.debugSpawnAt(kind, x, y);
   window.__RT_KILL_ALL__ = () => scene?.debugKillAll();
   window.__RT_POSE__ = (build) => scene?.debugPoseCombat(build);
+  window.__RT_TABLEAU__ = (kinds, build) => scene?.debugTableau(kinds, build);
   window.__RT_SET_STATS__ = (elapsed, kills) => scene?.debugSetStats(elapsed, kills);
   window.__RT_SET_BUILD__ = (trajectory, impact, trajectoryLevel = 1, impactLevel = 1) =>
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);

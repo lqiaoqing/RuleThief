@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05080f" />
-    <meta name="description" content="规则掠夺者 RULE THIEF · M1 规则构筑切片：3 弹道 × 3 命中 = 9 种组合，装备 / 升级 / 替换。" />
-    <title>规则掠夺者 RULE THIEF · M1 规则构筑切片</title>
+    <meta name="description" content="规则掠夺者 RULE THIEF · M3 敌人与精英切片：6 种敌人、2 个精英、6 个房间。" />
+    <title>规则掠夺者 RULE THIEF · M3 敌人与精英切片</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="preload" as="image" href="./assets/art/menu-key.webp" />
   </head>
@@ -134,7 +134,7 @@
               </div>
 
               <div class="run-actions">
-                <div class="style-badge">M1<br />RULES</div>
+                <div class="style-badge">M3<br />ELITE</div>
                 <button class="icon-btn sound-btn" id="sound-btn" aria-label="静音" aria-pressed="false">
                   <svg class="sound-on"><use href="#i-sound" /></svg>
                   <svg class="sound-off" hidden><use href="#i-mute" /></svg>
@@ -190,7 +190,7 @@
 
             <div class="boss-watch">
               <span class="boss-dot"></span>
-              M1 SLICE <b>训练回廊</b>
+              M3 SLICE <b>训练回廊</b>
             </div>
 
             <div class="rule-toast" id="rule-toast" hidden>
@@ -222,7 +222,7 @@
             <div class="brand-mark">RT</div>
             <div class="brand-copy">
               <b>RULE THIEF</b>
-              <small>M1 可玩切片 / 0.3</small>
+              <small>M3 可玩切片 / 0.4</small>
             </div>
             <span class="brand-line"></span>
           </div>
@@ -273,33 +273,22 @@
               <span>累计击杀 <b id="objective-kills">0</b></span>
               <span>房间 <b id="threat-level">I</b></span>
             </div>
-            <div class="codex-list">
-              <div class="codex-row is-locked" id="codex-beetle">
-                <div class="codex-img"><img src="./assets/sprites/beetle.png" alt="铁刺甲虫" /></div>
-                <div class="codex-copy"><b>铁刺甲虫</b><small>预警冲锋 · 接触伤害</small></div>
-                <div class="codex-side"><span class="codex-rule blast">爆裂</span><em class="codex-state" id="codex-beetle-state">未掠夺</em></div>
-              </div>
-              <div class="codex-row is-locked" id="codex-bat">
-                <div class="codex-img"><img src="./assets/sprites/bat.png" alt="雷光蝠" /></div>
-                <div class="codex-copy"><b>雷光蝠</b><small>远程雷击 · 保持距离</small></div>
-                <div class="codex-side"><span class="codex-rule chain">弹射</span><em class="codex-state" id="codex-bat-state">未掠夺</em></div>
-              </div>
-            </div>
+            <div class="codex-list" id="codex-list"></div>
             <p class="objective-note">清空本房配额后暂停战斗，三选一奖励：本房敌人的规则 + 基础强化。</p>
           </section>
 
           <section class="panel notes-panel">
-            <div class="panel-head"><span>M2 验证</span><span class="panel-sub">QA</span></div>
+            <div class="panel-head"><span>M3 验证</span><span class="panel-sub">QA</span></div>
             <ul class="check-list">
-              <li><i></i>三房间推进，配额清空后结算奖励</li>
-              <li><i></i>奖励来自本房敌人规则 + 基础强化</li>
-              <li><i></i>切房清空弹幕，构筑与生命保留</li>
-              <li><i></i>生命归零失败，三房全清胜利</li>
+              <li><i></i>6 种敌人 + 2 精英，规则池按房间分化</li>
+              <li><i></i>精英房领袖必出，四选一奖励</li>
+              <li><i></i>史莱姆火焰地面 / 冰霜减速弹 / 爆裂自爆</li>
+              <li><i></i>生命归零失败，六房全清胜利</li>
             </ul>
           </section>
 
           <div class="sidebar-foot">
-            <span>M2 BUILD</span>
+            <span>M3 BUILD</span>
             <b>BLENDER + PROCEDURAL</b>
           </div>
         </aside>
@@ -345,7 +334,7 @@
           <div class="result-emblem" id="result-emblem">
             <svg><use href="#i-crown" /></svg>
           </div>
-          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M2 · RUN COMPLETE</span></div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M3 · RUN COMPLETE</span></div>
           <h2 id="result-title">审判完成</h2>
           <p id="result-sub">你在训练回廊中完成了本局。</p>
           <div class="result-stats">
@@ -374,7 +363,7 @@
         <div class="menu-grid" aria-hidden="true"></div>
 
         <div class="menu-content">
-          <div class="eyebrow"><span class="eyebrow-dot"></span> M1 PLAYABLE / 0.3 · 2026</div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> M3 PLAYABLE / 0.4 · 2026</div>
           <h1>
             <span class="title-cn">规则</span>
             <span class="title-cn title-accent">掠夺者</span>
@@ -385,7 +374,7 @@
             <em>让每一次命中，都改写战斗。</em>
           </p>
 
-          <div class="slice-chip"><span class="slice-dot"></span>M1 · 3 × 3 规则构筑切片</div>
+          <div class="slice-chip"><span class="slice-dot"></span>M3 · 6 敌人 + 2 精英切片</div>
 
           <div class="stats-row">
             <div class="stat"><b>03:00</b><span>本局目标</span></div>
@@ -397,14 +386,14 @@
           <div class="menu-actions">
             <button class="primary" id="enter-btn">
               <span class="btn-ico"><svg><use href="#i-play" /></svg></span>
-              <span class="btn-copy"><b>进入训练回廊</b><small>M1 · 3 MINUTE RUN</small></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>M3 · 6 ROOM RUN</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
             <button class="ghost" id="menu-note-btn">这是什么？</button>
           </div>
 
           <div class="menu-foot">
-            <span>M1 可玩切片 · 非最终画面</span>
+            <span>M3 可玩切片 · 非最终画面</span>
             <span class="menu-foot-line"></span>
             <span>BLENDER + PROCEDURAL ASSETS</span>
           </div>
@@ -441,7 +430,7 @@
 
         <div class="menu-status">
           <span class="status-dot"></span>
-          M1 · 3 × 3 规则构筑 · 竖屏 / 横屏双端适配
+          M3 · 6 敌人 2 精英 · 竖屏 / 横屏双端适配
         </div>
 
         <div class="note-modal" id="note-modal" hidden>
@@ -450,7 +439,7 @@
               <svg><use href="#i-close" /></svg>
             </button>
             <div class="eyebrow"><span class="eyebrow-dot"></span> WHAT IS THIS</div>
-            <h2>M1 规则构筑切片</h2>
+            <h2>M3 敌人与精英切片</h2>
             <p>
               3 分钟生存训练。击败敌人掠夺规则碎片，每 15 次击杀开启「规则祭坛」三选一：新规则装备、重复规则升级、同槽不同规则替换。3 条弹道 × 3 条命中 = 9 种组合，全部可玩。
             </p>
@@ -463,7 +452,7 @@
               <li><b>音频</b>WebAudio 程序化音效与环境音，可随时静音</li>
             </ul>
             <button class="primary compact" id="note-enter-btn">
-              <span class="btn-copy"><b>进入训练回廊</b><small>M1 · 3 MINUTE RUN</small></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>M3 · 6 ROOM RUN</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
           </div>

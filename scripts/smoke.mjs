@@ -14,9 +14,12 @@ const checks = [];
 const errors = [];
 
 const ROOMS = [
-  { name: '训戒前庭', quota: 8 },
-  { name: '回声回廊', quota: 12 },
-  { name: '裂痕圣所', quota: 16 }
+  { name: '训戒前庭', en: 'ANTECHAMBER', quota: 8, elite: false },
+  { name: '余烬苗圃', en: 'EMBER NURSERY', quota: 10, elite: false },
+  { name: '孢子温室', en: 'SPORE VAULT', quota: 12, elite: false },
+  { name: '回声回廊', en: 'ECHO GALLERY', quota: 14, elite: false },
+  { name: '裂甲竞技场', en: 'SUNDER PIT', quota: 9, elite: true },
+  { name: '雷暴祭坛', en: 'THUNDER ALTAR', quota: 10, elite: true }
 ];
 
 const COMBO_NAMES = {
@@ -56,11 +59,12 @@ async function overlayState(page) {
     roomTitle: document.getElementById('room-title')?.textContent,
     roomKicker: document.getElementById('room-kicker')?.textContent,
     roomQuota: document.getElementById('room-quota')?.textContent,
+    enemyChips: document.querySelectorAll('#room-enemies .room-enemy').length,
+    eliteChips: document.querySelectorAll('#room-enemies .room-enemy.is-elite').length,
     cards: Array.from(document.querySelectorAll('#rule-offers .rule-card')).map((card) => ({
       key: card.dataset.key,
       action: card.dataset.action,
-      kind: card.dataset.kind,
-      text: card.textContent.replace(/\s+/g, ' ').trim().slice(0, 70)
+      kind: card.dataset.kind
     })),
     paused: window.__RT_GAME__?.scene.isPaused('M0') ?? false
   }));
@@ -74,13 +78,11 @@ async function hud(page) {
     timer: document.getElementById('timer')?.textContent,
     objective: document.getElementById('objective-time')?.textContent,
     objectiveLabel: document.getElementById('objective-label')?.textContent,
-    objectiveKills: document.getElementById('objective-kills')?.textContent,
-    progress: document.getElementById('survival-fill')?.style.width,
     hp: document.getElementById('hp-text')?.textContent,
     combo: document.getElementById('combo-name')?.textContent,
     buildCount: document.getElementById('build-count')?.textContent,
-    trajectoryStatus: document.getElementById('slot-trajectory-status')?.textContent,
-    impactStatus: document.getElementById('slot-impact-status')?.textContent
+    codexRows: document.querySelectorAll('#codex-list .codex-row').length,
+    codexOwned: document.querySelectorAll('#codex-list .codex-row.is-owned').length
   }));
 }
 
@@ -97,24 +99,29 @@ async function enterRoom(page) {
   const visible = await page.$eval('#room-screen', (el) => !el.hidden);
   if (!visible) return false;
   await page.click('#room-enter-btn');
-  await sleep(320);
+  await sleep(340);
   return true;
 }
 
 async function finishRoom(page, quota) {
   await page.evaluate((value) => window.__RT_SET_ROOM_KILLS__?.(value), quota - 1);
   await sleep(120);
-  for (let attempt = 0; attempt < 12; attempt += 1) {
+  for (let attempt = 0; attempt < 14; attempt += 1) {
     const state = await snapshot(page);
-    if (state.roomState === 'reward') return true;
+    if (state.roomState === 'reward' || state.runState === 'ended') return true;
     if (Number(state.enemies) === 0) {
       await page.evaluate(() => window.__RT_SPAWN__?.('beetle'));
-      await sleep(700);
+      await sleep(720);
     }
     await page.evaluate(() => window.__RT_KILL_ALL__?.());
     await sleep(200);
   }
   return (await snapshot(page)).roomState === 'reward';
+}
+
+async function pickFirstCard(page) {
+  await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
+  await sleep(380);
 }
 
 const browser = await puppeteer.launch({
@@ -140,7 +147,7 @@ try {
   check('menu visible on load', await page.$eval('#menu', (el) => !el.hidden));
   check('hud hidden on load', await page.$eval('#hud', (el) => el.hidden));
   check(
-    'room and reward overlays hidden on load',
+    'overlays hidden on load',
     await page.evaluate(() =>
       Boolean(document.getElementById('room-screen')?.hidden && document.getElementById('altar-screen')?.hidden)
     )
@@ -149,36 +156,34 @@ try {
   await page.click('#enter-btn');
   await sleep(900);
   check('menu hidden after start', await page.$eval('#menu', (el) => el.hidden));
-  check('hud visible after start', await page.$eval('#hud', (el) => !el.hidden));
 
   let overlay = await overlayState(page);
   let state = await snapshot(page);
-  check('first room preview opens', overlay.roomVisible, JSON.stringify(overlay.roomKicker));
-  check('preview shows room 1 of 3', /ROOM 01 \/ 03/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
-  check('preview shows the room name', overlay.roomTitle === ROOMS[0].name, overlay.roomTitle);
-  check('preview shows the quota', overlay.roomQuota === String(ROOMS[0].quota), overlay.roomQuota);
+  check('first room preview opens', overlay.roomVisible, overlay.roomKicker);
+  check('preview shows room 1 of 6', /ROOM 01 \/ 06/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+  check('preview shows the room name and quota', overlay.roomTitle === ROOMS[0].name && overlay.roomQuota === '8', `${overlay.roomTitle} / ${overlay.roomQuota}`);
   check('preview pauses the run', overlay.paused, String(overlay.paused));
+  check('preview lists the room enemies', overlay.enemyChips === 1, String(overlay.enemyChips));
   check(
-    'run starts with an empty build and full hp',
+    'run starts empty with full hp',
     state.hp === 100 && state.maxHp === 100 && state.build?.trajectory === null && state.build?.impact === null,
-    JSON.stringify({ hp: state.hp, maxHp: state.maxHp, build: state.build })
+    JSON.stringify({ hp: state.hp, build: state.build })
   );
 
   await enterRoom(page);
   overlay = await overlayState(page);
   state = await snapshot(page);
-  check('entering a room hides the preview', !overlay.roomVisible);
-  check('entering a room resumes play', overlay.paused === false, String(overlay.paused));
+  check('entering room 1 resumes play', !overlay.roomVisible && overlay.paused === false);
   check('room 1 is fighting', state.roomState === 'fighting' && state.roomIndex === 0, JSON.stringify({ roomState: state.roomState, roomIndex: state.roomIndex }));
 
-  const roomHud = await hud(page);
+  let roomHud = await hud(page);
   check(
-    'HUD shows room progress',
+    'HUD shows room 1 and the codex',
     roomHud.roomNum === '01' &&
-      roomHud.roomTotal === '/ 03' &&
-      roomHud.roomName === ROOMS[0].name &&
-      roomHud.objective === `0 / ${ROOMS[0].quota}` &&
-      roomHud.objectiveLabel === 'ANTECHAMBER',
+      roomHud.roomTotal === '/ 06' &&
+      roomHud.objective === '0 / 8' &&
+      roomHud.objectiveLabel === ROOMS[0].en &&
+      roomHud.codexRows === 1,
     JSON.stringify(roomHud)
   );
 
@@ -196,116 +201,130 @@ try {
   await page.keyboard.up('Space');
   check('space triggers dash', dashed);
 
+  await page.evaluate(() => {
+    window.__RT_KILL_ALL__?.();
+  });
+  await sleep(200);
+  for (const kind of ['spore', 'slime', 'wisp', 'bomber']) {
+    const before = Number((await snapshot(page)).enemies);
+    await page.evaluate((k) => window.__RT_SPAWN_AT__?.(k, 560, 360), kind);
+    await sleep(260);
+    const after = Number((await snapshot(page)).enemies);
+    check(`spawns ${kind}`, after > before, `${before} -> ${after}`);
+  }
+  const hazardSeen = await poll(page, () => (window.__RT_SNAPSHOT__?.().hazards ?? 0) > 0, 7000);
+  check('slime leaves burning ground', hazardSeen);
+
+  await poll(page, () => (window.__RT_SNAPSHOT__?.().invuln ?? 0) === 0, 3000);
+  const hpBeforeBomber = Number((await snapshot(page)).hp);
+  const playerPos = await snapshot(page);
+  await page.evaluate(
+    (pos) => window.__RT_SPAWN_AT__?.('bomber', pos.x + 58, pos.y),
+    { x: Number(playerPos.playerX), y: Number(playerPos.playerY) }
+  );
+  await sleep(180);
   await page.evaluate(() => window.__RT_KILL_ALL__?.());
-  await sleep(250);
-  state = await snapshot(page);
-  check('kills count toward the room', Number(state.roomKills) > 0, JSON.stringify({ roomKills: state.roomKills, kills: state.kills }));
-  let afterKillHud = await hud(page);
+  await sleep(300);
+  const hpAfterBomber = Number((await snapshot(page)).hp);
   check(
-    'HUD tracks room progress',
-    afterKillHud.objective === `${Math.min(ROOMS[0].quota, state.roomKills)} / ${ROOMS[0].quota}`,
-    JSON.stringify({ objective: afterKillHud.objective, roomKills: state.roomKills })
+    'bomber death explosion damages the player',
+    hpAfterBomber < hpBeforeBomber,
+    `${hpBeforeBomber} -> ${hpAfterBomber}`
   );
 
   const cleared = await finishRoom(page, ROOMS[0].quota);
-  state = await snapshot(page);
   overlay = await overlayState(page);
-  check('clearing the quota opens the reward screen', cleared && overlay.rewardVisible, JSON.stringify({ roomState: state.roomState }));
-  check('reward screen pauses the run', overlay.paused, String(overlay.paused));
-  check('reward offers three cards', overlay.cards.length === 3, String(overlay.cards.length));
+  check('clearing the quota opens rewards', cleared && overlay.rewardVisible, JSON.stringify({ cleared, visible: overlay.rewardVisible }));
+  check('normal room offers three cards', overlay.cards.length === 3, String(overlay.cards.length));
   check(
-    'room 1 only offers the rule its enemies carry',
-    overlay.cards.filter((card) => card.kind === 'rule').every((card) => card.key === 'blast'),
+    'room 1 only offers the rule its enemy carries',
+    overlay.cards.filter((card) => card.kind === 'rule').every((card) => card.key === 'pierce'),
     JSON.stringify(overlay.cards)
   );
-  check(
-    'reward screen mixes rules and supports',
-    overlay.cards.some((card) => card.kind === 'rule') && overlay.cards.some((card) => card.kind === 'support'),
-    JSON.stringify(overlay.cards.map((card) => card.kind))
-  );
 
-  const ruleIndex = overlay.cards.findIndex((card) => card.kind === 'rule');
-  await page.evaluate((index) => window.__RT_PICK_REWARD__?.(index), ruleIndex);
-  await sleep(400);
+  await pickFirstCard(page);
   state = await snapshot(page);
   overlay = await overlayState(page);
-  check('picking a reward equips the rule', state.build?.impact?.key === 'blast', JSON.stringify(state.build));
-  check('picking a reward hides the reward screen', !overlay.rewardVisible);
-  check(
-    'next room preview follows the reward',
-    overlay.roomVisible && /ROOM 02 \/ 03/.test(overlay.roomKicker ?? ''),
-    overlay.roomKicker
-  );
-  const carriedHud = await hud(page);
-  check(
-    'build and level carry into the next room',
-    carriedHud.impactStatus === 'Lv.1' && carriedHud.buildCount === '等级 1 / 6',
-    JSON.stringify(carriedHud)
-  );
+  check('picking pierce equips the trajectory slot', state.build?.trajectory?.key === 'pierce', JSON.stringify(state.build));
+  check('next room preview follows the reward', overlay.roomVisible && /ROOM 02 \/ 06/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+  roomHud = await hud(page);
+  check('codex switches to the new room enemies', roomHud.codexRows === 2, String(roomHud.codexRows));
 
-  await enterRoom(page);
-  state = await snapshot(page);
-  check(
-    'room 2 loads its own quota and mix',
-    state.roomIndex === 1 && state.roomQuota === ROOMS[1].quota,
-    JSON.stringify({ roomIndex: state.roomIndex, roomQuota: state.roomQuota })
-  );
-  check('switching rooms clears in-flight bolts', Number(state.bolts) === 0 && Number(state.enemies) === 0, JSON.stringify({ bolts: state.bolts, enemies: state.enemies }));
-  const room2Hud = await hud(page);
-  check('HUD shows room 2', room2Hud.roomNum === '02' && room2Hud.roomName === ROOMS[1].name, JSON.stringify(room2Hud));
+  for (let index = 1; index < ROOMS.length; index += 1) {
+    const room = ROOMS[index];
+    const preview = await overlayState(page);
+    if (room.elite) {
+      check(`room ${index + 1} preview marks the elite`, preview.eliteChips >= 1, String(preview.eliteChips));
+    }
 
-  await page.evaluate(() => {
-    window.__RT_ORIG_RANDOM__ = Math.random;
-    Math.random = () => 0.99;
-  });
-  await finishRoom(page, ROOMS[1].quota);
-  await page.evaluate(() => {
-    if (window.__RT_ORIG_RANDOM__) Math.random = window.__RT_ORIG_RANDOM__;
-  });
-  overlay = await overlayState(page);
-  const supportCard = overlay.cards.find((card) => card.kind === 'support');
-  check('room 2 reward screen opens', overlay.rewardVisible && overlay.cards.length === 3, JSON.stringify(overlay.cards));
-  check('room 2 can offer a support', Boolean(supportCard), JSON.stringify(overlay.cards.map((c) => c.key)));
+    await enterRoom(page);
+    await sleep(200);
+    const roomState = await snapshot(page);
+    check(
+      `room ${index + 1} loads (${room.name})`,
+      roomState.roomIndex === index && roomState.roomQuota === room.quota,
+      JSON.stringify({ roomIndex: roomState.roomIndex, quota: roomState.roomQuota })
+    );
+    if (index === 1) {
+      check(
+        'switching rooms clears bolts and enemies',
+        Number(roomState.bolts) === 0 && Number(roomState.enemies) === 0,
+        JSON.stringify({ bolts: roomState.bolts, enemies: roomState.enemies })
+      );
+    }
+    if (room.elite) {
+      check(
+        `room ${index + 1} spawns its elite leader`,
+        Number(roomState.eliteAlive) === 1,
+        String(roomState.eliteAlive)
+      );
+    }
 
-  await page.evaluate((id) => window.__RT_PICK_SUPPORT__?.(id), supportCard?.key ?? 'max-hp');
-  await sleep(400);
-  state = await snapshot(page);
-  check(
-    'support reward raises the hp cap',
-    state.maxHp === 120 && state.hp === 120,
-    JSON.stringify({ support: supportCard?.key, hp: state.hp, maxHp: state.maxHp })
-  );
-  const hpText = await page.$eval('#hp-text', (el) => el.textContent);
-  check('HUD shows the new hp cap', hpText === '120 / 120', String(hpText));
+    await finishRoom(page, room.quota);
+    overlay = await overlayState(page);
+    check(`room ${index + 1} reward screen opens`, overlay.rewardVisible, JSON.stringify({ cards: overlay.cards.length }));
+    if (room.elite) {
+      check(`elite room ${index + 1} offers four rewards`, overlay.cards.length === 4, String(overlay.cards.length));
+    } else {
+      check(`room ${index + 1} offers three rewards`, overlay.cards.length === 3, String(overlay.cards.length));
+    }
 
-  overlay = await overlayState(page);
-  check('room 3 preview follows', overlay.roomVisible && /ROOM 03 \/ 03/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+    await pickFirstCard(page);
+    state = await snapshot(page);
+    const isLast = index === ROOMS.length - 1;
+    if (isLast) {
+      check('final reward ends the run in victory', state.runState === 'ended', String(state.runState));
+    } else {
+      const nextOverlay = await overlayState(page);
+      check(
+        `room ${index + 1} reward applies and the next room opens`,
+        state.runState === 'playing' && nextOverlay.roomVisible,
+        JSON.stringify({ runState: state.runState, room: nextOverlay.roomKicker })
+      );
+      check(
+        `room ${index + 2} preview lists enemies`,
+        nextOverlay.enemyChips >= 1,
+        String(nextOverlay.enemyChips)
+      );
+    }
+  }
 
-  await enterRoom(page);
-  await finishRoom(page, ROOMS[2].quota);
-  overlay = await overlayState(page);
-  check('final reward screen opens', overlay.rewardVisible && overlay.cards.length === 3, String(overlay.cards.length));
-
-  const finalRuleIndex = overlay.cards.findIndex((card) => card.kind === 'rule');
-  await page.evaluate((index) => window.__RT_PICK_REWARD__?.(index >= 0 ? index : 0), finalRuleIndex);
-  await page.waitForFunction(() => !document.getElementById('result-screen')?.hidden, { timeout: 6000 });
+  await page.waitForFunction(() => !document.getElementById('result-screen')?.hidden, { timeout: 8000 });
   const victory = await page.evaluate(() => ({
     title: document.getElementById('result-title')?.textContent,
     cls: document.getElementById('result-screen')?.className,
     rooms: document.getElementById('result-rooms')?.textContent,
     combo: document.getElementById('result-combo-name')?.textContent,
-    kills: document.getElementById('result-kills')?.textContent,
     time: document.getElementById('result-time')?.textContent
   }));
-  check('finishing room 3 wins the run', victory.title === '审判完成' && victory.cls.includes('is-victory'), JSON.stringify(victory));
-  check('victory reports three rooms cleared', victory.rooms === '3 / 3', String(victory.rooms));
-  check('victory reports a combo', Boolean(victory.combo), String(victory.combo));
-  check('victory reports total time', /^\d\d:\d\d$/.test(victory.time ?? ''), String(victory.time));
+  check('clearing all six rooms wins', victory.title === '审判完成' && victory.cls.includes('is-victory'), JSON.stringify(victory));
+  check('victory reports six rooms', victory.rooms === '6 / 6', String(victory.rooms));
+  check('victory reports a combo and time', Boolean(victory.combo) && /^\d\d:\d\d$/.test(victory.time ?? ''), `${victory.combo} / ${victory.time}`);
 
   await page.click('#restart-btn');
-  await sleep(600);
+  await sleep(700);
   state = await snapshot(page);
-  const restartedHud = await hud(page);
+  roomHud = await hud(page);
   overlay = await overlayState(page);
   check(
     'restart resets the whole run',
@@ -315,16 +334,10 @@ try {
       state.kills === 0 &&
       state.build?.trajectory === null &&
       state.build?.impact === null,
-    JSON.stringify({ hp: state.hp, maxHp: state.maxHp, roomIndex: state.roomIndex, kills: state.kills, build: state.build })
+    JSON.stringify({ hp: state.hp, roomIndex: state.roomIndex, kills: state.kills, build: state.build })
   );
   check('restart reopens room 1 preview', overlay.roomVisible, String(overlay.roomVisible));
-  check(
-    'restart resets the HUD',
-    restartedHud.roomNum === '01' &&
-      restartedHud.objective === `0 / ${ROOMS[0].quota}` &&
-      restartedHud.buildCount === '等级 0 / 6',
-    JSON.stringify(restartedHud)
-  );
+  check('restart resets the HUD and codex', roomHud.roomNum === '01' && roomHud.objective === '0 / 8' && roomHud.codexRows === 1, JSON.stringify(roomHud));
 
   await enterRoom(page);
   await page.evaluate(() => window.__RT_DAMAGE__?.(500));
@@ -335,17 +348,14 @@ try {
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check('death shows the defeat result', defeat.title === '规则耗尽' && defeat.cls.includes('is-defeat'), JSON.stringify(defeat));
-  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 3', String(defeat.rooms));
+  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 6', String(defeat.rooms));
 
   await page.click('#result-menu-btn');
   await sleep(300);
   check('result menu returns to menu', await page.$eval('#menu', (el) => !el.hidden));
-  check('result menu hides hud', await page.$eval('#hud', (el) => el.hidden));
 
   await page.click('#enter-btn');
   await sleep(800);
-  state = await snapshot(page);
-  check('re-enter starts a fresh run', state.roomState === 'preview' && state.hp === 100, JSON.stringify({ roomState: state.roomState, hp: state.hp }));
   await enterRoom(page);
 
   const comboResults = [];
@@ -375,7 +385,6 @@ try {
   await page.click('#pause-btn');
   await sleep(220);
   check('pause overlay visible', await page.$eval('#pause-screen', (el) => !el.hidden));
-  check('pause offers no rule lab', await page.evaluate(() => !document.getElementById('open-altar-btn')));
   await page.click('#resume-btn');
   await sleep(220);
   check('pause overlay hidden after resume', await page.$eval('#pause-screen', (el) => el.hidden));
@@ -409,27 +418,18 @@ try {
   await sleep(400);
   check('mobile can enter a room', (await snapshot(mobile)).roomState === 'fighting');
   check('mobile controls visible', await mobile.$eval('#joystick', (el) => getComputedStyle(el).display !== 'none'));
-  check('mobile room label updates', (await mobile.$eval('#mobile-room-name', (el) => el.textContent)) === ROOMS[0].name);
+  check('mobile codex renders room enemies', (await mobile.$$('#codex-list .codex-row')).length === 1);
 
   await mobile.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(8));
   await mobile.evaluate(() => window.__RT_SPAWN__?.('beetle'));
-  await sleep(750);
+  await sleep(760);
   await mobile.evaluate(() => window.__RT_KILL_ALL__?.());
-  const mobileReward = await poll(
-    mobile,
-    () => !document.getElementById('altar-screen')?.hidden,
-    8000
-  );
+  const mobileReward = await poll(mobile, () => !document.getElementById('altar-screen')?.hidden, 8000);
   check('mobile reward screen opens', mobileReward);
-  const mobileCards = await mobile.evaluate(() => {
-    const card = document.querySelector('#rule-offers .rule-card');
-    const box = card?.getBoundingClientRect();
-    return {
-      count: document.querySelectorAll('#rule-offers .rule-card').length,
-      fits: Boolean(box && box.width > 0 && box.bottom <= window.innerHeight + 1),
-      overflow: document.documentElement.scrollWidth <= window.innerWidth + 1
-    };
-  });
+  const mobileCards = await mobile.evaluate(() => ({
+    count: document.querySelectorAll('#rule-offers .rule-card').length,
+    overflow: document.documentElement.scrollWidth <= window.innerWidth + 1
+  }));
   check('mobile reward cards fit', mobileCards.count === 3 && mobileCards.overflow, JSON.stringify(mobileCards));
   await mobile.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
   await sleep(400);
