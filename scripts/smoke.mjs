@@ -305,6 +305,7 @@ try {
   await sleep(900);
   const beforeStatus = await snapshot(page);
   const burningBefore = (beforeStatus.enemyList ?? []).filter((enemy) => enemy.burning).length;
+
   await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'frost', 2, 2));
   await sleep(150);
   const afterStatus = await snapshot(page);
@@ -318,7 +319,13 @@ try {
     })
   );
   await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'frost', 2, 2));
-  await sleep(150);
+  await page.evaluate(() => {
+    const snap = window.__RT_SNAPSHOT__?.() ?? {};
+    window.__RT_SET_ROOM_KILLS__?.(0);
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_SPAWN_AT__?.('sunder', Number(snap.playerX) + 220, Number(snap.playerY) + 40);
+  });
+  await sleep(200);
   await page.evaluate(() => window.__RT_VOLLEY__?.());
   await sleep(900);
   const frosted = await snapshot(page);
@@ -329,7 +336,27 @@ try {
       slowed: (frosted.enemyList ?? []).filter((enemy) => enemy.slowed).length
     })
   );
-  await page.evaluate(() => window.__RT_KILL_ALL__?.());
+  await page.evaluate(() => window.__RT_PURGE_ENEMIES__?.());
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
+
+  await page.evaluate(() => {
+    const snap = window.__RT_SNAPSHOT__?.() ?? {};
+    window.__RT_SET_ROOM_KILLS__?.(0);
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_SPAWN_AT__?.('wisp', Number(snap.playerX) + 260, Number(snap.playerY));
+  });
+  let slowedByWisp = false;
+  for (let tick = 0; tick < 90; tick += 1) {
+    const sample = await snapshot(page);
+    if (Number(sample.slowTime) > 0) {
+      slowedByWisp = true;
+      break;
+    }
+    await page.evaluate(() => window.__RT_HEAL__?.(40));
+    await sleep(150);
+  }
+  check('frost wisp bolt slows the player', slowedByWisp, String((await snapshot(page)).slowTime));
+  await page.evaluate(() => window.__RT_PURGE_ENEMIES__?.());
   await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
 
   // keep the quota from being reached while probing combat rules
@@ -427,20 +454,39 @@ try {
   check('slime leaves burning ground', hazardSeen);
 
   // standing inside a fire patch must damage the player
-  await page.evaluate(() => window.__RT_HEAL__?.(200));
   await page.evaluate(() => {
-    const snap = window.__RT_SNAPSHOT__?.() ?? {};
+    window.__RT_PURGE_ENEMIES__?.();
     window.__RT_SET_ROOM_KILLS__?.(0);
-    window.__RT_SPAWN_HAZARD__?.(Number(snap.playerX), Number(snap.playerY));
+    window.__RT_FREEZE_ATTACK__?.();
   });
-  await sleep(320);
-  const afterHazard = await snapshot(page);
+  await poll(page, () => (window.__RT_SNAPSHOT__?.().invuln ?? 0) === 0, 4000);
+  await page.evaluate(() => window.__RT_HEAL__?.(200));
+  const hazardDamageStart = Number((await snapshot(page)).damageTaken?.hazard ?? 0);
+  let hazardDamage = 0;
+  let hazardCount = 0;
+  let hazardState = '';
+  let hazardInvuln = 0;
+  for (let tick = 0; tick < 12; tick += 1) {
+    await page.evaluate(() => {
+      const snap = window.__RT_SNAPSHOT__?.() ?? {};
+      window.__RT_SET_ROOM_KILLS__?.(0);
+      window.__RT_SPAWN_HAZARD__?.(Number(snap.playerX), Number(snap.playerY));
+    });
+    await sleep(300);
+    const sample = await snapshot(page);
+    hazardCount = Number(sample.hazards ?? 0);
+    hazardState = String(sample.roomState ?? '');
+    hazardInvuln = Number(sample.invuln ?? 0);
+    hazardDamage = Number(sample.damageTaken?.hazard ?? 0) - hazardDamageStart;
+    if (hazardDamage > 0 && Number(sample.hp) < 100) break;
+  }
   check(
-    'standing in fire damage the player',
-    Number(afterHazard.hp) < 100 && Number(afterHazard.hazards) >= 1,
-    JSON.stringify({ hp: afterHazard.hp, hazards: afterHazard.hazards })
+    'standing in fire damages the player',
+    hazardDamage > 0 && hazardCount >= 1,
+    JSON.stringify({ hazardDamage, hazards: hazardCount, state: hazardState, invuln: hazardInvuln })
   );
-
+  await poll(page, () => (window.__RT_SNAPSHOT__?.().hazards ?? 0) === 0, 5000);
+  await page.evaluate(() => window.__RT_HEAL__?.(200));
   await poll(page, () => (window.__RT_SNAPSHOT__?.().invuln ?? 0) === 0, 3000);
   const hpBeforeBomber = Number((await snapshot(page)).hp);
   const playerPos = await snapshot(page);
@@ -592,6 +638,10 @@ try {
         const supportIndex = reward.cards.findIndex((card) => card.kind === 'support');
         if (supportIndex >= 0) {
           supportChecked = true;
+          const preSupport = await snapshot(page);
+          const chip = Math.max(0.5, Math.min(10, Number(preSupport.hp) - 1));
+          await page.evaluate((amount) => window.__RT_DAMAGE__?.(amount), chip);
+          await sleep(80);
           const statsBefore = await snapshot(page);
           await page.evaluate(
             (slot) => document.querySelectorAll('#rule-offers .rule-card')[slot]?.click(),

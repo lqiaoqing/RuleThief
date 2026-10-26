@@ -39,6 +39,7 @@ declare global {
     __RT_SPAWN__?: (kind?: EnemyKind) => void;
     __RT_SPAWN_AT__?: (kind: EnemyKind, x: number, y: number) => void;
     __RT_KILL_ALL__?: () => void;
+    __RT_PURGE_ENEMIES__?: () => void;
     __RT_POSE__?: (build?: {
       trajectory?: TrajectoryKey | null;
       impact?: ImpactKey | null;
@@ -426,6 +427,7 @@ function handleReady(): void {
   window.__RT_SPAWN__ = (kind) => scene?.debugSpawn(kind);
   window.__RT_SPAWN_AT__ = (kind, x, y) => scene?.debugSpawnAt(kind, x, y);
   window.__RT_KILL_ALL__ = () => scene?.debugKillAll();
+  window.__RT_PURGE_ENEMIES__ = () => scene?.debugPurgeEnemies();
   window.__RT_POSE__ = (build) => scene?.debugPoseCombat(build);
   window.__RT_TABLEAU__ = (kinds, build) => scene?.debugTableau(kinds, build);
   window.__RT_SET_STATS__ = (elapsed, kills) => scene?.debugSetStats(elapsed, kills);

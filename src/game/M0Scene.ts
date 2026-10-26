@@ -1014,6 +1014,14 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  public debugPurgeEnemies(): void {
+    for (const enemy of this.enemies) {
+      this.destroyEnemy(enemy);
+    }
+    this.enemies = [];
+    this.pendingSpawns = 0;
+  }
+
   public debugSetStats(elapsed: number, kills: number): void {
     this.elapsed = Math.max(0, elapsed);
     this.kills = kills;
@@ -1178,6 +1186,7 @@ export class M0Scene extends Phaser.Scene {
       blastDamageEvents: this.blastDamageEvents,
       damageDealt: Math.round(this.damageDealt),
       slowTime: this.slowTime,
+      damageTaken: { ...this.damageTaken },
       invuln: this.invuln,
       mutation: this.mutation.id,
       mutationReady: this.mutation.overloadReady,

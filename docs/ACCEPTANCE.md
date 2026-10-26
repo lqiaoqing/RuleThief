@@ -14,6 +14,7 @@
 | 单次攻击最多 3 次命中规则；爆炸与 DOT 不再触发 | 自动 | 冒烟「single volley never exceeds the 3-impact budget」（3 proc / 7 次爆炸伤害）、「burn DOT keeps dealing damage without new impact procs」（0 新 proc） |
 | 弹射不重复选取已命中目标 | 自动 | `rules.test.ts` `selectChainTargets` 去重 |
 | 冰霜减速有上限 | 自动 | `rules.test.ts` `mergeFrost` 0.8 上限 |
+| 寒霜浮灵的弹会减速玩家 | 自动 | 冒烟「frost wisp bolt slows the player」（`slowTime` 1.8s） |
 | 6 种敌人，各自携带一条规则 | 自动 | `rooms.test.ts` 敌人→规则 1:1；冒烟各敌人可生成 |
 | 2 个精英（双冲锋 / 三连雷击 + 锁定预警） | 自动 | 冒烟行为断言：裂甲精英连续冲锋 2 次、雷暴精英一次施法 3 发弹；雷暴施法前有青色锁定扇区（截图 m9-thunder-telegraph） |
 | 3 条突变，每局最多 1 条 | 自动 | `mutations.test.ts` 12 项；冒烟精英房突变卡数量断言 |
@@ -39,12 +40,12 @@
 | --- | --- | --- | --- |
 | 组合 | 贯穿+爆裂不递归 | 自动 | 冒烟单次齐射 3 proc / 7 次爆炸伤害 |
 | 组合 | 燃烧/冰霜在敌人身上真实生效 | 自动 | 冒烟：命中后敌人 burning=true；冰霜命中后 3 个敌人 slowed=true |
-| 组合 | 火焰地面会伤害玩家 | 自动 | 冒烟：站在火焰里 320ms 后 100 → 95（`debugSpawnHazard` 定点生成） |
+| 组合 | 火焰地面会伤害玩家 | 自动 | 冒烟：`debugSpawnHazard` 在脚下生成火焰，按 `damageTaken.hazard` 归因确认掉血（实测 +5） |
 | 组合 | 弹射+燃烧 DOT 不触发弹射 | 自动 | 冒烟 DOT 0 新 proc 且持续掉血 |
 | 组合 | 散射+冰霜方向正确、不无限减速 | 自动 | `rules.test.ts` 角度对称 + 减速上限 |
 | 规则 | 9 组合生效、等级、替换即时生效、满级处理 | 自动 | 冒烟：切弹道清在飞弹体（1→0）、切命中清燃烧（3→0）、替换后 Lv.1 且另一槽保级、满级构筑只出强化卡 |
 | 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕；图鉴跟随房间 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
-| 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化生效 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟卡数与突变断言、`support reward applies a stat change`（生命 47→67、上限 100→120） |
+| 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化生效 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟卡数与突变断言、`support reward applies a stat change`（选卡前先扣 10 血，治疗/上限/速度/冷却均可见变化） |
 | 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts`；冒烟固定 seed=5（诅咒宝箱 + 不稳定实验），两条条件断言每次都跑 |
 | 突变 | 3 种；每局最多 1；精英保底 | 自动 | `mutations.test.ts`；冒烟 `elite room N spawns its leader immediately` + 突变卡数量 |
 | BOSS | 3 阶段阈值；封印 4s 可躲可恢复；召唤物清理 | 自动 | 冒烟：phase 2 召唤 3 个杂兵、击杀 BOSS 后场上归零；封印预警截图 |
@@ -74,7 +75,7 @@
 npm test                       88/88 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 171/171 通过（主流程固定 seed=5）
+npm run smoke                 172/172 通过（主流程固定 seed=5）
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：57.0 / 55.7 / 43.7 fps（30 敌人，对象池后）
 scripts/combo-run.mjs          9 组合清第 1 房：30–35s，全部满血
