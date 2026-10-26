@@ -1,8 +1,8 @@
 [
   {
     "cpuThrottle": 1,
-    "avgFps": 59.7,
-    "minFps": 59,
+    "avgFps": 57,
+    "minFps": 57,
     "enemies": 29
   },
   {
@@ -13,8 +13,8 @@
   },
   {
     "cpuThrottle": 6,
-    "avgFps": 41,
-    "minFps": 38,
+    "avgFps": 43.7,
+    "minFps": 41,
     "enemies": 29
   }
 ]
