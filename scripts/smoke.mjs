@@ -317,6 +317,18 @@ try {
       burningAfter: (afterStatus.enemyList ?? []).filter((enemy) => enemy.burning).length
     })
   );
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'frost', 2, 2));
+  await sleep(150);
+  await page.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(900);
+  const frosted = await snapshot(page);
+  check(
+    'frost impact slows a live enemy in game',
+    (frosted.enemyList ?? []).some((enemy) => enemy.slowed),
+    JSON.stringify({
+      slowed: (frosted.enemyList ?? []).filter((enemy) => enemy.slowed).length
+    })
+  );
   await page.evaluate(() => window.__RT_KILL_ALL__?.());
   await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
 
@@ -413,6 +425,21 @@ try {
   }
   const hazardSeen = await poll(page, () => (window.__RT_SNAPSHOT__?.().hazards ?? 0) > 0, 7000);
   check('slime leaves burning ground', hazardSeen);
+
+  // standing inside a fire patch must damage the player
+  await page.evaluate(() => window.__RT_HEAL__?.(200));
+  await page.evaluate(() => {
+    const snap = window.__RT_SNAPSHOT__?.() ?? {};
+    window.__RT_SET_ROOM_KILLS__?.(0);
+    window.__RT_SPAWN_HAZARD__?.(Number(snap.playerX), Number(snap.playerY));
+  });
+  await sleep(320);
+  const afterHazard = await snapshot(page);
+  check(
+    'standing in fire damage the player',
+    Number(afterHazard.hp) < 100 && Number(afterHazard.hazards) >= 1,
+    JSON.stringify({ hp: afterHazard.hp, hazards: afterHazard.hazards })
+  );
 
   await poll(page, () => (window.__RT_SNAPSHOT__?.().invuln ?? 0) === 0, 3000);
   const hpBeforeBomber = Number((await snapshot(page)).hp);

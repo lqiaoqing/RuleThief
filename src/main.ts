@@ -69,6 +69,7 @@ declare global {
     __RT_INTRO__?: () => boolean;
     __RT_OPEN_EVENT__?: (id: string) => void;
     __RT_CAST_SEAL__?: () => void;
+    __RT_SPAWN_HAZARD__?: (x: number, y: number) => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
     __RT_ROUTE__?: () => boolean;
@@ -438,6 +439,7 @@ function handleReady(): void {
   window.__RT_INTRO__ = () => !introScreen.hidden;
   window.__RT_OPEN_EVENT__ = (id) => scene?.debugOpenEvent(id as never);
   window.__RT_CAST_SEAL__ = () => scene?.debugCastSeal();
+  window.__RT_SPAWN_HAZARD__ = (x, y) => scene?.debugSpawnHazard(x, y);
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
   window.__RT_ROUTE__ = () => isRouteVisible();

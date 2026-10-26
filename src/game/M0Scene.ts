@@ -926,6 +926,11 @@ export class M0Scene extends Phaser.Scene {
     return lines.join(String.fromCharCode(10));
   }
 
+  public debugSpawnHazard(x: number, y: number): void {
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
+    this.spawnFirePatch(x, y, 44, 2.6);
+  }
+
   public debugCastSeal(): void {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
     this.castRuleSeal();
