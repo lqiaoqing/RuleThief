@@ -162,7 +162,7 @@ try {
   check('preview shows room 1 of 9', /ROOM 01 \/ 09/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
   check(
     'preview shows the room name and quota',
-    overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '8',
+    overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '10',
     `${overlay.roomTitle} / ${overlay.roomQuota}`
   );
   check('preview pauses the run', overlay.paused, String(overlay.paused));
@@ -183,7 +183,7 @@ try {
     'HUD shows room 1 and the codex',
     roomHud.roomNum === '01' &&
       roomHud.roomTotal === '/ 09' &&
-      roomHud.objective === '0 / 8' &&
+      roomHud.objective === '0 / 10' &&
       roomHud.objectiveLabel === 'ANTECHAMBER' &&
       roomHud.codexRows === 1,
     JSON.stringify(roomHud)
@@ -453,7 +453,7 @@ try {
     JSON.stringify({ hp: state.hp, roomIndex: state.roomIndex, kills: state.kills, build: state.build })
   );
   check('restart reopens room 1 preview', overlay.roomVisible, String(overlay.roomVisible));
-  check('restart resets the HUD and codex', roomHud.roomNum === '01' && roomHud.objective === '0 / 8' && roomHud.codexRows === 1, JSON.stringify(roomHud));
+  check('restart resets the HUD and codex', roomHud.roomNum === '01' && roomHud.objective === '0 / 10' && roomHud.codexRows === 1, JSON.stringify(roomHud));
 
   await enterRoom(page);
   await page.evaluate(() => window.__RT_DAMAGE__?.(500));
