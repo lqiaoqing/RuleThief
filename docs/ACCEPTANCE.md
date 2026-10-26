@@ -53,6 +53,7 @@
 | 体验 | 新手理解操作目标与预警 | 自动 + 截图 | 首启「训练须知」三条要点，冒烟验证显示/记忆 |
 | 移动 | 安全区；横竖屏；音频解锁 | 自动 | 冒烟 390×844 / 844×390 无溢出；横屏下房间预览/奖励/路线覆盖层均完整入屏（354/340/313px ≤ 390）；音频 running |
 | 移动 | 小屏竖屏（360×640）覆盖层不溢出 | 自动 | 卡片 394px / 视口 640px，可滚动、无横向溢出 |
+| 性能 | 对象池 | 自动 | 伤害数字池复用且上限 48（冒烟：池 14 / 活跃 3）；压测帧率不回归 |
 | 移动 | 摇杆 / 闪避按钮 / 多点触控 | 自动 | 冒烟：摇杆拖拽移动、按钮闪避、CDP 双触点同时移动+闪避；横屏覆盖层自适应 |
 | 平衡 | 9 组合强度基准 | 自动 | `combo-bench.mjs`：爆裂 99–138 / 燃烧 40–88 / 冰霜 26–73（聚怪木桩） |
 | 平衡 | 9 组合清房实测 | 自动 | `combo-run.mjs`：9 套组合均 30–35s 满血清第 1 房，证明清房时间由刷怪节奏决定 |
@@ -67,9 +68,9 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 162/162 通过，无 console/page error
+npm run smoke                 163/163 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
-scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
+scripts/lowend.mjs             CPU ×1/×4/×6：57.0 / 55.7 / 43.7 fps（30 敌人，对象池后）
 scripts/combo-run.mjs          9 组合清第 1 房：30–35s，全部满血
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）
 scripts/combo-bench.mjs        9 组合 DPS 基准（2 次采样 × 5 秒）

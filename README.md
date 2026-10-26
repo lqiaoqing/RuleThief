@@ -72,9 +72,9 @@ npm run dev
 ## 验证结果
 
 - 单元测试：**83/83 通过**（`rules` 19 + `rooms` 23 + `mutations` 12 + `run` 12 + `tuning` 6 + `telemetry` 7 + `theme` 3）。
-- 生产构建浏览器冒烟：**162 项通过**，无 console/page error。
+- 生产构建浏览器冒烟：**163 项通过**，无 console/page error。
 - 冒烟覆盖：单次攻击命中结算 ≤3（爆炸命中 7 个敌人也不额外触发）、燃烧 DOT 只掉血不触发规则、失焦自动暂停；13 步路线（10 场战斗 + 2 事件 + BOSS）、分支二选一、每房配额与敌人、精英领袖必出、精英房四选一与保底突变、跨房修饰只作用一房、BOSS 三阶段与封印、结算 13/13、单局记录持久化、动态图鉴、9 组合名称、重开重置、死亡失败、手机流程。
-- 真实 Chrome（硬件 WebGL，headed）：40 敌压测 **57–59fps**；BOSS 第三阶段 **60fps**；CPU ×6 节流模拟低端机 **41fps（最低 38）**；音频 `running`。
+- 真实 Chrome（硬件 WebGL，headed）：40 敌压测 **57–59fps**；BOSS 第三阶段 **60fps**；CPU ×6 节流模拟低端机 **43.7fps（最低 41）**；音频 `running`。
 - 部署体积：`dist` 约 1.8MB；`public/assets` 约 460KB。
 
 截图：

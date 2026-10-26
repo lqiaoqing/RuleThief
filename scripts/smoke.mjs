@@ -361,6 +361,18 @@ try {
     })
   );
 
+  const poolState = await snapshot(page);
+  check(
+    'damage numbers are pooled and bounded',
+    Number(poolState.damageLabelPool) > 0 &&
+      Number(poolState.damageLabelPool) <= 48 &&
+      Number(poolState.liveDamageNumbers) <= Number(poolState.damageLabelPool),
+    JSON.stringify({
+      pool: poolState.damageLabelPool,
+      live: poolState.liveDamageNumbers
+    })
+  );
+
   await page.evaluate(() => window.dispatchEvent(new Event('blur')));
   await sleep(300);
   check('window blur pauses the run', await page.$eval('#pause-screen', (el) => !el.hidden));

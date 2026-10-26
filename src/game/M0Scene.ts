@@ -244,6 +244,7 @@ export class M0Scene extends Phaser.Scene {
   private slowTime = 0;
   private slowFactor = 0;
   private liveDamageNumbers = 0;
+  private damageLabelPool: Phaser.GameObjects.Text[] = [];
   private liveHitSparks = 0;
   private impactProcs = 0;
   private blastDamageEvents = 0;
@@ -1144,6 +1145,7 @@ export class M0Scene extends Phaser.Scene {
       hazards: this.hazards.length,
       liveDamageNumbers: this.liveDamageNumbers,
       liveHitSparks: this.liveHitSparks,
+      damageLabelPool: this.damageLabelPool.length,
       impactProcs: this.impactProcs,
       blastDamageEvents: this.blastDamageEvents,
       damageDealt: Math.round(this.damageDealt),
@@ -1221,6 +1223,7 @@ export class M0Scene extends Phaser.Scene {
     this.slowFactor = 0;
     this.liveDamageNumbers = 0;
     this.liveHitSparks = 0;
+    this.damageLabelPool = [];
     this.impactProcs = 0;
     this.blastDamageEvents = 0;
     this.damageDealt = 0;
@@ -3773,18 +3776,34 @@ export class M0Scene extends Phaser.Scene {
   ): void {
     if (this.liveDamageNumbers >= MAX_DAMAGE_NUMBERS) return;
     this.liveDamageNumbers += 1;
-    const label = this.add
-      .text(x, y, text, {
-        fontFamily: 'Bahnschrift, "Noto Sans SC", sans-serif',
-        fontSize: `${fontSize}px`,
-        fontStyle: 'bold',
-        color,
-        stroke: '#160c07',
-        strokeThickness: 4
-      })
-      .setOrigin(0.5)
-      .setAlpha(0.95);
-    this.addFx(label);
+    let label = this.damageLabelPool.find((item) => !item.active);
+    if (!label) {
+      if (this.damageLabelPool.length >= MAX_DAMAGE_NUMBERS) {
+        this.liveDamageNumbers = Math.max(0, this.liveDamageNumbers - 1);
+        return;
+      }
+      label = this.add
+        .text(0, 0, '', {
+          fontFamily: 'Bahnschrift, "Noto Sans SC", sans-serif',
+          fontSize: `${fontSize}px`,
+          fontStyle: 'bold',
+          color,
+          stroke: '#160c07',
+          strokeThickness: 4
+        })
+        .setOrigin(0.5);
+      this.addFx(label);
+      this.damageLabelPool.push(label);
+    }
+    label
+      .setText(text)
+      .setPosition(x, y)
+      .setFontSize(fontSize)
+      .setColor(color)
+      .setAlpha(0.95)
+      .setScale(1)
+      .setActive(true)
+      .setVisible(true);
     this.tweens.add({
       targets: label,
       y: y - 40,
@@ -3794,7 +3813,7 @@ export class M0Scene extends Phaser.Scene {
       ease: 'Cubic.easeOut',
       onComplete: () => {
         this.liveDamageNumbers = Math.max(0, this.liveDamageNumbers - 1);
-        label.destroy();
+        label.setActive(false).setVisible(false);
       }
     });
   }
