@@ -132,18 +132,6 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
   }
 };
 
-export const ENEMY_LABELS: Record<EnemyKind, { name: string; rule: string; hint: string }> =
-  Object.fromEntries(
-    (Object.keys(ENEMY_SPECS) as EnemyKind[]).map((kind) => [
-      kind,
-      {
-        name: ENEMY_SPECS[kind].name,
-        rule: ENEMY_SPECS[kind].ruleName,
-        hint: ENEMY_SPECS[kind].hint
-      }
-    ])
-  ) as Record<EnemyKind, { name: string; rule: string; hint: string }>;
-
 export const ENEMY_RULES: Record<EnemyKind, RuleKey> = Object.fromEntries(
   (Object.keys(ENEMY_SPECS) as EnemyKind[]).map((kind) => [kind, ENEMY_SPECS[kind].rule])
 ) as Record<EnemyKind, RuleKey>;

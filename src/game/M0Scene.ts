@@ -393,10 +393,6 @@ export class M0Scene extends Phaser.Scene {
     return this.encounter?.kind === 'room' ? this.encounter.room : ROOMS[ROOMS.length - 1];
   }
 
-  public isRewardOpen(): boolean {
-    return this.rewardOpen;
-  }
-
   public isRoomPreviewOpen(): boolean {
     return this.roomState === 'preview';
   }
@@ -778,10 +774,6 @@ export class M0Scene extends Phaser.Scene {
     setHp(this.hp, this.maxHp);
   }
 
-  public skipPreview(): void {
-    this.beginRoom();
-  }
-
   public setPlayEnabled(enabled: boolean): void {
     this.playEnabled = enabled;
     if (!enabled) {
@@ -958,16 +950,6 @@ export class M0Scene extends Phaser.Scene {
     this.roomKills = Math.max(0, Math.min(this.getRoom().quota, kills));
     this.roomSpawned = Math.max(this.roomSpawned, this.roomKills);
     this.refreshRoomHud();
-  }
-
-  public debugApplyReward(kind: 'rule' | 'support', index = 0): void {
-    if (!this.rewardOpen) return;
-    const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
-      hasMutation: Boolean(this.mutation.id)
-    });
-    const filtered = rewards.filter((reward) => reward.kind === kind);
-    const reward = filtered[index] ?? rewards[0];
-    if (reward) this.applyReward(reward);
   }
 
   public debugPoseCombat(build?: {

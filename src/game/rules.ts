@@ -206,10 +206,6 @@ export function getRuleName(key: RuleKey): string {
   return RULE_DEFS[key].name;
 }
 
-export function getRuleIcon(key: RuleKey): string {
-  return RULE_DEFS[key].icon;
-}
-
 export function getRuleSlotLabel(slot: RuleSlot): string {
   return slot === 'trajectory' ? '弹道规则 · TRAJECTORY' : '命中规则 · IMPACT';
 }
