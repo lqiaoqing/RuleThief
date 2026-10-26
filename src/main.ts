@@ -328,7 +328,7 @@ function enterArena(instant = false): void {
   scene.startNewRun();
   applyBuildParam();
   if (bossPractice) {
-    scene.debugJumpToBoss();
+    scene.debugJumpToBoss(!buildParam);
   }
 
   if (instant) {

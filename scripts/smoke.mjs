@@ -905,6 +905,21 @@ try {
   );
   await bossPractice.close();
 
+  const bossPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await bossPreset.goto(`${BASE}/?arena=1&boss=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(bossPreset);
+  await bossPreset.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(300);
+  const bossPresetState = await snapshot(bossPreset);
+  check(
+    'explicit build overrides the boss-practice starter build',
+    bossPresetState.build?.trajectory?.key === 'spread' &&
+      bossPresetState.build?.impact?.key === 'burn' &&
+      bossPresetState.build?.trajectory?.level === 3,
+    JSON.stringify(bossPresetState.build)
+  );
+  await bossPreset.close();
+
   const compact = await newPage(browser, {
     width: 360,
     height: 640,

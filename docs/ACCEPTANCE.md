@@ -60,7 +60,7 @@
 | 节奏 | 节奏模型被实测验证 | 自动 | 配额 10 时模型 30s / 实测 30–35s；配额 12 时 37s；整局实测每房 48–67s（设计 55s） |
 | 移动 | 低端机性能 | 自动近似 | Chrome CPU ×4 55.7fps / ×6 41.0fps（30 敌人）；真机仍需确认 |
 | 工程 | 单测/构建/静态部署/无 console error | 自动 | 见下 |
-| 工程 | 试玩入口：一键 BOSS / 指定构筑 | 自动 | `?arena=1&boss=1` 跳第 13 步；`&build=spread,burn,3,3` 载入预设组合（冒烟断言） |
+| 工程 | 试玩入口：一键 BOSS / 指定构筑 | 自动 | `?arena=1&boss=1` 跳第 13 步；`&build=spread,burn,3,3` 载入预设组合、且显式 build 覆盖 BOSS 起始构筑（冒烟断言） |
 
 ## C. 当前自动化结果（2026-10-26）
 
@@ -68,7 +68,7 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 163/163 通过，无 console/page error
+npm run smoke                 164/164 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：57.0 / 55.7 / 43.7 fps（30 敌人，对象池后）
 scripts/combo-run.mjs          9 组合清第 1 房：30–35s，全部满血
