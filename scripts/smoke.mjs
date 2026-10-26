@@ -265,6 +265,56 @@ try {
   await page.evaluate(() => window.__RT_KILL_ALL__?.());
   await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
 
+  // replace takes effect immediately and leaves no stale state
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
+  await page.evaluate(() => window.__RT_KILL_ALL__?.());
+  for (const [x, y] of [[700, 600], [740, 540], [660, 660]]) {
+    await page.evaluate(([px, py]) => window.__RT_SPAWN_AT__?.('beetle', px, py), [x, y]);
+  }
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'burn', 2, 2));
+  await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
+  await sleep(150);
+  await page.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(150);
+  const beforeReplace = await snapshot(page);
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('pierce', 'frost', 1, 2));
+  await sleep(120);
+  const afterReplace = await snapshot(page);
+  check(
+    'switching trajectory clears in-flight bolts immediately',
+    Number(beforeReplace.bolts) > 0 && Number(afterReplace.bolts) === 0,
+    JSON.stringify({ before: beforeReplace.bolts, after: afterReplace.bolts })
+  );
+  check(
+    'replaced rule starts at Lv.1 while the other slot keeps its level',
+    afterReplace.build?.trajectory?.key === 'pierce' &&
+      afterReplace.build?.trajectory?.level === 1 &&
+      afterReplace.build?.impact?.key === 'frost' &&
+      afterReplace.build?.impact?.level === 2,
+    JSON.stringify(afterReplace.build)
+  );
+
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'burn', 2, 2));
+  await sleep(150);
+  await page.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(900);
+  const beforeStatus = await snapshot(page);
+  const burningBefore = (beforeStatus.enemyList ?? []).filter((enemy) => enemy.burning).length;
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'frost', 2, 2));
+  await sleep(150);
+  const afterStatus = await snapshot(page);
+  check(
+    'switching impact clears burning and slowed enemies',
+    burningBefore > 0 &&
+      (afterStatus.enemyList ?? []).every((enemy) => !enemy.burning && !enemy.slowed),
+    JSON.stringify({
+      burningBefore,
+      burningAfter: (afterStatus.enemyList ?? []).filter((enemy) => enemy.burning).length
+    })
+  );
+  await page.evaluate(() => window.__RT_KILL_ALL__?.());
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
+
   // keep the quota from being reached while probing combat rules
   await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
   await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 3, 3));
@@ -805,6 +855,27 @@ try {
 
   check('desktop no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await page.close();
+
+  const maxed = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await maxed.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await waitReady(maxed);
+  await maxed.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(400);
+  await maxed.tap('#room-enter-btn');
+  await sleep(500);
+  await maxed.evaluate(() => window.__RT_SET_BUILD__?.('pierce', 'blast', 3, 3));
+  await maxed.evaluate(() => window.__RT_SCENE__?.debugOpenReward());
+  await maxed.waitForFunction(() => !document.getElementById('altar-screen')?.hidden, { timeout: 6000 });
+  await sleep(300);
+  const maxedReward = await maxed.evaluate(() =>
+    Array.from(document.querySelectorAll('#rule-offers .rule-card')).map((card) => card.dataset.kind)
+  );
+  check(
+    'fully maxed build is offered supports only',
+    maxedReward.length > 0 && maxedReward.every((kind) => kind === 'support'),
+    JSON.stringify(maxedReward)
+  );
+  await maxed.close();
 
   const mobile = await newPage(browser, {
     width: 390,

@@ -1174,6 +1174,8 @@ export class M0Scene extends Phaser.Scene {
         y: Math.round(enemy.root.y),
         radius: enemy.radius,
         hp: Math.round(enemy.hp),
+        burning: enemy.burnTime > 0,
+        slowed: enemy.frostTime > 0,
         elite: enemy.elite,
         charging: enemy.state === 'charge'
       })),

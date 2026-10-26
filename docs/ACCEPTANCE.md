@@ -40,7 +40,7 @@
 | 组合 | 贯穿+爆裂不递归 | 自动 | 冒烟单次齐射 3 proc / 7 次爆炸伤害 |
 | 组合 | 弹射+燃烧 DOT 不触发弹射 | 自动 | 冒烟 DOT 0 新 proc 且持续掉血 |
 | 组合 | 散射+冰霜方向正确、不无限减速 | 自动 | `rules.test.ts` 角度对称 + 减速上限 |
-| 规则 | 9 组合生效、等级、替换、满级 | 自动 | `rules.test.ts` + 冒烟 |
+| 规则 | 9 组合生效、等级、替换即时生效、满级处理 | 自动 | 冒烟：切弹道清在飞弹体（1→0）、切命中清燃烧（3→0）、替换后 Lv.1 且另一槽保级、满级构筑只出强化卡 |
 | 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕；图鉴跟随房间 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
 | 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化生效 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟卡数与突变断言、`support reward applies a stat change`（生命 47→67、上限 100→120） |
 | 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts` + 冒烟 |
@@ -63,7 +63,7 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 151/151 通过，无 console/page error
+npm run smoke                 155/155 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）
