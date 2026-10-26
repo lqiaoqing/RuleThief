@@ -222,6 +222,7 @@ export class M0Scene extends Phaser.Scene {
   private hudTick = 0;
   private runToken = 0;
   private nextEnemyId = 1;
+  private spawnedTotal = 0;
 
   private scenePaused = false;
   private roomState: RoomState = 'preview';
@@ -377,6 +378,7 @@ export class M0Scene extends Phaser.Scene {
     this.dashQueued = false;
     this.joystick.set(0, 0);
     this.nextEnemyId = 1;
+    this.spawnedTotal = 0;
     this.build = createEmptyBuild();
     this.acquired.clear();
     this.plan = buildRunPlan();
@@ -1192,6 +1194,7 @@ export class M0Scene extends Phaser.Scene {
         ? { x: Math.round(this.sealZone.x), y: Math.round(this.sealZone.y), radius: this.sealZone.radius }
         : null,
       eliteAlive: this.enemies.filter((enemy) => enemy.elite && !enemy.dead).length,
+      spawnedTotal: this.spawnedTotal,
       enemyCounts: this.enemies.reduce<Record<string, number>>((acc, enemy) => {
         acc[enemy.kind] = (acc[enemy.kind] ?? 0) + 1;
         return acc;
@@ -2415,6 +2418,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private spawnEnemy(kind: EnemyKind, x: number, y: number, countsTowardQuota = true): void {
+    this.spawnedTotal += 1;
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
     const hover = kind === 'bat' || kind === 'wisp' || kind === 'thunder';

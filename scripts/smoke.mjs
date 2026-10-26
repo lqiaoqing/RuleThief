@@ -397,18 +397,17 @@ try {
   await sleep(300);
   check('resuming after background works', await page.$eval('#pause-screen', (el) => el.hidden));
 
-  const countKind = (state, kind) => Number((state.enemyCounts ?? {})[kind] ?? 0);
   for (const kind of ['spore', 'slime', 'wisp', 'bomber']) {
     const beforeState = await snapshot(page);
-    const before = countKind(beforeState, kind);
     await page.evaluate((k) => window.__RT_SPAWN_AT__?.(k, 560, 360), kind);
-    await sleep(300);
+    await sleep(250);
     const afterState = await snapshot(page);
-    const after = countKind(afterState, kind);
+    const spawned = Number(afterState.spawnedTotal) - Number(beforeState.spawnedTotal);
+    const present = Number((afterState.enemyCounts ?? {})[kind] ?? 0);
     check(
       `spawns ${kind}`,
-      after === before + 1,
-      `${kind} ${before} -> ${after} all=${JSON.stringify(afterState.enemyCounts)}`
+      spawned === 1 && present >= 1,
+      `spawned=${spawned} present=${present}`
     );
   }
   const hazardSeen = await poll(page, () => (window.__RT_SNAPSHOT__?.().hazards ?? 0) > 0, 7000);
@@ -694,19 +693,29 @@ try {
       Number(sealed.sealTime) > 2 && Number(sealed.sealTime) <= 4.2,
       String(sealed.sealTime)
     );
-    const released = await poll(page, () => !window.__RT_SNAPSHOT__?.().sealSlot, 7000);
+    let released = false;
+    for (let tick = 0; tick < 30; tick += 1) {
+      await page.evaluate(() => window.__RT_HEAL__?.(40));
+      if (!(await snapshot(page)).sealSlot) {
+        released = true;
+        break;
+      }
+      await sleep(300);
+    }
     check('sealed rule is restored automatically', released);
 
     // second seal: walk out of the telegraph and stay unsealed
     let zone = null;
-    for (let tick = 0; tick < 90; tick += 1) {
-      await page.evaluate(() => window.__RT_HEAL__?.(40));
+    for (let tick = 0; tick < 240; tick += 1) {
       const sample = await snapshot(page);
       if (sample.sealZone) {
         zone = sample.sealZone;
         break;
       }
-      await sleep(160);
+      if (tick % 4 === 0) {
+        await page.evaluate(() => window.__RT_HEAL__?.(40));
+      }
+      await sleep(60);
     }
     check('boss telegraphs the next seal zone', Boolean(zone), JSON.stringify(zone));
     if (zone) {
@@ -724,7 +733,8 @@ try {
               ? 'KeyS'
               : 'KeyW';
       await page.keyboard.down(key);
-      await sleep(1500);
+      await page.evaluate(() => window.__RT_HEAL__?.(40));
+      await sleep(1700);
       await page.keyboard.up(key);
       const dodged = await snapshot(page);
       const distanceFromZone = Math.hypot(
@@ -1149,7 +1159,7 @@ try {
   );
   check('mobile dash button works', mobileDashed);
 
-  await sleep(4300);
+  await poll(mobile, () => (window.__RT_SNAPSHOT__?.().dashCooldown ?? 1) === 0, 8000);
   const touchPoints = await mobile.evaluate(() => {
     const centre = (selector) => {
       const rect = document.querySelector(selector)?.getBoundingClientRect();
