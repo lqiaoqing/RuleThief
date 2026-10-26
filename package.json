@@ -10,7 +10,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "shot": "node scripts/screenshot.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "verify": "node scripts/verify-dist.mjs"
   },
   "dependencies": {
     "phaser": "3.90.0"

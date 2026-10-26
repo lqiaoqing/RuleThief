@@ -107,6 +107,7 @@ npm run preview -- --port 4177
 BASE_URL=http://127.0.0.1:4177 npm run smoke
 BASE_URL=http://127.0.0.1:4177 npm run shot
 BASE_URL=http://127.0.0.1:4177 node scripts/perf.mjs
+BASE_URL=http://127.0.0.1:4177 npm run verify   # 静态资源完整性
 ```
 
 ## 素材管线
@@ -142,6 +143,7 @@ screenshots/              # 各阶段验收截图
 
 - [设计文档 V1](docs/RULE_THIEF_design_v1.html)
 - [可行性分析](docs/FEASIBILITY.md)
+- [M5 移动/音频/部署](docs/M5_DEPLOY.md)
 - [M4 数值与节奏调优](docs/M4_TUNING.md)
 - [M3c 事件与分支报告](docs/M3C_REPORT.md)
 - [M3b 突变与 BOSS 报告](docs/M3B_REPORT.md)
