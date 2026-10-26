@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { EVENTS, EVENT_IDS, buildRunPlan, planNodeCount, planStepCount, stepEncounters } from './run';
 import { ROOMS } from './rooms';
+import { buildRoomRewards } from './rooms';
+import { createEmptyBuild } from './rules';
 
 const random = () => 0.37;
 
@@ -57,6 +59,40 @@ describe('run plan', () => {
       .filter((encounter) => encounter.kind === 'event');
     expect(events).toHaveLength(2);
     expect(new Set(events.map((item) => item.kind === 'event' && item.event.id)).size).toBe(2);
+  });
+
+  it('guarantees a trajectory rule then an impact rule in the first two rooms', () => {
+    const plan = buildRunPlan(random);
+    const first = plan[0];
+    const firstRoom =
+      first.kind === 'encounter' && first.encounter.kind === 'room' ? first.encounter.room : null;
+    expect(firstRoom).not.toBeNull();
+    const firstRewards = buildRoomRewards(createEmptyBuild(), firstRoom!, random);
+    expect(
+      firstRewards.some(
+        (reward) =>
+          reward.kind === 'rule' &&
+          ['pierce', 'chain', 'spread'].includes(reward.offer.key)
+      )
+    ).toBe(true);
+
+    const trajectoryOnly = {
+      trajectory: { key: 'pierce' as const, level: 1 as const },
+      impact: null
+    };
+    const second = plan[1];
+    const options = second.kind === 'choice' ? second.options : [second.encounter];
+    for (const option of options) {
+      if (option.kind !== 'room') continue;
+      const rewards = buildRoomRewards(trajectoryOnly, option.room, random);
+      expect(
+        rewards.some(
+          (reward) =>
+            reward.kind === 'rule' &&
+            ['burn', 'frost', 'blast'].includes(reward.offer.key)
+        )
+      ).toBe(true);
+    }
   });
 
   it('never repeats a room within a single plan', () => {
