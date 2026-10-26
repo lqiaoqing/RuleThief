@@ -63,7 +63,7 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 150/150 通过，无 console/page error
+npm run smoke                 151/151 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）

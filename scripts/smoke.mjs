@@ -702,6 +702,11 @@ try {
     time: document.getElementById('result-time')?.textContent
   }));
   check(
+    'result shows the mutation line',
+    /^突变 · /.test(await page.$eval('#result-mutation', (el) => el.textContent ?? '')),
+    await page.$eval('#result-mutation', (el) => el.textContent ?? '')
+  );
+  check(
     'victory reports a combo and time',
     Boolean(finalStats.combo) && /^\d\d:\d\d$/.test(finalStats.time ?? ''),
     `${finalStats.combo} / ${finalStats.time}`
