@@ -3411,6 +3411,7 @@ export class M0Scene extends Phaser.Scene {
     audio.play('hurt');
     this.cameras.main.shake(130, 0.0022);
     this.cameras.main.flash(110, 255, 55, 80);
+    this.spawnHitDirection(sourceX, sourceY);
     this.spawnDamageNumber(
       this.playerRoot.x,
       this.playerRoot.y - 62,
@@ -3544,6 +3545,26 @@ export class M0Scene extends Phaser.Scene {
     this.addFx(sparks);
     sparks.explode(9);
     this.time.delayedCall(650, () => sparks.destroy());
+  }
+
+  private spawnHitDirection(sourceX: number, sourceY: number): void {
+    const angle = Math.atan2(sourceY - this.playerRoot.y, sourceX - this.playerRoot.x);
+    const arc = this.add.graphics();
+    arc.lineStyle(3, 0xff4d5e, 0.9);
+    arc.beginPath();
+    arc.arc(0, 0, 40, angle - 0.42, angle + 0.42);
+    arc.strokePath();
+    arc.setPosition(this.playerRoot.x, this.playerRoot.y - 6);
+    arc.setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(arc);
+    this.tweens.add({
+      targets: arc,
+      alpha: 0,
+      scale: 1.45,
+      duration: 360,
+      ease: 'Cubic.easeOut',
+      onComplete: () => arc.destroy()
+    });
   }
 
   private spawnHitSpark(x: number, y: number): void {

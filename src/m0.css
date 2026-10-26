@@ -478,6 +478,14 @@
   letter-spacing: 0.1em;
 }
 
+.result-mutation {
+  margin: -8px 0 12px;
+  color: #8f7fc0;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
 .result-record {
   margin: -4px 0 12px;
   color: #5f748c;

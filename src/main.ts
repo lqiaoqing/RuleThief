@@ -132,6 +132,7 @@ const resultCombo = byId<HTMLElement>('result-combo');
 const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
 const resultRecord = byId<HTMLElement>('result-record');
+const resultMutation = byId<HTMLElement>('result-mutation');
 
 let scene: M0Scene | null = null;
 let entered = false;
@@ -176,6 +177,7 @@ function showResult(payload: RunEndPayload): void {
     mutation: payload.mutation
   });
   resultRecord.textContent = formatRecordLine(summarize(runs));
+  resultMutation.textContent = payload.mutation ? `突变 · ${payload.mutation}` : '突变 · 无';
   resultScreen.hidden = false;
   pauseScreen.hidden = true;
   hideOverlays();
