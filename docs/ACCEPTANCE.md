@@ -52,6 +52,7 @@
 | 体验 | 随时查看本局构筑与进度 | 自动 | 暂停页显示组合/等级/突变/步数/用时/击杀/生命（冒烟断言） |
 | 体验 | 新手理解操作目标与预警 | 自动 + 截图 | 首启「训练须知」三条要点，冒烟验证显示/记忆 |
 | 移动 | 安全区；横竖屏；音频解锁 | 自动 | 冒烟 390×844 / 844×390 无溢出；音频 running |
+| 移动 | 摇杆 / 闪避按钮 / 多点触控 | 自动 | 冒烟：摇杆拖拽移动、按钮闪避、CDP 双触点同时移动+闪避 |
 | 平衡 | 9 组合强度基准 | 自动 | `combo-bench.mjs`：爆裂 99–138 / 燃烧 40–88 / 冰霜 26–73（聚怪木桩） |
 | 移动 | 低端机性能 | 自动近似 | Chrome CPU ×4 55.7fps / ×6 41.0fps（30 敌人）；真机仍需确认 |
 | 工程 | 单测/构建/静态部署/无 console error | 自动 | 见下 |
@@ -62,7 +63,7 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 118/118 通过，无 console/page error
+npm run smoke                 121/121 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）

@@ -176,7 +176,7 @@ try {
   let overlay = await overlayState(page);
   let state = await snapshot(page);
   check('first room preview opens', overlay.roomVisible, overlay.roomKicker);
-  check('preview shows room 1 of 9', /ROOM 01 \/ 13/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+  check('preview shows room 1 of 13', /ROOM 01 \/ 13/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
   check(
     'preview shows the room name and quota',
     overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '10',
@@ -508,7 +508,7 @@ try {
     bossBarHidden: document.getElementById('boss-bar')?.hidden
   }));
   check('killing the arbiter wins the run', bossVictory.title === '审判完成', JSON.stringify(bossVictory));
-  check('boss victory reports seven rooms', bossVictory.rooms === '13 / 13', String(bossVictory.rooms));
+  check('boss victory reports thirteen steps', bossVictory.rooms === '13 / 13', String(bossVictory.rooms));
   check('boss bar hides after the kill', bossVictory.bossBarHidden === true, String(bossVictory.bossBarHidden));
 
   const finalStats = await page.evaluate(() => ({
@@ -642,6 +642,73 @@ try {
   check('mobile can enter a room', (await snapshot(mobile)).roomState === 'fighting');
   check('mobile controls visible', await mobile.$eval('#joystick', (el) => getComputedStyle(el).display !== 'none'));
   check('mobile codex renders room enemies', (await mobile.$$('#codex-list .codex-row')).length === 1);
+
+  const mobileBefore = Number((await snapshot(mobile)).playerX);
+  const joyBox = await mobile.$eval('#joystick', (el) => {
+    const rect = el.getBoundingClientRect();
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+  });
+  await mobile.mouse.move(joyBox.x, joyBox.y);
+  await mobile.mouse.down();
+  await mobile.mouse.move(joyBox.x + 32, joyBox.y, { steps: 5 });
+  const mobileMoved = await poll(
+    mobile,
+    (startX) => (window.__RT_SNAPSHOT__?.().playerX ?? 0) > startX + 10,
+    5000,
+    mobileBefore
+  );
+  await mobile.mouse.up();
+  check(
+    'virtual joystick moves the player',
+    mobileMoved,
+    `${mobileBefore.toFixed(1)} -> ${Number((await snapshot(mobile)).playerX).toFixed(1)}`
+  );
+
+  await mobile.tap('#dash-btn');
+  const mobileDashed = await poll(
+    mobile,
+    () => (window.__RT_SNAPSHOT__?.().dashCooldown ?? 0) > 3,
+    5000
+  );
+  check('mobile dash button works', mobileDashed);
+
+  await sleep(4300);
+  const touchPoints = await mobile.evaluate(() => {
+    const centre = (selector) => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    };
+    return { joy: centre('#joystick'), dash: centre('#dash-btn') };
+  });
+  const beforeMulti = await snapshot(mobile);
+  const cdp = await mobile.target().createCDPSession();
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [
+      { x: touchPoints.joy.x, y: touchPoints.joy.y, id: 1 },
+      { x: touchPoints.dash.x, y: touchPoints.dash.y, id: 2 }
+    ]
+  });
+  await sleep(120);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchMove',
+    touchPoints: [
+      { x: touchPoints.joy.x + 34, y: touchPoints.joy.y, id: 1 },
+      { x: touchPoints.dash.x, y: touchPoints.dash.y, id: 2 }
+    ]
+  });
+  await sleep(650);
+  const afterMulti = await snapshot(mobile);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  check(
+    'multi-touch moves and dashes at the same time',
+    Number(afterMulti.playerX) > Number(beforeMulti.playerX) + 8 &&
+      Number(afterMulti.dashCooldown) > 3,
+    JSON.stringify({
+      x: [Number(beforeMulti.playerX), Number(afterMulti.playerX)],
+      dashCooldown: Number(afterMulti.dashCooldown)
+    })
+  );
 
   await mobile.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(8));
   await mobile.evaluate(() => window.__RT_SPAWN__?.('beetle'));
