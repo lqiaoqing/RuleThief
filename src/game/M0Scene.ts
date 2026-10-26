@@ -1,6 +1,18 @@
 import Phaser from 'phaser';
 import { ARENA, ASSETS, COLORS } from './theme';
-import { resetM0Hud, setBuild, setDash, setHp, setRoomEnemies, setRoomProgress, setRunClock, showRuleToast } from '../ui/hud';
+import {
+  resetM0Hud,
+  setBossBar,
+  setBuild,
+  setDash,
+  setHp,
+  setMutation,
+  setRoomEnemies,
+  setRoomProgress,
+  setRunClock,
+  setSealedRule,
+  showRuleToast
+} from '../ui/hud';
 import { audio } from './audio';
 import {
   applyRuleOffer,
@@ -26,6 +38,20 @@ import {
   type TrajectoryProfile
 } from './rules';
 import { ROOMS, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
+import {
+  MUTATIONS,
+  createMutationState,
+  consumeOverload,
+  equipMutation,
+  getAttackIntervalMultiplier,
+  getDamageMultiplier,
+  getOverloadProgress,
+  registerHit,
+  tickMutation,
+  triggerDashfire,
+  type MutationId,
+  type MutationState
+} from './mutations';
 
 type RunState = 'idle' | 'playing' | 'ended';
 type RoomState = 'preview' | 'fighting' | 'reward';
@@ -60,6 +86,7 @@ interface EnemyUnit {
   elite: boolean;
   chargesLeft: number;
   trailCd: number;
+  countsTowardQuota: boolean;
 }
 
 interface PlayerBolt {
@@ -76,6 +103,8 @@ interface PlayerBolt {
   maxHits: number;
   hitEnemies: Set<EnemyUnit>;
   budget: TriggerBudget;
+  impact: PlayerBuild['impact'];
+  power: number;
   chainJumps: number;
   chainRange: number;
   chainMultiplier: number;
@@ -196,6 +225,16 @@ export class M0Scene extends Phaser.Scene {
   private slowTime = 0;
   private slowFactor = 0;
 
+  private mutation: MutationState = createMutationState();
+  private bossPhase = 0;
+  private bossRef: EnemyUnit | null = null;
+  private sealSlot: 'trajectory' | 'impact' | null = null;
+  private sealTime = 0;
+  private bossAttackCd = 0;
+  private bossChargeCd = 0;
+  private bossSummonCd = 0;
+  private bossSealCd = 0;
+
   private readonly onJoystickEvent = (event: Event): void => {
     const detail = (event as CustomEvent<{ x: number; y: number }>).detail;
     this.joystick.set(detail.x, detail.y);
@@ -307,6 +346,15 @@ export class M0Scene extends Phaser.Scene {
     this.rewardOpen = false;
     this.slowTime = 0;
     this.slowFactor = 0;
+    this.mutation = createMutationState();
+    this.bossPhase = 0;
+    this.bossRef = null;
+    this.sealSlot = null;
+    this.sealTime = 0;
+    this.bossAttackCd = 0;
+    this.bossChargeCd = 0;
+    this.bossSummonCd = 0;
+    this.bossSealCd = 0;
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
@@ -391,6 +439,18 @@ export class M0Scene extends Phaser.Scene {
       this.roomSpawned += 1;
       this.spawnLeaderBurst(ARENA * 0.5, 210);
     }
+    if (room.boss) {
+      this.spawnEnemy(room.boss, ARENA * 0.5, 235);
+      this.roomSpawned += 1;
+      this.bossRef = this.enemies[this.enemies.length - 1] ?? null;
+      this.bossPhase = 1;
+      this.bossAttackCd = 1.6;
+      this.bossChargeCd = 4.5;
+      this.bossSummonCd = 7;
+      this.bossSealCd = 6;
+      this.spawnLeaderBurst(ARENA * 0.5, 235);
+      this.cameras.main.shake(420, 0.005);
+    }
   }
 
   private spawnLeaderBurst(x: number, y: number): void {
@@ -424,7 +484,9 @@ export class M0Scene extends Phaser.Scene {
     this.bolts = [];
     this.scene.pause();
     audio.play('rule');
-    const rewards = buildRoomRewards(this.build, this.getRoom());
+    const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
+      hasMutation: Boolean(this.mutation.id)
+    });
     this.game.events.emit('m2-room-cleared', {
       index: this.roomIndex,
       total: ROOMS.length,
@@ -451,6 +513,11 @@ export class M0Scene extends Phaser.Scene {
         title,
         sub: `${reward.offer.name} Lv.${reward.offer.nextLevel}`
       });
+    } else if (reward.kind === 'mutation') {
+      this.mutation = equipMutation(this.mutation, reward.mutation.id);
+      setMutation(reward.mutation);
+      audio.play('rule');
+      showRuleToast('pierce', '突变已装备', reward.mutation.name);
     } else {
       this.applySupport(reward.support.id);
     }
@@ -590,6 +657,13 @@ export class M0Scene extends Phaser.Scene {
     this.time.delayedCall(340, () => this.scene.pause());
   }
 
+  public debugDamageBoss(amount: number): void {
+    const boss = this.bossRef;
+    if (!boss || boss.dead) return;
+    this.applyDamage(boss, amount, 'blast');
+    this.refreshBossHud();
+  }
+
   public debugOpenReward(): void {
     this.clearRoom();
   }
@@ -640,7 +714,9 @@ export class M0Scene extends Phaser.Scene {
 
   public debugApplyReward(kind: 'rule' | 'support', index = 0): void {
     if (!this.rewardOpen) return;
-    const rewards = buildRoomRewards(this.build, this.getRoom());
+    const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
+      hasMutation: Boolean(this.mutation.id)
+    });
     const filtered = rewards.filter((reward) => reward.kind === kind);
     const reward = filtered[index] ?? rewards[0];
     if (reward) this.applyReward(reward);
@@ -787,6 +863,13 @@ export class M0Scene extends Phaser.Scene {
       hazards: this.hazards.length,
       slowTime: this.slowTime,
       invuln: this.invuln,
+      mutation: this.mutation.id,
+      mutationReady: this.mutation.overloadReady,
+      dashfireTime: this.mutation.dashfireTime,
+      bossPhase: this.bossPhase,
+      bossHp: this.bossRef ? Math.round(this.bossRef.hp) : 0,
+      sealSlot: this.sealSlot,
+      sealTime: this.sealTime,
       eliteAlive: this.enemies.filter((enemy) => enemy.elite && !enemy.dead).length,
       bolts: this.bolts.length,
       enemyBolts: this.enemyBolts.length,
@@ -812,6 +895,10 @@ export class M0Scene extends Phaser.Scene {
     }
     this.slowTime = 0;
     this.slowFactor = 0;
+    this.sealSlot = null;
+    this.sealTime = 0;
+    this.bossRef = null;
+    this.bossPhase = 0;
     this.playerSprite?.clearTint();
 
     for (const child of [...this.fxLayer.list, ...this.enemyLayer.list]) {
@@ -1178,6 +1265,7 @@ export class M0Scene extends Phaser.Scene {
 
     this.dashRemaining = DASH_DURATION;
     this.dashCooldown = this.dashCdMax;
+    triggerDashfire(this.mutation);
     this.invuln = Math.max(this.invuln, DASH_IFRAME);
     this.dashGhostClock = 0;
     setDash(0, this.dashCooldown);
@@ -1304,7 +1392,7 @@ export class M0Scene extends Phaser.Scene {
       const target = this.findNearestEnemy(this.playerRoot.x, this.playerRoot.y);
       if (target) {
         this.fireAttack(target);
-        this.attackCd = ATTACK_INTERVAL;
+        this.attackCd = ATTACK_INTERVAL * getAttackIntervalMultiplier(this.mutation);
       } else {
         this.attackCd = 0;
       }
@@ -1331,10 +1419,15 @@ export class M0Scene extends Phaser.Scene {
       target.root.x - this.playerRoot.x
     );
     const budget = new TriggerBudget(IMPACT_TRIGGER_BUDGET);
-    const trajectory = this.build.trajectory;
+    const sealedTrajectory = this.sealSlot === 'trajectory';
+    const sealedImpact = this.sealSlot === 'impact';
+    const trajectory = sealedTrajectory ? null : this.build.trajectory;
     const profile = trajectory
       ? getTrajectoryProfile(trajectory.key, trajectory.level)
       : null;
+    const overcharged = consumeOverload(this.mutation);
+    const power = getDamageMultiplier(this.mutation, this.hp, this.maxHp, overcharged);
+    const impact = sealedImpact ? null : this.build.impact;
     const color =
       profile?.kind === 'pierce'
         ? PIERCE_COLOR
@@ -1342,16 +1435,22 @@ export class M0Scene extends Phaser.Scene {
           ? SPREAD_COLOR
           : COLORS.cyan;
 
+    if (overcharged) {
+      this.spawnOverloadBurst();
+    }
+
     if (profile?.kind === 'spread') {
       const angles = getSpreadAngles(baseAngle, profile.bolts, profile.spreadDeg);
       for (const angle of angles) {
         this.spawnBolt({
           mode: 'spread',
           angle,
-          damage: profile.damage,
+          damage: profile.damage * power,
           speed: profile.speed,
           maxDistance: profile.range,
           budget,
+          impact,
+          power,
           color
         });
       }
@@ -1359,11 +1458,13 @@ export class M0Scene extends Phaser.Scene {
       this.spawnBolt({
         mode: 'pierce',
         angle: baseAngle,
-        damage: BASE_DAMAGE,
+        damage: BASE_DAMAGE * power,
         speed: profile.speed,
         maxDistance: profile.range,
         maxHits: profile.targets,
         budget,
+        impact,
+        power,
         color
       });
     } else {
@@ -1371,10 +1472,12 @@ export class M0Scene extends Phaser.Scene {
         mode: 'homing',
         target,
         angle: baseAngle,
-        damage: BASE_DAMAGE,
+        damage: BASE_DAMAGE * power,
         speed: profile?.kind === 'chain' ? profile.speed : BOLT_SPEED,
         maxDistance: ARENA * 1.6,
         budget,
+        impact,
+        power,
         chainJumps: profile?.kind === 'chain' ? profile.jumps : 0,
         chainRange: profile?.kind === 'chain' ? profile.range : 0,
         chainMultiplier: profile?.kind === 'chain' ? profile.damageMultiplier : 1,
@@ -1394,6 +1497,8 @@ export class M0Scene extends Phaser.Scene {
     maxDistance: number;
     maxHits?: number;
     budget: TriggerBudget;
+    impact?: PlayerBuild['impact'];
+    power?: number;
     chainJumps?: number;
     chainRange?: number;
     chainMultiplier?: number;
@@ -1428,6 +1533,8 @@ export class M0Scene extends Phaser.Scene {
       maxHits: options.maxHits ?? 1,
       hitEnemies: new Set(),
       budget: options.budget,
+      impact: options.impact ?? null,
+      power: options.power ?? 1,
       chainJumps: options.chainJumps ?? 0,
       chainRange: options.chainRange ?? 0,
       chainMultiplier: options.chainMultiplier ?? 1,
@@ -1550,8 +1657,11 @@ export class M0Scene extends Phaser.Scene {
 
   private handleBoltHit(bolt: PlayerBolt, enemy: EnemyUnit): void {
     this.applyDamage(enemy, bolt.damage, 'hit');
-    if (this.build.impact && bolt.budget.tryConsume()) {
-      this.applyImpact(enemy, bolt.damage);
+    if (this.registerOverloadHit()) {
+      this.showOverloadReady();
+    }
+    if (bolt.impact && bolt.budget.tryConsume()) {
+      this.applyImpact(enemy, bolt.damage, bolt.impact, bolt.power);
     }
     if (bolt.chainJumps > 0) {
       this.resolveChain(
@@ -1609,20 +1719,31 @@ export class M0Scene extends Phaser.Scene {
         this.drawLightning(sourceX, sourceY, target.root.x, target.root.y - 10);
         const damage = Math.round(BASE_DAMAGE * multiplier);
         this.applyDamage(target, damage, 'hit');
+        if (this.registerOverloadHit()) {
+          this.showOverloadReady();
+        }
         if (this.build.impact && budget.tryConsume()) {
-          this.applyImpact(target, damage);
+          this.applyImpact(target, damage, this.build.impact, 1);
         }
       });
     });
   }
 
-  private applyImpact(enemy: EnemyUnit, directDamage: number): void {
+  private applyImpact(
+    enemy: EnemyUnit,
+    directDamage: number,
+    impact: PlayerBuild['impact'],
+    power = 1
+  ): void {
     void directDamage;
-    const impact = this.build.impact;
-    if (!impact) return;
-    const profile = getImpactProfile(impact.key, impact.level);
+    const sealed = this.sealSlot === 'impact' ? null : impact;
+    if (!sealed) return;
+    const profile = getImpactProfile(sealed.key, sealed.level);
     if (profile.kind === 'blast') {
-      this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy, profile);
+      this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy, {
+        radius: profile.radius,
+        damage: profile.damage * power
+      });
     } else if (!enemy.dead) {
       if (profile.kind === 'burn') {
         this.applyBurn(enemy, profile);
@@ -1772,13 +1893,16 @@ export class M0Scene extends Phaser.Scene {
     });
     audio.play('death');
     this.kills += 1;
-    this.roomKills += 1;
+    if (enemy.countsTowardQuota) this.roomKills += 1;
     this.refreshRoomHud();
 
     if (enemy.kind === 'bomber') {
       this.detonate(enemy);
     } else if (enemy.kind === 'slime') {
       this.spawnFirePatch(x, y + 8, 40, 2.2);
+    } else if (enemy.kind === 'arbiter') {
+      this.onBossDefeated(enemy);
+      return;
     }
 
     if (this.kills > 0 && this.kills % 10 === 0) {
@@ -1935,7 +2059,7 @@ export class M0Scene extends Phaser.Scene {
     });
   }
 
-  private spawnEnemy(kind: EnemyKind, x: number, y: number): void {
+  private spawnEnemy(kind: EnemyKind, x: number, y: number, countsTowardQuota = true): void {
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
     const hover = kind === 'bat' || kind === 'wisp' || kind === 'thunder';
@@ -2052,7 +2176,8 @@ export class M0Scene extends Phaser.Scene {
       frostSlow: 0,
       elite,
       chargesLeft: 0,
-      trailCd: 1.2
+      trailCd: 1.2,
+      countsTowardQuota
     };
 
     this.enemies.push(enemy);
@@ -2113,6 +2238,9 @@ export class M0Scene extends Phaser.Scene {
           break;
         case 'bomber':
           this.updateBomber(enemy, dt);
+          break;
+        case 'arbiter':
+          this.updateArbiter(enemy, dt);
           break;
       }
       enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, ARENA - 58);
@@ -2545,6 +2673,291 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  private onBossDefeated(boss: EnemyUnit): void {
+    this.bossRef = null;
+    this.sealSlot = null;
+    this.sealTime = 0;
+    setSealedRule(null, false);
+    setBossBar(null);
+    for (const enemy of [...this.enemies]) {
+      if (enemy === boss) continue;
+      enemy.dead = true;
+      this.spawnDeathBurst(enemy.root.x, enemy.root.y - 8, enemy.kind);
+      this.tweens.killTweensOf(enemy.root);
+      this.tweens.add({
+        targets: enemy.root,
+        alpha: 0,
+        scale: 0.6,
+        duration: 320,
+        onComplete: () => enemy.root.destroy(true)
+      });
+    }
+    this.enemies = [];
+    this.pendingSpawns = 0;
+    this.spawnExplosion(boss.root.x, boss.root.y - 20, 200);
+    this.cameras.main.shake(700, 0.01);
+    this.cameras.main.flash(420, 255, 235, 190);
+    audio.play('victory');
+    this.time.delayedCall(900, () => {
+      if (this.runState === 'playing') this.endRun(true);
+    });
+  }
+
+  private refreshBossHud(): void {
+    const boss = this.bossRef;
+    if (!boss || boss.dead) {
+      setBossBar(null);
+      return;
+    }
+    setBossBar({
+      name: ENEMY_SPECS.arbiter.name,
+      hp: boss.hp,
+      maxHp: boss.maxHp,
+      phase: this.bossPhase
+    });
+  }
+
+  private updateArbiter(enemy: EnemyUnit, dt: number): void {
+    this.bossRef = enemy;
+    const ratio = enemy.hp / enemy.maxHp;
+    const phase = ratio > 0.7 ? 1 : ratio > 0.35 ? 2 : 3;
+    if (phase !== this.bossPhase) {
+      this.bossPhase = phase;
+      this.onBossPhase(enemy, phase);
+    }
+
+    this.bossAttackCd -= dt;
+    this.bossChargeCd -= dt;
+    this.bossSummonCd -= dt;
+    this.bossSealCd -= dt;
+
+    if (enemy.state === 'telegraph') {
+      enemy.stateTimer -= dt;
+      this.drawBeetleWarning(enemy);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'charge';
+        enemy.stateTimer = 0.52;
+        enemy.hasHitThisCharge = false;
+        enemy.warning.setVisible(false);
+        audio.play('dash');
+      }
+      return;
+    }
+
+    if (enemy.state === 'charge') {
+      enemy.stateTimer -= dt;
+      enemy.root.x += enemy.chargeDir.x * 560 * dt;
+      enemy.root.y += enemy.chargeDir.y * 560 * dt;
+      const contact = this.distanceToPlayer(enemy);
+      if (!enemy.hasHitThisCharge && contact < enemy.radius + PLAYER_RADIUS + 12) {
+        enemy.hasHitThisCharge = true;
+        this.hurtPlayer(16, enemy.root.x, enemy.root.y);
+      }
+      const atWall =
+        enemy.root.x <= 70 ||
+        enemy.root.x >= ARENA - 70 ||
+        enemy.root.y <= 90 ||
+        enemy.root.y >= ARENA - 70;
+      if (atWall || enemy.stateTimer <= 0) {
+        enemy.state = 'idle';
+        enemy.stateTimer = 0;
+        this.cameras.main.shake(140, 0.0024);
+      }
+      return;
+    }
+
+    this.strafeAtRange(enemy, dt, 330, 240, 430);
+
+    if (this.bossAttackCd <= 0) {
+      this.bossAttackCd = this.bossPhase >= 3 ? 1.55 : this.bossPhase === 2 ? 1.95 : 2.4;
+      this.fireBossFan(enemy, this.bossPhase >= 3 ? 11 : 9, 0.95);
+    }
+
+    if (this.bossPhase >= 2 && this.bossChargeCd <= 0) {
+      this.bossChargeCd = 5.0;
+      enemy.state = 'telegraph';
+      enemy.stateTimer = 0.75;
+      const dx = this.playerRoot.x - enemy.root.x;
+      const dy = this.playerRoot.y - enemy.root.y;
+      enemy.chargeDir.set(dx, dy).normalize();
+      enemy.warning.setVisible(true);
+      audio.play('spawn');
+      this.refreshBossHud();
+    }
+
+    if (this.bossPhase >= 2 && this.bossSummonCd <= 0) {
+      this.bossSummonCd = 7.5;
+      this.summonBossAdds();
+    }
+
+    if (this.bossPhase >= 3 && this.bossSealCd <= 0) {
+      this.bossSealCd = 6.5;
+      this.castRuleSeal();
+    }
+
+    if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 1.0;
+      this.hurtPlayer(8, enemy.root.x, enemy.root.y);
+    }
+  }
+
+  private fireBossFan(enemy: EnemyUnit, bolts: number, spreadRad: number): void {
+    const base = Math.atan2(this.playerRoot.y - enemy.root.y, this.playerRoot.x - enemy.root.x);
+    for (let i = 0; i < bolts; i += 1) {
+      const t = bolts === 1 ? 0.5 : i / (bolts - 1);
+      const angle = base - spreadRad / 2 + spreadRad * t;
+      this.fireEnemyBolt(enemy, {
+        angle,
+        speed: 205,
+        damage: 9,
+        tint: COLORS.purple,
+        scale: 1.15
+      });
+    }
+    this.cameras.main.shake(90, 0.0012);
+  }
+
+  private summonBossAdds(): void {
+    const alive = this.enemies.filter((item) => !item.dead && !item.elite).length;
+    if (alive >= 4) return;
+    const kinds: EnemyKind[] = this.bossPhase >= 3 ? ['bomber', 'wisp'] : ['bat', 'spore'];
+    const spots: [number, number][] = [
+      [140, 190],
+      [ARENA - 140, 190]
+    ];
+    kinds.forEach((kind, index) => {
+      this.spawnEnemy(kind, spots[index][0], spots[index][1], false);
+      const spawned = this.enemies[this.enemies.length - 1];
+      if (spawned) {
+        this.tweens.killTweensOf(spawned.root);
+        this.tweens.add({
+          targets: spawned.root,
+          scale: { from: 0.2, to: 1 },
+          alpha: { from: 0, to: 1 },
+          duration: 260,
+          ease: 'Back.easeOut'
+        });
+      }
+    });
+    audio.play('spawn');
+  }
+
+  private castRuleSeal(): void {
+    const x = this.playerRoot.x;
+    const y = this.playerRoot.y;
+    const radius = 96;
+    const ring = this.add
+      .circle(x, y, radius, 0x8d6a39, 0.12)
+      .setStrokeStyle(2.5, COLORS.gold, 0.75)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const inner = this.add
+      .circle(x, y, radius * 0.55, 0x000000, 0)
+      .setStrokeStyle(1.5, COLORS.purple, 0.55);
+    this.addFx(ring);
+    this.addFx(inner);
+    this.tweens.add({
+      targets: [ring, inner],
+      scale: { from: 0.18, to: 1 },
+      duration: 1150,
+      ease: 'Cubic.easeOut'
+    });
+    this.tweens.add({
+      targets: ring,
+      alpha: { from: 1, to: 0.35 },
+      duration: 260,
+      yoyo: true,
+      repeat: 3
+    });
+    this.time.delayedCall(1150, () => {
+      const hit =
+        Phaser.Math.Distance.Between(x, y, this.playerRoot.x, this.playerRoot.y) <
+        radius + PLAYER_RADIUS * 0.5;
+      ring.destroy();
+      inner.destroy();
+      if (hit) this.sealRandomRule();
+    });
+  }
+
+  private sealRandomRule(): void {
+    const slots: ('trajectory' | 'impact')[] = [];
+    if (this.build.trajectory) slots.push('trajectory');
+    if (this.build.impact) slots.push('impact');
+    if (!slots.length) return;
+    const slot = slots[Phaser.Math.Between(0, slots.length - 1)];
+    this.sealSlot = slot;
+    this.sealTime = 4;
+    setSealedRule(slot, true);
+    audio.play('hurt');
+    this.cameras.main.flash(140, 120, 90, 200);
+    showRuleToast('pierce', '规则被封印', `${slot === 'trajectory' ? '弹道' : '命中'}规则离线 4 秒`);
+  }
+
+  private onBossPhase(enemy: EnemyUnit, phase: number): void {
+    if (phase === 2) {
+      this.bossChargeCd = 1.4;
+      this.bossSummonCd = 2.6;
+    } else if (phase === 3) {
+      this.bossSealCd = 1.2;
+    }
+    this.cameras.main.shake(420, 0.006);
+    this.cameras.main.flash(220, 150, 110, 255);
+    const ring = this.add
+      .circle(enemy.root.x, enemy.root.y - 10, 60, 0x000000, 0)
+      .setStrokeStyle(4, COLORS.purple, 0.9)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 5.5,
+      alpha: 0,
+      duration: 780,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy()
+    });
+    audio.play('rule');
+    showRuleToast('blast', `规则审判者 · 第 ${phase} 阶段`, phase === 1 ? '秩序 · 扇形审判' : phase === 2 ? '混乱 · 冲锋与召唤' : '规则剥夺 · 小心封印区');
+    this.refreshBossHud();
+  }
+
+  private registerOverloadHit(): boolean {
+    return registerHit(this.mutation);
+  }
+
+  private showOverloadReady(): void {
+    showRuleToast('spread', '过载核心已充能', '下一轮普通攻击伤害 ×1.8');
+    audio.play('rule');
+    const ring = this.add
+      .circle(this.playerRoot.x, this.playerRoot.y - 16, 26, 0x000000, 0)
+      .setStrokeStyle(2, COLORS.purple, 0.9)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 2.4,
+      alpha: 0,
+      duration: 420,
+      onComplete: () => ring.destroy()
+    });
+  }
+
+  private spawnOverloadBurst(): void {
+    const glow = this.add
+      .image(this.playerRoot.x, this.playerRoot.y - 16, 'glow')
+      .setDisplaySize(96, 96)
+      .setTint(COLORS.purple)
+      .setAlpha(0.5)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(glow);
+    this.tweens.add({
+      targets: glow,
+      scale: 1.7,
+      alpha: 0,
+      duration: 320,
+      onComplete: () => glow.destroy()
+    });
+    audio.play('rule');
+  }
+
   private strafeAtRange(
     enemy: EnemyUnit,
     dt: number,
@@ -2768,6 +3181,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.hudTick >= 0.1) {
       this.hudTick = 0;
       setRunClock(this.elapsed);
+      if (this.bossRef) this.refreshBossHud();
     }
   }
 
@@ -3009,6 +3423,16 @@ export class M0Scene extends Phaser.Scene {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
     const dt = Math.min(deltaMs, 50) / 1000;
     this.elapsed += dt;
+
+    tickMutation(this.mutation, dt);
+    if (this.sealTime > 0) {
+      this.sealTime = Math.max(0, this.sealTime - dt);
+      if (this.sealTime === 0 && this.sealSlot) {
+        this.sealSlot = null;
+        setSealedRule(null, false);
+        showRuleToast('pierce', '规则解封', '被封印的规则已经恢复');
+      }
+    }
 
     this.updatePlayer(dt);
     if (this.runState !== 'playing') return;

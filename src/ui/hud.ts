@@ -8,6 +8,7 @@ import {
   type RuleKey
 } from '../game/rules';
 import { ENEMY_SPECS, type EnemyKind } from '../game/rooms';
+import type { MutationDef } from '../game/mutations';
 import { formatTime } from '../game/theme';
 
 export type RuleToastKind = RuleKey | 'heal';
@@ -81,6 +82,52 @@ const mobileComboName = byId<HTMLElement>('mobile-combo-name');
 const mobileComboSub = byId<HTMLElement>('mobile-combo-sub');
 
 const codexList = byId<HTMLElement>('codex-list');
+
+const bossBar = byId<HTMLElement>('boss-bar');
+const bossBarName = byId<HTMLElement>('boss-bar-name');
+const bossBarPhase = byId<HTMLElement>('boss-bar-phase');
+const bossBarFill = byId<HTMLElement>('boss-bar-fill');
+const bossPips = Array.from(document.querySelectorAll<HTMLElement>('#boss-pips i'));
+const mutationLine = byId<HTMLElement>('mutation-line');
+const mutationName = byId<HTMLElement>('mutation-name');
+const mutationIcon = byId<SVGUseElement>('mutation-icon');
+
+const PHASE_LABELS = ['秩序', '混乱', '规则剥夺'];
+const PHASE_NUMERALS = ['I', 'II', 'III'];
+
+export function setBossBar(
+  state: { name: string; hp: number; maxHp: number; phase: number } | null
+): void {
+  document.body.classList.toggle('boss-active', Boolean(state));
+  if (!state) {
+    bossBar.hidden = true;
+    return;
+  }
+  bossBar.hidden = false;
+  bossBarName.textContent = state.name;
+  const index = Math.max(0, Math.min(2, state.phase - 1));
+  bossBarPhase.textContent = `PHASE ${PHASE_NUMERALS[index]} · ${PHASE_LABELS[index]}`;
+  bossBarPhase.dataset.phase = String(state.phase);
+  bossBarFill.style.width = `${Math.max(0, Math.min(100, (state.hp / state.maxHp) * 100))}%`;
+  bossPips.forEach((pip, pipIndex) => pip.classList.toggle('active', pipIndex < state.phase));
+}
+
+export function setMutation(def: MutationDef | null): void {
+  mutationLine.hidden = !def;
+  if (!def) return;
+  mutationName.textContent = def.name;
+  mutationLine.style.setProperty('--mutation-color', def.color);
+  mutationIcon.setAttribute('href', def.icon);
+}
+
+export function setSealedRule(slot: 'trajectory' | 'impact' | null, visible: boolean): void {
+  const trajectory = visible && slot === 'trajectory';
+  const impact = visible && slot === 'impact';
+  slotTrajectory.classList.toggle('is-sealed', trajectory);
+  slotImpact.classList.toggle('is-sealed', impact);
+  miniTrajectory.classList.toggle('is-sealed', trajectory);
+  miniImpact.classList.toggle('is-sealed', impact);
+}
 
 const lowHpVignette = byId<HTMLElement>('low-hp-vignette');
 const toast = byId<HTMLElement>('rule-toast');
@@ -358,5 +405,8 @@ export function resetM0Hud(): void {
     maxHp: 100
   });
   setBuild(createEmptyBuild(), new Set());
+  setBossBar(null);
+  setMutation(null);
+  setSealedRule(null, false);
   hideRuleToast();
 }

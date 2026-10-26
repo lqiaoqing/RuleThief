@@ -134,7 +134,7 @@
               </div>
 
               <div class="run-actions">
-                <div class="style-badge">M3<br />ELITE</div>
+                <div class="style-badge">M3<br />BOSS</div>
                 <button class="icon-btn sound-btn" id="sound-btn" aria-label="静音" aria-pressed="false">
                   <svg class="sound-on"><use href="#i-sound" /></svg>
                   <svg class="sound-off" hidden><use href="#i-mute" /></svg>
@@ -143,6 +143,15 @@
                   <svg><use href="#i-pause" /></svg>
                 </button>
               </div>
+            </div>
+
+            <div class="boss-bar" id="boss-bar" hidden>
+              <div class="boss-bar-head">
+                <span class="boss-bar-name" id="boss-bar-name">规则审判者</span>
+                <span class="boss-bar-phase" id="boss-bar-phase">PHASE I · 秩序</span>
+              </div>
+              <div class="bar boss-bar-track"><i id="boss-bar-fill" style="width: 100%"></i></div>
+              <div class="boss-pips" id="boss-pips"><i class="active"></i><i></i><i></i></div>
             </div>
 
             <div class="mobile-build" aria-label="当前构筑">
@@ -257,6 +266,10 @@
               <b id="combo-name">基础魔弹</b>
               <small id="combo-sub">尚未掠夺规则 · 自动锁定最近目标</small>
             </div>
+            <div class="mutation-line" id="mutation-line" hidden>
+              <span class="mutation-ico"><svg><use id="mutation-icon" href="#i-mutation" /></svg></span>
+              <span class="mutation-copy"><small>突变 MUTATION</small><b id="mutation-name">—</b></span>
+            </div>
           </section>
 
           <section class="panel objective-panel">
@@ -280,10 +293,10 @@
           <section class="panel notes-panel">
             <div class="panel-head"><span>M3 验证</span><span class="panel-sub">QA</span></div>
             <ul class="check-list">
-              <li><i></i>6 种敌人 + 2 精英，规则池按房间分化</li>
+              <li><i></i>6 种敌人 + 2 精英 + 3 阶段 BOSS</li>
               <li><i></i>精英房领袖必出，四选一奖励</li>
               <li><i></i>史莱姆火焰地面 / 冰霜减速弹 / 爆裂自爆</li>
-              <li><i></i>生命归零失败，六房全清胜利</li>
+              <li><i></i>规则审判者三阶段 · 第三阶段封印规则</li>
             </ul>
           </section>
 

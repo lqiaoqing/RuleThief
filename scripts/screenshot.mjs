@@ -151,46 +151,68 @@ async function captureResult(viewport, name, victory, build) {
   await page.close();
 }
 
+async function captureBoss(viewport, name, damage, phaseWait, build) {
+  const page = await createPage(browser, viewport);
+  await openArena(page, 6);
+  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await sleep(900);
+  await page.evaluate(
+    (b) => window.__RT_SET_BUILD__?.(b[0], b[1], b[2], b[3]),
+    build ?? ['pierce', 'frost', 3, 3]
+  );
+  await page.evaluate(() => window.__RT_SET_STATS__?.(318, 52));
+  if (damage) {
+    await page.evaluate((amount) => window.__RT_DAMAGE_BOSS__?.(amount), damage);
+  }
+  await sleep(phaseWait);
+  await shot(page, name);
+  await page.close();
+}
+
+async function captureBossVictory(viewport, name, build) {
+  const page = await createPage(browser, viewport);
+  await openArena(page, 6);
+  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await sleep(900);
+  await page.evaluate(
+    (b) => window.__RT_SET_BUILD__?.(b[0], b[1], b[2], b[3]),
+    build ?? ['pierce', 'frost', 3, 3]
+  );
+  await page.evaluate(() => window.__RT_SET_STATS__?.(402, 66));
+  await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(2200));
+  await page.waitForFunction(() => !document.getElementById('result-screen')?.hidden, { timeout: 9000 });
+  await sleep(450);
+  await shot(page, name);
+  await page.close();
+}
+
 const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const PHONE = { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
 
 try {
-  await captureMenu(DESKTOP, 'm3a-menu-desktop.png');
-  await captureRoomPreview(DESKTOP, 'm3a-room-preview-desktop.png');
-  await captureRoomPreview(DESKTOP, 'm3a-elite-preview-desktop.png', 4);
-  await captureCombat(DESKTOP, 'm3a-combat-desktop.png', {
-    trajectory: 'pierce',
-    impact: 'blast',
-    trajectoryLevel: 2,
-    impactLevel: 2
-  });
-  await captureTableau(DESKTOP, 'm3a-enemies-desktop.png', ['spore', 'slime', 'wisp', 'bomber'], {
+  await captureMenu(DESKTOP, 'm3b-menu-desktop.png');
+  await captureRoomPreview(DESKTOP, 'm3b-boss-preview-desktop.png', 6);
+  await captureBoss(DESKTOP, 'm3b-boss-phase1-desktop.png', 0, 1700);
+  await captureBoss(DESKTOP, 'm3b-boss-phase3-desktop.png', 1250, 2000);
+  await captureReward(DESKTOP, 'm3b-mutation-reward-desktop.png', 4, ['pierce', 'burn', 2, 2]);
+  await captureCombat(DESKTOP, 'm3b-combat-desktop.png', {
     trajectory: 'chain',
     impact: 'frost',
     trajectoryLevel: 2,
-    impactLevel: 2
+    impactLevel: 3
   });
-  await captureTableau(DESKTOP, 'm3a-elites-desktop.png', ['sunder', 'thunder', 'bomber', 'wisp'], {
-    trajectory: 'spread',
+  await captureTableau(DESKTOP, 'm3b-enemies-desktop.png', ['sunder', 'thunder', 'slime', 'wisp'], {
+    trajectory: 'pierce',
     impact: 'burn',
     trajectoryLevel: 3,
     impactLevel: 3
   });
-  await captureReward(DESKTOP, 'm3a-reward-desktop.png', 1, ['pierce', 'burn', 2, 1]);
-  await captureReward(DESKTOP, 'm3a-elite-reward-desktop.png', 4, ['pierce', 'burn', 2, 3]);
-  await captureResult(DESKTOP, 'm3a-victory-desktop.png', true, ['pierce', 'frost', 3, 3]);
-  await captureResult(DESKTOP, 'm3a-defeat-desktop.png', false, ['chain', 'burn', 1, 1]);
-  await captureMenu(PHONE, 'm3a-menu-mobile.png');
-  await captureRoomPreview(PHONE, 'm3a-room-preview-mobile.png');
-  await captureTableau(PHONE, 'm3a-combat-mobile.png', ['spore', 'slime', 'wisp'], {
-    trajectory: 'pierce',
-    impact: 'blast',
-    trajectoryLevel: 2,
-    impactLevel: 2
-  });
-  await captureReward(PHONE, 'm3a-reward-mobile.png', 1, ['pierce', 'burn', 1, 1]);
-  await captureTableau(LANDSCAPE, 'm3a-landscape.png', ['sunder', 'spore', 'bomber'], {
+  await captureBossVictory(DESKTOP, 'm3b-victory-desktop.png');
+  await captureMenu(PHONE, 'm3b-menu-mobile.png');
+  await captureBoss(PHONE, 'm3b-boss-mobile.png', 0, 1600);
+  await captureReward(PHONE, 'm3b-mutation-reward-mobile.png', 4, ['pierce', 'burn', 1, 1]);
+  await captureTableau(LANDSCAPE, 'm3b-landscape.png', ['arbiter', 'thunder', 'bomber'], {
     trajectory: 'chain',
     impact: 'blast',
     trajectoryLevel: 2,

@@ -1,4 +1,5 @@
 import { getRuleOffers, type PlayerBuild, type RuleKey, type RuleOffer } from './rules';
+import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
 
 export type EnemyKind =
   | 'beetle'
@@ -8,7 +9,8 @@ export type EnemyKind =
   | 'wisp'
   | 'bomber'
   | 'sunder'
-  | 'thunder';
+  | 'thunder'
+  | 'arbiter';
 
 export interface EnemySpec {
   name: string;
@@ -21,6 +23,7 @@ export interface EnemySpec {
   sprite: string;
   displaySize: number;
   elite?: boolean;
+  boss?: boolean;
 }
 
 export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
@@ -113,6 +116,19 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     sprite: 'bat',
     displaySize: 200,
     elite: true
+  },
+  arbiter: {
+    name: '规则审判者',
+    rule: 'blast',
+    ruleName: '审判',
+    hint: '最终 BOSS · 三阶段',
+    hp: 1800,
+    radius: 62,
+    speed: 74,
+    sprite: 'boss',
+    displaySize: 300,
+    elite: true,
+    boss: true
   }
 };
 
@@ -142,6 +158,7 @@ export interface RoomDef {
   spawnInterval: number;
   mix: { kind: EnemyKind; weight: number }[];
   leader?: EnemyKind;
+  boss?: EnemyKind;
   rewardCount?: number;
   elite?: boolean;
 }
@@ -227,6 +244,18 @@ export const ROOMS: readonly RoomDef[] = [
     leader: 'thunder',
     rewardCount: 4,
     elite: true
+  },
+  {
+    id: 'judgement-hall',
+    name: '审判庭',
+    en: 'JUDGEMENT HALL',
+    subtitle: '规则审判者不会抢夺你的规则，它会审判你如何使用它们。',
+    quota: 1,
+    maxAlive: 2,
+    spawnInterval: 99,
+    mix: [],
+    boss: 'arbiter',
+    rewardCount: 0
   }
 ] as const;
 
@@ -242,6 +271,7 @@ export function getRoomRuleKeys(room: RoomDef): RuleKey[] {
 export function getRoomEnemyKinds(room: RoomDef): EnemyKind[] {
   const kinds = room.mix.map((entry) => entry.kind);
   if (room.leader && !kinds.includes(room.leader)) kinds.push(room.leader);
+  if (room.boss && !kinds.includes(room.boss)) kinds.push(room.boss);
   return kinds;
 }
 
@@ -300,7 +330,8 @@ const SUPPORT_IDS: SupportId[] = ['max-hp', 'heal', 'dash', 'speed'];
 
 export type Reward =
   | { kind: 'rule'; offer: RuleOffer }
-  | { kind: 'support'; support: SupportDef };
+  | { kind: 'support'; support: SupportDef }
+  | { kind: 'mutation'; mutation: MutationDef };
 
 export interface RoomPreview {
   index: number;
@@ -334,12 +365,23 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
 export function buildRoomRewards(
   build: PlayerBuild,
   room: RoomDef,
-  random: () => number = Math.random
+  random: () => number = Math.random,
+  options: { hasMutation?: boolean } = {}
 ): Reward[] {
   const pool = getRoomRuleKeys(room);
   const count = room.rewardCount ?? 3;
+  const rewards: Reward[] = [];
+
+  if (room.elite && !options.hasMutation) {
+    const mutationId = MUTATION_IDS[Math.floor(random() * MUTATION_IDS.length)] ?? 'overload';
+    rewards.push({ kind: 'mutation', mutation: MUTATIONS[mutationId] });
+  }
+
   const ruleOffers = getRuleOffers(build, random, pool).slice(0, 2);
-  const rewards: Reward[] = ruleOffers.map((offer) => ({ kind: 'rule', offer }));
+  for (const offer of ruleOffers) {
+    if (rewards.length >= count) break;
+    rewards.push({ kind: 'rule', offer });
+  }
 
   const supports = shuffle(SUPPORT_IDS, random).map((id) => SUPPORTS[id]);
   let cursor = 0;

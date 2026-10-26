@@ -131,11 +131,42 @@ function supportCard(reward: Extract<Reward, { kind: 'support' }>, index: number
   return card;
 }
 
+function mutationCard(reward: Extract<Reward, { kind: 'mutation' }>, index: number) {
+  const mutation = reward.mutation;
+  const card = el('button', 'rule-card action-mutation');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', mutation.color);
+  card.dataset.key = mutation.id;
+  card.dataset.action = 'mutation';
+  card.dataset.kind = 'mutation';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(mutation.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '突变 · MUTATION'),
+    el('span', 'rule-card-name', mutation.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action mutation', '突变'));
+
+  card.append(head, el('p', 'rule-card-desc', mutation.description));
+  card.append(el('span', 'rule-card-now', mutation.detail));
+  card.append(el('div', 'rule-card-combo mutation-note', '每局仅能装备 1 项突变 · 第三构筑维度'));
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
   offersWrap.dataset.count = String(rewards.length);
   rewards.forEach((reward, index) => {
-    const card = reward.kind === 'rule' ? ruleCard(reward.offer, index) : supportCard(reward, index);
+    const card =
+      reward.kind === 'rule'
+        ? ruleCard(reward.offer, index)
+        : reward.kind === 'mutation'
+          ? mutationCard(reward, index)
+          : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
     offersWrap.append(card);
   });

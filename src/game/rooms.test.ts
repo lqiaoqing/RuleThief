@@ -29,7 +29,7 @@ describe('enemy catalogue', () => {
 
   it('marks exactly two elites, both carrying a normal rule', () => {
     const elites = (Object.keys(ENEMY_SPECS) as EnemyKind[]).filter(
-      (kind) => ENEMY_SPECS[kind].elite
+      (kind) => ENEMY_SPECS[kind].elite && !ENEMY_SPECS[kind].boss
     );
     expect(elites).toEqual(['sunder', 'thunder']);
     expect(ENEMY_RULES.sunder).toBe('pierce');
@@ -45,14 +45,23 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships six rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(6);
-    expect(ROOMS.map((room) => room.quota)).toEqual([8, 10, 12, 14, 9, 10]);
+  it('ships seven rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(7);
+    expect(ROOMS.map((room) => room.quota)).toEqual([8, 10, 12, 14, 9, 10, 1]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
   });
 
-  it('every room lists a positive enemy mix', () => {
-    for (const room of ROOMS) {
+  it('ends with the arbiter boss room', () => {
+    const bossRoom = ROOMS[ROOMS.length - 1];
+    expect(bossRoom.boss).toBe('arbiter');
+    expect(bossRoom.quota).toBe(1);
+    expect(bossRoom.mix).toHaveLength(0);
+    expect(getRoomEnemyKinds(bossRoom)).toEqual(['arbiter']);
+    expect(buildRoomRewards(createEmptyBuild(), bossRoom, random)).toHaveLength(0);
+  });
+
+  it('every non-boss room lists a positive enemy mix', () => {
+    for (const room of ROOMS.filter((item) => !item.boss)) {
       expect(room.mix.length).toBeGreaterThan(0);
       for (const entry of room.mix) {
         expect(entry.weight).toBeGreaterThan(0);
@@ -61,7 +70,7 @@ describe('room definitions', () => {
   });
 
   it('covers all six playable rules across the run', () => {
-    const rules = new Set(ROOMS.flatMap((room) => getRoomRuleKeys(room)));
+    const rules = new Set(ROOMS.slice(0, 6).flatMap((room) => getRoomRuleKeys(room)));
     expect(rules.size).toBe(6);
   });
 
@@ -84,7 +93,7 @@ describe('room definitions', () => {
   });
 
   it('non-elite rooms keep the standard three choices', () => {
-    for (const room of ROOMS.filter((item) => !item.elite)) {
+    for (const room of ROOMS.filter((item) => !item.elite && !item.boss)) {
       expect(room.leader).toBeUndefined();
       expect(room.rewardCount).toBeUndefined();
     }
@@ -118,6 +127,21 @@ describe('room rewards', () => {
   it('offers four rewards in elite rooms', () => {
     expect(buildRoomRewards(createEmptyBuild(), ROOMS[4], random)).toHaveLength(4);
     expect(buildRoomRewards(createEmptyBuild(), ROOMS[5], random)).toHaveLength(4);
+  });
+
+  it('elite rooms guarantee a mutation until one is equipped', () => {
+    const rewards = buildRoomRewards(createEmptyBuild(), ROOMS[4], random);
+    expect(rewards.filter((reward) => reward.kind === 'mutation')).toHaveLength(1);
+    const withMutation = buildRoomRewards(createEmptyBuild(), ROOMS[4], random, { hasMutation: true });
+    expect(withMutation.some((reward) => reward.kind === 'mutation')).toBe(false);
+    expect(withMutation).toHaveLength(4);
+  });
+
+  it('normal rooms never offer mutations', () => {
+    for (const room of ROOMS.filter((item) => !item.elite)) {
+      const rewards = buildRoomRewards(createEmptyBuild(), room, random);
+      expect(rewards.some((reward) => reward.kind === 'mutation')).toBe(false);
+    }
   });
 
   it('only offers rules carried by the room enemies', () => {

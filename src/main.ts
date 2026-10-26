@@ -53,6 +53,7 @@ declare global {
       impactLevel?: 1 | 2 | 3
     ) => void;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
+    __RT_DAMAGE_BOSS__?: (amount: number) => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
     __RT_PICK_REWARD__?: (index: number) => void;
@@ -301,6 +302,7 @@ function handleReady(): void {
   window.__RT_SET_BUILD__ = (trajectory, impact, trajectoryLevel = 1, impactLevel = 1) =>
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
+  window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
   window.__RT_PICK_REWARD__ = (index) => {
