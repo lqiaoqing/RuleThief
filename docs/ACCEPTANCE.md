@@ -15,7 +15,7 @@
 | 弹射不重复选取已命中目标 | 自动 | `rules.test.ts` `selectChainTargets` 去重 |
 | 冰霜减速有上限 | 自动 | `rules.test.ts` `mergeFrost` 0.8 上限 |
 | 6 种敌人，各自携带一条规则 | 自动 | `rooms.test.ts` 敌人→规则 1:1；冒烟各敌人可生成 |
-| 2 个精英（双冲锋 / 三连雷击） | 自动 | 冒烟行为断言：裂甲精英连续进入冲锋 2 次、雷暴精英一次施法打出 3 发弹；截图 |
+| 2 个精英（双冲锋 / 三连雷击 + 锁定预警） | 自动 | 冒烟行为断言：裂甲精英连续冲锋 2 次、雷暴精英一次施法 3 发弹；雷暴施法前有青色锁定扇区（截图 m9-thunder-telegraph） |
 | 3 条突变，每局最多 1 条 | 自动 | `mutations.test.ts` 12 项；冒烟精英房突变卡数量断言 |
 | 4 种随机事件，每局 2 种 | 自动 | `run.test.ts` 事件数量/唯一性；冒烟「run visited two events」「visited events are distinct」 |
 | 跨房修饰只影响下一房 | 自动 | 冒烟「event speed modifier applies to the next room only」+「room N has no leftover speed modifier」 |

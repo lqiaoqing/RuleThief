@@ -1209,6 +1209,7 @@ export class M0Scene extends Phaser.Scene {
         burning: enemy.burnTime > 0,
         slowed: enemy.frostTime > 0,
         elite: enemy.elite,
+        state: enemy.state,
         charging: enemy.state === 'charge'
       })),
       hazardList: this.hazards.slice(0, 12).map((hazard) => ({
@@ -2848,9 +2849,11 @@ export class M0Scene extends Phaser.Scene {
       enemy.stateTimer -= dt;
       enemy.castRing.setVisible(true);
       enemy.castRing.setScale(1 + Math.sin(this.time.now * 0.03) * 0.12);
+      this.drawThunderWarning(enemy);
       if (enemy.stateTimer <= 0) {
         enemy.state = 'idle';
         enemy.castRing.setVisible(false);
+        enemy.warning.clear();
         enemy.sprite.clearTint();
         const base = Math.atan2(
           this.playerRoot.y - enemy.root.y,
@@ -2884,6 +2887,46 @@ export class M0Scene extends Phaser.Scene {
     if (enemy.state !== 'cast' && enemy.contactCd <= 0 && contact < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
       this.hurtPlayer(5, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private drawThunderWarning(enemy: EnemyUnit): void {
+    const g = enemy.warning;
+    g.clear();
+    const angle = Math.atan2(
+      this.playerRoot.y - enemy.root.y,
+      this.playerRoot.x - enemy.root.x
+    );
+    const reach = 420;
+    const spread = 0.2;
+    const pulse = 0.28 + Math.sin(this.time.now * 0.02) * 0.1;
+    g.fillStyle(COLORS.cyan, 0.05);
+    g.fillTriangle(
+      0,
+      0,
+      Math.cos(angle - spread) * reach,
+      Math.sin(angle - spread) * reach,
+      Math.cos(angle + spread) * reach,
+      Math.sin(angle + spread) * reach
+    );
+    g.lineStyle(1.5, COLORS.cyan, pulse);
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.lineTo(Math.cos(angle - spread) * reach, Math.sin(angle - spread) * reach);
+    g.moveTo(0, 0);
+    g.lineTo(Math.cos(angle) * reach, Math.sin(angle) * reach);
+    g.moveTo(0, 0);
+    g.lineTo(Math.cos(angle + spread) * reach, Math.sin(angle + spread) * reach);
+    g.strokePath();
+    for (let d = 26; d < reach; d += 22) {
+      const t = d / reach;
+      const x = Math.cos(angle) * d;
+      const y = Math.sin(angle) * d;
+      g.lineStyle(1, COLORS.cyan, 0.3 * (1 - t) + 0.06);
+      g.beginPath();
+      g.moveTo(x - Math.sin(angle) * 5, y + Math.cos(angle) * 5);
+      g.lineTo(x + Math.sin(angle) * 5, y - Math.cos(angle) * 5);
+      g.strokePath();
     }
   }
 
