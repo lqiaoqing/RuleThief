@@ -1,0 +1,59 @@
+[
+  {
+    "run": 1,
+    "result": "规则耗尽",
+    "rooms": "8 / 9",
+    "time": "04:47",
+    "seconds": 293,
+    "roomLog": [
+      {
+        "room": 1,
+        "seconds": 41,
+        "hpAtStart": 100,
+        "hpAtEnd": 88,
+        "kills": 10
+      },
+      {
+        "room": 2,
+        "seconds": 51,
+        "hpAtStart": 108,
+        "hpAtEnd": 118,
+        "kills": 24
+      },
+      {
+        "room": 3,
+        "seconds": 45,
+        "hpAtStart": 138,
+        "hpAtEnd": 94,
+        "kills": 42
+      },
+      {
+        "room": 5,
+        "seconds": 41,
+        "hpAtStart": 139,
+        "hpAtEnd": 27,
+        "kills": 54
+      },
+      {
+        "room": 6,
+        "seconds": 48,
+        "hpAtStart": 72,
+        "hpAtEnd": 12,
+        "kills": 70
+      },
+      {
+        "room": 8,
+        "seconds": 49,
+        "hpAtStart": 57,
+        "hpAtEnd": 29,
+        "kills": 86
+      }
+    ],
+    "picks": 6,
+    "eventsSeen": [
+      "CURSED CHEST:A",
+      "FORGOTTEN IDOL:B"
+    ],
+    "errors": []
+  }
+]

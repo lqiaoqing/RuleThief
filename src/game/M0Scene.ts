@@ -709,6 +709,8 @@ export class M0Scene extends Phaser.Scene {
       bolt.root.destroy(true);
     }
     this.bolts = [];
+    this.hp = Math.min(this.maxHp, this.hp + 10);
+    setHp(this.hp, this.maxHp);
     this.scene.pause();
     audio.play('rule');
     const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
@@ -1118,6 +1120,19 @@ export class M0Scene extends Phaser.Scene {
       sealSlot: this.sealSlot,
       sealTime: this.sealTime,
       eliteAlive: this.enemies.filter((enemy) => enemy.elite && !enemy.dead).length,
+      enemyList: this.enemies.slice(0, 24).map((enemy) => ({
+        kind: enemy.kind,
+        x: Math.round(enemy.root.x),
+        y: Math.round(enemy.root.y),
+        radius: enemy.radius,
+        elite: enemy.elite,
+        charging: enemy.state === 'charge'
+      })),
+      hazardList: this.hazards.slice(0, 12).map((hazard) => ({
+        x: Math.round(hazard.x),
+        y: Math.round(hazard.y),
+        radius: hazard.radius
+      })),
       bolts: this.bolts.length,
       enemyBolts: this.enemyBolts.length,
       pickups: this.pickups.length,
@@ -2154,7 +2169,7 @@ export class M0Scene extends Phaser.Scene {
       return;
     }
 
-    if (this.kills > 0 && this.kills % 10 === 0) {
+    if (this.kills > 0 && this.kills % 8 === 0) {
       this.dropHeal(x, y);
     }
     if (
@@ -2249,11 +2264,11 @@ export class M0Scene extends Phaser.Scene {
           ) < 32
         ) {
           pickup.dead = true;
-          this.hp = Math.min(this.maxHp, this.hp + 12);
+          this.hp = Math.min(this.maxHp, this.hp + 14);
           setHp(this.hp, this.maxHp);
           this.refreshRoomHud();
           audio.play('pickup');
-          showRuleToast('heal', '生命碎片', '恢复 12 点生命');
+          showRuleToast('heal', '生命碎片', '恢复 14 点生命');
           pickup.root.destroy(true);
         }
       }
