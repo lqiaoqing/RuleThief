@@ -59,17 +59,17 @@
 ## C. 当前自动化结果（2026-10-26）
 
 ```text
-npm test                       82/82 通过
-npm run build                  dist 1.30MB JS（gzip 353KB）+ 50KB CSS
+npm test                       83/83 通过
+npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
 npm run smoke                 118/118 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
+scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）
 scripts/combo-bench.mjs        9 组合 DPS 基准（2 次采样 × 5 秒）
-scripts/lowend.mjs             CPU ×1/×4/×6 压测：59.7 / 55.7 / 41.0 fps
 ```
 
-- 单测文件：`rules` 19、`rooms` 23、`mutations` 12、`run` 12、`tuning` 6、`telemetry` 7、`theme` 3。
+- 单测文件：`rules` 19、`rooms` 23、`mutations` 12、`run` 13、`tuning` 6、`telemetry` 7、`theme` 3。
 - 冒烟覆盖 13 步完整流程（10 场战斗 + 2 事件 + BOSS）、5 个分支、精英房、突变、封印、记录持久化、双端视口。
 
 ## D. 未完成项（需要外部条件）
