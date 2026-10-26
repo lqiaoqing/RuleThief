@@ -856,6 +856,23 @@ try {
   check('desktop no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await page.close();
 
+  const buildPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await buildPreset.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(buildPreset);
+  await buildPreset.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(300);
+  const presetState = await snapshot(buildPreset);
+  const presetCombo = await buildPreset.$eval('#combo-name', (el) => el.textContent);
+  check(
+    'build URL parameter loads a preset combo',
+    presetState.build?.trajectory?.key === 'spread' &&
+      presetState.build?.trajectory?.level === 3 &&
+      presetState.build?.impact?.key === 'burn' &&
+      presetCombo === '火焰弹幕',
+    JSON.stringify({ build: presetState.build, combo: presetCombo })
+  );
+  await buildPreset.close();
+
   const bossPractice = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await bossPractice.goto(`${BASE}/?arena=1&boss=1`, { waitUntil: 'networkidle0' });
   await waitReady(bossPractice);

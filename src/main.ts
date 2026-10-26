@@ -151,6 +151,7 @@ let pendingRewards: RoomCleared['rewards'] = [];
 const params = new URLSearchParams(window.location.search);
 const autoArena = params.get('arena') === '1';
 const bossPractice = params.get('boss') === '1';
+const buildParam = params.get('build');
 const INTRO_KEY = 'rulethief.intro.v1';
 
 function maybeShowIntro(): void {
@@ -225,6 +226,26 @@ function showResult(payload: RunEndPayload): void {
   pauseScreen.hidden = true;
   hideOverlays();
   scene?.pauseGame();
+}
+
+function applyBuildParam(): void {
+  if (!buildParam || !scene) return;
+  const [trajectory, impact, trajectoryLevel, impactLevel] = buildParam.split(',');
+  const trajectoryKey = ['pierce', 'chain', 'spread'].includes(trajectory)
+    ? (trajectory as TrajectoryKey)
+    : null;
+  const impactKey = ['burn', 'frost', 'blast'].includes(impact) ? (impact as ImpactKey) : null;
+  if (!trajectoryKey && !impactKey) return;
+  const level = (value: string | undefined): 1 | 2 | 3 => {
+    const parsed = Number(value);
+    return parsed === 2 ? 2 : parsed === 3 ? 3 : 1;
+  };
+  scene.debugSetBuild(
+    trajectoryKey,
+    impactKey,
+    level(trajectoryLevel),
+    level(impactLevel)
+  );
 }
 
 function hideOverlays(): void {
@@ -305,6 +326,7 @@ function enterArena(instant = false): void {
   void audio.unlock().then(() => audio.resume());
   scene.setPlayEnabled(true);
   scene.startNewRun();
+  applyBuildParam();
   if (bossPractice) {
     scene.debugJumpToBoss();
   }
