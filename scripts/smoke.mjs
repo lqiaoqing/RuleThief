@@ -387,6 +387,8 @@ try {
         );
       }
       if (roomsEntered === 2) {
+        const codexRows = await page.$$eval('#codex-list .codex-row', (rows) => rows.length);
+        check('codex follows the new room', codexRows === 2, String(codexRows));
         check(
           'switching rooms clears bolts, enemies, hazards and slow',
           Number(inside.bolts) === 0 &&
@@ -533,6 +535,14 @@ try {
     await page.$eval('#boss-bar-phase', (el) => el.textContent)
   );
 
+  await page.evaluate(() => window.__RT_HEAL__?.(100));
+  const summoned = await poll(
+    page,
+    () => (window.__RT_SNAPSHOT__?.().enemies ?? 0) >= 2,
+    6000
+  );
+  check('phase 2 summons adds', summoned, String((await snapshot(page)).enemies));
+
   await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(600));
   await sleep(700);
   bossState = await snapshot(page);
@@ -549,6 +559,12 @@ try {
     bossBarHidden: document.getElementById('boss-bar')?.hidden
   }));
   check('killing the arbiter wins the run', bossVictory.title === '审判完成', JSON.stringify(bossVictory));
+  const leftover = await snapshot(page);
+  check(
+    'boss death clears the summoned adds',
+    Number(leftover.enemies) === 0,
+    String(leftover.enemies)
+  );
   check('boss victory reports thirteen steps', bossVictory.rooms === '13 / 13', String(bossVictory.rooms));
   check('boss bar hides after the kill', bossVictory.bossBarHidden === true, String(bossVictory.bossBarHidden));
 

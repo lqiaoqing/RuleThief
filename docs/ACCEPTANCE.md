@@ -41,11 +41,11 @@
 | 组合 | 弹射+燃烧 DOT 不触发弹射 | 自动 | 冒烟 DOT 0 新 proc 且持续掉血 |
 | 组合 | 散射+冰霜方向正确、不无限减速 | 自动 | `rules.test.ts` 角度对称 + 减速上限 |
 | 规则 | 9 组合生效、等级、替换、满级 | 自动 | `rules.test.ts` + 冒烟 |
-| 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
+| 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕；图鉴跟随房间 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
 | 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟 `room N offers three cards` / `elite room N offers four cards and a guaranteed mutation` |
 | 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts` + 冒烟 |
 | 突变 | 3 种；每局最多 1；精英保底 | 自动 | `mutations.test.ts`；冒烟 `elite room N spawns its leader immediately` + 突变卡数量 |
-| BOSS | 3 阶段阈值；封印 4s 可躲可恢复；召唤物清理 | 自动 | 冒烟 + 截图 |
+| BOSS | 3 阶段阈值；封印 4s 可躲可恢复；召唤物清理 | 自动 | 冒烟：phase 2 召唤 3 个杂兵、击杀 BOSS 后场上归零；封印预警截图 |
 | 状态 | 死亡/暂停/失焦/切后台/重开；无旧弹幕/旧状态 | 自动 | 冒烟 blur / visibilitychange / 切房清理 / 重开 |
 | 体验 | 预警可读；受击来源清楚；构筑面板常驻；结算显示构筑 | 自动 + 截图 | 受击方向弧、结算「承伤构成」百分比、组合+突变行、截图 |
 | 体验 | 死亡归因可量化 | 自动 | 按 6 类来源（接触/冲锋/敌弹/火焰/自爆/其他）累计承伤，写入结算与 localStorage |
@@ -63,7 +63,7 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 140/140 通过，无 console/page error
+npm run smoke                 143/143 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）
