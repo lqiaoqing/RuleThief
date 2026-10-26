@@ -8,6 +8,7 @@ export interface RunRecord {
   combo: string;
   levelSum: number;
   mutation: string | null;
+  topDamage?: string;
 }
 
 const STORAGE_KEY = 'rulethief.runs.v1';

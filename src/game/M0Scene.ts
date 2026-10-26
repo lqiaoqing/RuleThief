@@ -56,6 +56,16 @@ import {
 
 type RunState = 'idle' | 'playing' | 'ended';
 type RoomState = 'preview' | 'fighting' | 'reward' | 'route' | 'event';
+type DamageSource = 'melee' | 'charge' | 'bolt' | 'hazard' | 'explosion' | 'other';
+const DAMAGE_SOURCES: DamageSource[] = ['melee', 'charge', 'bolt', 'hazard', 'explosion', 'other'];
+const DAMAGE_LABELS: Record<DamageSource, string> = {
+  melee: '近身接触',
+  charge: '冲锋',
+  bolt: '敌弹',
+  hazard: '火焰地面',
+  explosion: '自爆',
+  other: '其他'
+};
 type EnemyState = 'approach' | 'telegraph' | 'charge' | 'recover' | 'idle' | 'cast';
 
 interface EnemyUnit {
@@ -152,6 +162,7 @@ export interface RunEndPayload {
   roomsTotal: number;
   mutation: string | null;
   maxHp: number;
+  damage: { source: string; label: string; amount: number }[];
 }
 
 const PLAYER_MAX_HP = 100;
@@ -237,6 +248,14 @@ export class M0Scene extends Phaser.Scene {
   private impactProcs = 0;
   private blastDamageEvents = 0;
   private damageDealt = 0;
+  private damageTaken: Record<DamageSource, number> = {
+    melee: 0,
+    charge: 0,
+    bolt: 0,
+    hazard: 0,
+    explosion: 0,
+    other: 0
+  };
 
   private mutation: MutationState = createMutationState();
   private bossPhase = 0;
@@ -920,11 +939,7 @@ export class M0Scene extends Phaser.Scene {
   public debugDamagePlayer(amount: number): void {
     if (this.runState !== 'playing') return;
     this.invuln = 0;
-    this.hp = Math.max(0, this.hp - amount);
-    setHp(this.hp, this.maxHp);
-    audio.play('hurt');
-    this.cameras.main.flash(90, 255, 70, 90);
-    if (this.hp <= 0) this.endRun(false);
+    this.hurtPlayer(amount, this.playerRoot.x, this.playerRoot.y - 40, 'other');
   }
 
   public debugEndRun(victory: boolean): void {
@@ -1182,6 +1197,7 @@ export class M0Scene extends Phaser.Scene {
     this.impactProcs = 0;
     this.blastDamageEvents = 0;
     this.damageDealt = 0;
+    for (const key of DAMAGE_SOURCES) this.damageTaken[key] = 0;
     this.sealSlot = null;
     this.sealTime = 0;
     this.bossRef = null;
@@ -2605,7 +2621,7 @@ export class M0Scene extends Phaser.Scene {
       }
       if (!enemy.hasHitThisCharge && dist < enemy.radius + PLAYER_RADIUS + 8) {
         enemy.hasHitThisCharge = true;
-        this.hurtPlayer(12, enemy.root.x, enemy.root.y);
+        this.hurtPlayer(12, enemy.root.x, enemy.root.y, 'charge');
       }
     } else if (enemy.state === 'recover') {
       enemy.stateTimer -= dt;
@@ -2617,7 +2633,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.state !== 'charge' && enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(6, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(6, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2696,7 +2712,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.state !== 'cast' && enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(4, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(4, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2744,7 +2760,7 @@ export class M0Scene extends Phaser.Scene {
         enemy.root.y >= ARENA - 64;
       if (!enemy.hasHitThisCharge && dist < enemy.radius + PLAYER_RADIUS + 10) {
         enemy.hasHitThisCharge = true;
-        this.hurtPlayer(14, enemy.root.x, enemy.root.y);
+        this.hurtPlayer(14, enemy.root.x, enemy.root.y, 'charge');
       }
       if (atWall || enemy.stateTimer <= 0) {
         enemy.chargesLeft -= 1;
@@ -2769,7 +2785,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.state !== 'charge' && enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(8, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2816,7 +2832,7 @@ export class M0Scene extends Phaser.Scene {
     );
     if (enemy.state !== 'cast' && enemy.contactCd <= 0 && contact < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(5, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(5, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2852,7 +2868,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.state !== 'cast' && enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(4, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(4, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2906,7 +2922,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.contactCd <= 0 && distance < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(4, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(4, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2927,7 +2943,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.contactCd <= 0 && distance < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(7, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(7, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -2962,7 +2978,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.contactCd <= 0 && distance < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 0.9;
-      this.hurtPlayer(6, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(6, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -3044,7 +3060,7 @@ export class M0Scene extends Phaser.Scene {
       const contact = this.distanceToPlayer(enemy);
       if (!enemy.hasHitThisCharge && contact < enemy.radius + PLAYER_RADIUS + 12) {
         enemy.hasHitThisCharge = true;
-        this.hurtPlayer(16, enemy.root.x, enemy.root.y);
+        this.hurtPlayer(16, enemy.root.x, enemy.root.y, 'charge');
       }
       const atWall =
         enemy.root.x <= 70 ||
@@ -3090,7 +3106,7 @@ export class M0Scene extends Phaser.Scene {
 
     if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 1.0;
-      this.hurtPlayer(8, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -3348,7 +3364,7 @@ export class M0Scene extends Phaser.Scene {
         if (bolt.slowFactor > 0) {
           this.applyPlayerSlow(bolt.slowFactor, bolt.slowDuration);
         }
-        this.hurtPlayer(bolt.damage, hitX, hitY);
+        this.hurtPlayer(bolt.damage, hitX, hitY, 'bolt');
       }
     }
     this.enemyBolts = this.enemyBolts.filter((bolt) => !bolt.dead);
@@ -3406,7 +3422,7 @@ export class M0Scene extends Phaser.Scene {
         ) <
           hazard.radius + PLAYER_RADIUS * 0.55
       ) {
-        this.hurtPlayer(5, hazard.x, hazard.y);
+        this.hurtPlayer(5, hazard.x, hazard.y, 'hazard');
       }
     }
     this.hazards = this.hazards.filter((hazard) => !hazard.dead);
@@ -3422,12 +3438,18 @@ export class M0Scene extends Phaser.Scene {
       radius + PLAYER_RADIUS
     ) {
       this.invuln = 0;
-      this.hurtPlayer(18, enemy.root.x, enemy.root.y);
+      this.hurtPlayer(18, enemy.root.x, enemy.root.y, 'explosion');
     }
   }
 
-  private hurtPlayer(amount: number, sourceX: number, sourceY: number): void {
+  private hurtPlayer(
+    amount: number,
+    sourceX: number,
+    sourceY: number,
+    source: DamageSource = 'other'
+  ): void {
     if (this.runState !== 'playing' || this.invuln > 0) return;
+    this.damageTaken[source] += amount;
     this.hp = Math.max(0, this.hp - amount);
     this.invuln = 1.0;
     setHp(this.hp, this.maxHp);
@@ -3503,7 +3525,14 @@ export class M0Scene extends Phaser.Scene {
       roomsCleared: victory ? this.stepTotal : this.stepIndex,
       roomsTotal: this.stepTotal,
       mutation: this.mutation.id ? MUTATIONS[this.mutation.id].name : null,
-      maxHp: this.maxHp
+      maxHp: this.maxHp,
+      damage: DAMAGE_SOURCES.map((source) => ({
+        source,
+        label: DAMAGE_LABELS[source],
+        amount: Math.round(this.damageTaken[source])
+      }))
+        .filter((entry) => entry.amount > 0)
+        .sort((a, b) => b.amount - a.amount)
     } satisfies RunEndPayload);
   }
 

@@ -139,6 +139,7 @@ const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
 const resultRecord = byId<HTMLElement>('result-record');
 const resultMutation = byId<HTMLElement>('result-mutation');
+const resultDamage = byId<HTMLElement>('result-damage');
 
 let scene: M0Scene | null = null;
 let entered = false;
@@ -201,10 +202,22 @@ function showResult(payload: RunEndPayload): void {
     kills: payload.kills,
     combo: payload.combo,
     levelSum: payload.levelSum,
-    mutation: payload.mutation
+    mutation: payload.mutation,
+    topDamage: payload.damage
+      .slice(0, 2)
+      .map((entry) => `${entry.label}:${entry.amount}`)
+      .join('|')
   });
   resultRecord.textContent = formatRecordLine(summarize(runs));
   resultMutation.textContent = payload.mutation ? `突变 · ${payload.mutation}` : '突变 · 无';
+  const totalTaken = payload.damage.reduce((sum, entry) => sum + entry.amount, 0);
+  const damageLine = totalTaken
+    ? payload.damage
+        .slice(0, 3)
+        .map((entry) => `${entry.label} ${Math.round((entry.amount / totalTaken) * 100)}%`)
+        .join(' · ')
+    : '无伤';
+  resultDamage.textContent = `承伤构成：${damageLine}`;
   resultScreen.hidden = false;
   pauseScreen.hidden = true;
   hideOverlays();

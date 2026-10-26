@@ -550,6 +550,23 @@ try {
   check('death shows the defeat result', defeat.title === '规则耗尽' && defeat.cls.includes('is-defeat'), JSON.stringify(defeat));
   check('defeat reports zero rooms cleared', defeat.rooms === '0 / 13', String(defeat.rooms));
 
+  const damageLine = await page.$eval('#result-damage', (el) => el.textContent);
+  check(
+    'defeat shows the damage source breakdown',
+    /承伤构成：.+%/.test(damageLine ?? ''),
+    String(damageLine)
+  );
+  const telemetry = await page.evaluate(() => ({
+    line: document.getElementById('result-record')?.textContent,
+    stored: JSON.parse(localStorage.getItem('rulethief.runs.v1') ?? '[]').length
+  }));
+  check('run is recorded in localStorage', telemetry.stored >= 1, String(telemetry.stored));
+  check(
+    'result shows the running record',
+    /累计 \d+ 局/.test(telemetry.line ?? ''),
+    String(telemetry.line)
+  );
+
   await page.click('#result-menu-btn');
   await sleep(300);
   check('result menu returns to menu', await page.$eval('#menu', (el) => !el.hidden));
