@@ -2,34 +2,56 @@
   {
     "run": 1,
     "result": "规则耗尽",
-    "rooms": "4 / 13",
-    "time": "04:14",
-    "seconds": 258,
+    "rooms": "8 / 13",
+    "time": "06:35",
+    "seconds": 401,
     "roomLog": [
       {
         "room": 1,
-        "seconds": 57,
+        "seconds": 53,
         "hpAtStart": 100,
-        "hpAtEnd": 100,
-        "kills": 14
+        "hpAtEnd": 64,
+        "kills": 13
       },
       {
         "room": 2,
-        "seconds": 72,
-        "hpAtStart": 100,
-        "hpAtEnd": 78,
-        "kills": 35
+        "seconds": 68,
+        "hpAtStart": 64,
+        "hpAtEnd": 89,
+        "kills": 33
       },
       {
         "room": 3,
-        "seconds": 65,
-        "hpAtStart": 78,
-        "hpAtEnd": 38,
-        "kills": 61
+        "seconds": 59,
+        "hpAtStart": 89,
+        "hpAtEnd": 65,
+        "kills": 57
+      },
+      {
+        "room": 5,
+        "seconds": 60,
+        "hpAtStart": 65,
+        "hpAtEnd": 28,
+        "kills": 79
+      },
+      {
+        "room": 6,
+        "seconds": 68,
+        "hpAtStart": 73,
+        "hpAtEnd": 92,
+        "kills": 101
+      },
+      {
+        "room": 8,
+        "seconds": 61,
+        "hpAtStart": 92,
+        "hpAtEnd": 60,
+        "kills": 123
       }
     ],
-    "picks": 3,
+    "picks": 6,
     "eventsSeen": [
+      "FORGOTTEN IDOL:B",
       "UNSTABLE LAB:A"
     ],
     "errors": []

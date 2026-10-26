@@ -58,7 +58,7 @@
 
 ```bash
 npm ci
-npm test          # 75 项单测
+npm test          # 88 项单测
 npm run build     # tsc --noEmit + vite build
 npm run preview -- --port 4177
 BASE_URL=http://127.0.0.1:4177 npm run smoke
@@ -66,18 +66,20 @@ BASE_URL=http://127.0.0.1:4177 npm run verify
 ```
 
 - `npm run verify` 会校验：JS/CSS bundle、8 个精灵、地砖、菜单图、构建体积（<8MB）以及 HTML 中没有 dev server 引用。
-- 当前产物：`dist` 1.85MB；`public/assets` 约 460KB。
+- 当前产物：`dist` 1.86MB；`public/assets` 约 460KB。
 - 试玩记录保存在浏览器 localStorage（`rulethief.runs.v1`，最多 20 局），不涉及后端。
 - 部署方式：把 `dist` 整个目录上传到任意静态托管（Nginx / OSS / GitHub Pages / Netlify）。项目没有后端、没有环境变量、没有运行时配置。
 - 注意：`index.html` 使用相对路径 `./assets/...`，因此可以部署在子目录下（例如 `https://example.com/rule-thief/`）。
 
 ## 5. 验收矩阵
 
+> 最终构建复测（2026-10-26）：单测 88/88、冒烟 172/172、静态资源 31/31。
+
 | 项目 | 状态 | 证据 |
 | --- | --- | --- |
-| 单测 | 通过 | `npm test` 82/82 |
+| 单测 | 通过 | `npm test` 88/88 |
 | 生产构建 | 通过 | `npm run build` |
-| 桌面完整流程 | 通过 | smoke 109/109 |
+| 桌面完整流程 | 通过 | smoke 172/172 |
 | 结算预算（不递归） | 通过 | 齐射 3 次命中 / 7 次爆炸伤害；DOT 0 次新命中 |
 | 失焦暂停 | 通过 | blur 事件后暂停并可恢复 |
 | 移动视口完整流程 | 通过 | smoke（手机段） |

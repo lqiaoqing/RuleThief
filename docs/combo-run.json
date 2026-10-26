@@ -5,82 +5,82 @@
       "combo": "pierce+burn",
       "cleared": true,
       "died": false,
-      "seconds": 30,
+      "seconds": 40,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "pierce+frost",
       "cleared": true,
       "died": false,
-      "seconds": 34,
+      "seconds": 46,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "pierce+blast",
       "cleared": true,
       "died": false,
-      "seconds": 35,
+      "seconds": 42,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "chain+burn",
       "cleared": true,
       "died": false,
-      "seconds": 31,
+      "seconds": 41,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "chain+frost",
       "cleared": true,
       "died": false,
-      "seconds": 34,
+      "seconds": 43,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "chain+blast",
       "cleared": true,
       "died": false,
-      "seconds": 33,
+      "seconds": 41,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "spread+burn",
       "cleared": true,
       "died": false,
-      "seconds": 30,
+      "seconds": 39,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "spread+frost",
       "cleared": true,
       "died": false,
-      "seconds": 31,
+      "seconds": 40,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     },
     {
       "combo": "spread+blast",
       "cleared": true,
       "died": false,
-      "seconds": 30,
+      "seconds": 39,
       "hp": 100,
-      "kills": 10,
-      "roomKills": 10
+      "kills": 13,
+      "roomKills": 13
     }
   ]
 }
