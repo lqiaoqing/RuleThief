@@ -40,12 +40,12 @@ describe('pacing model', () => {
     }
   });
 
-  it('each plan visits six combat rooms plus the boss', () => {
+  it('each plan visits at least ten combat rooms plus the boss', () => {
     const plan = buildRunPlan(random);
     const rooms = plan
       .flatMap((step) => (step.kind === 'choice' ? step.options : [step.encounter]))
       .filter((encounter) => encounter.kind === 'room');
-    expect(rooms.length).toBeGreaterThanOrEqual(6);
+    expect(rooms.length).toBeGreaterThanOrEqual(10);
     const boss = rooms.filter(
       (encounter) => encounter.kind === 'room' && Boolean(encounter.room.boss)
     );

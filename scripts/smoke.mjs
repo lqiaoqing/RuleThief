@@ -159,7 +159,7 @@ try {
   let overlay = await overlayState(page);
   let state = await snapshot(page);
   check('first room preview opens', overlay.roomVisible, overlay.roomKicker);
-  check('preview shows room 1 of 9', /ROOM 01 \/ 09/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+  check('preview shows room 1 of 9', /ROOM 01 \/ 13/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
   check(
     'preview shows the room name and quota',
     overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '10',
@@ -182,7 +182,7 @@ try {
   check(
     'HUD shows room 1 and the codex',
     roomHud.roomNum === '01' &&
-      roomHud.roomTotal === '/ 09' &&
+      roomHud.roomTotal === '/ 13' &&
       roomHud.objective === '0 / 10' &&
       roomHud.objectiveLabel === 'ANTECHAMBER' &&
       roomHud.codexRows === 1,
@@ -242,15 +242,15 @@ try {
 
   const planInfo = await snapshot(page);
   check(
-    'run plan has nine steps',
-    Array.isArray(planInfo.plan) && planInfo.plan.length === 9,
+    'run plan has thirteen steps',
+    Array.isArray(planInfo.plan) && planInfo.plan.length === 13,
     String(planInfo.plan?.length)
   );
   const planNodes = (planInfo.plan ?? []).reduce(
     (sum, step) => sum + (step.kind === 'choice' ? step.options.length : 1),
     0
   );
-  check('plan exposes thirteen nodes', planNodes === 13, String(planNodes));
+  check('plan exposes eighteen nodes', planNodes === 18, String(planNodes));
   const planEvents = (planInfo.plan ?? [])
     .filter((step) => step.kind === 'encounter' && EVENT_IDS.includes(step.encounter))
     .map((step) => step.encounter);
@@ -260,8 +260,8 @@ try {
     JSON.stringify(planEvents)
   );
   check(
-    'plan contains four branching steps',
-    (planInfo.plan ?? []).filter((step) => step.kind === 'choice').length === 4,
+    'plan contains five branching steps',
+    (planInfo.plan ?? []).filter((step) => step.kind === 'choice').length === 5,
     String((planInfo.plan ?? []).filter((step) => step.kind === 'choice').length)
   );
 
@@ -271,10 +271,10 @@ try {
   let roomsEntered = 1;
   let bossPreview = null;
 
-  for (let guard = 0; guard < 26; guard += 1) {
+  for (let guard = 0; guard < 40; guard += 1) {
     const view = await overlayState(page);
     if (view.roomVisible) {
-      if (/ROOM 09 \/ 09/.test(view.roomKicker ?? '')) {
+      if (/ROOM 13 \/ 13/.test(view.roomKicker ?? '')) {
         bossPreview = view;
         break;
       }
@@ -374,12 +374,12 @@ try {
 
   check('run visited two events', seenEvents.length === 2, JSON.stringify(seenEvents));
   check('visited events are distinct', new Set(seenEvents).size === 2, JSON.stringify(seenEvents));
-  check('run entered six combat rooms', roomsEntered === 6, String(roomsEntered));
+  check('run entered ten combat rooms', roomsEntered === 10, String(roomsEntered));
   check('boss preview reached', Boolean(bossPreview), bossPreview?.roomKicker);
 
   check(
     'boss room preview opens',
-    Boolean(bossPreview) && /ROOM 09 \/ 09/.test(bossPreview.roomKicker ?? ''),
+    Boolean(bossPreview) && /ROOM 13 \/ 13/.test(bossPreview.roomKicker ?? ''),
     bossPreview?.roomKicker
   );
 
@@ -424,7 +424,7 @@ try {
     bossBarHidden: document.getElementById('boss-bar')?.hidden
   }));
   check('killing the arbiter wins the run', bossVictory.title === '审判完成', JSON.stringify(bossVictory));
-  check('boss victory reports seven rooms', bossVictory.rooms === '9 / 9', String(bossVictory.rooms));
+  check('boss victory reports seven rooms', bossVictory.rooms === '13 / 13', String(bossVictory.rooms));
   check('boss bar hides after the kill', bossVictory.bossBarHidden === true, String(bossVictory.bossBarHidden));
 
   const finalStats = await page.evaluate(() => ({
@@ -464,7 +464,7 @@ try {
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check('death shows the defeat result', defeat.title === '规则耗尽' && defeat.cls.includes('is-defeat'), JSON.stringify(defeat));
-  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 9', String(defeat.rooms));
+  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 13', String(defeat.rooms));
 
   await page.click('#result-menu-btn');
   await sleep(300);

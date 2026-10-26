@@ -281,7 +281,7 @@ async function captureBoss(viewport, name, damage, phaseWait, build) {
   await waitReady(page);
   await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(450);
-  await goToRoom(page, 6);
+  await goToRoom(page, 10);
   await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
   await sleep(900);
   await page.evaluate(
@@ -303,7 +303,7 @@ async function captureBossVictory(viewport, name, build) {
   await waitReady(page);
   await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(450);
-  await goToRoom(page, 6);
+  await goToRoom(page, 10);
   await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
   await sleep(900);
   await page.evaluate(

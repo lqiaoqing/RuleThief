@@ -175,10 +175,14 @@ export function buildRunPlan(random: () => number = Math.random): RunStep[] {
     { kind: 'choice', options: [room('ember-nursery'), room('spore-vault')] },
     { kind: 'choice', options: [room('echo-gallery'), room('bone-gallery')] },
     { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[0]] } },
-    { kind: 'choice', options: [room('sunder-pit'), room('ember-rift')] },
     { kind: 'encounter', encounter: room('mycelium-hall') },
+    { kind: 'choice', options: [room('sunder-pit'), room('ember-rift')] },
     { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[1]] } },
-    { kind: 'choice', options: [room('thunder-altar'), room('cinder-court')] },
+    { kind: 'encounter', encounter: room('cinder-court') },
+    { kind: 'choice', options: [room('thunder-altar'), room('frostbone-gallery')] },
+    { kind: 'encounter', encounter: room('slag-yard') },
+    { kind: 'encounter', encounter: room('echo-vault') },
+    { kind: 'choice', options: [room('frost-court'), room('ash-gallery')] },
     { kind: 'encounter', encounter: room('judgement-hall') }
   ];
 }

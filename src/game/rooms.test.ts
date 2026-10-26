@@ -45,9 +45,11 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships eleven rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(11);
-    expect(ROOMS.map((room) => room.quota)).toEqual([10, 14, 16, 18, 16, 16, 16, 16, 12, 13, 1]);
+  it('ships sixteen rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(16);
+    expect(ROOMS.map((room) => room.quota)).toEqual([
+      10, 14, 16, 18, 16, 16, 16, 16, 16, 16, 16, 16, 16, 12, 13, 1
+    ]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
   });
 

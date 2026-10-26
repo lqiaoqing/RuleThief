@@ -35,16 +35,16 @@ describe('event definitions', () => {
 });
 
 describe('run plan', () => {
-  it('builds a nine-step path through thirteen nodes', () => {
+  it('builds a thirteen-step path through eighteen nodes', () => {
     const plan = buildRunPlan(random);
-    expect(planStepCount(plan)).toBe(9);
-    expect(planNodeCount(plan)).toBe(13);
+    expect(planStepCount(plan)).toBe(13);
+    expect(planNodeCount(plan)).toBe(18);
   });
 
-  it('has three branching steps with two options each', () => {
+  it('has five branching steps with two options each', () => {
     const plan = buildRunPlan(random);
     const choices = plan.filter((step) => step.kind === 'choice');
-    expect(choices).toHaveLength(4);
+    expect(choices).toHaveLength(5);
     for (const choice of choices) {
       expect(choice.options).toHaveLength(2);
     }

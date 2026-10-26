@@ -266,6 +266,71 @@ export const ROOMS: readonly RoomDef[] = [
     ]
   },
   {
+    id: 'frostbone-gallery',
+    name: '霜骨回廊',
+    en: 'FROSTBONE GALLERY',
+    subtitle: '霜灵在骨柱间穿行，爆裂甲虫负责把你逼出掩体。',
+    quota: 16,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'wisp', weight: 6 },
+      { kind: 'bomber', weight: 4 }
+    ]
+  },
+  {
+    id: 'slag-yard',
+    name: '熔渣庭院',
+    en: 'SLAG YARD',
+    subtitle: '熔渣没过脚踝，史莱姆与甲虫都不打算让你停下。',
+    quota: 16,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'slime', weight: 6 },
+      { kind: 'beetle', weight: 6 }
+    ]
+  },
+  {
+    id: 'echo-vault',
+    name: '残响回廊',
+    en: 'ECHO VAULT',
+    subtitle: '雷光在穹顶反弹，史莱姆在下方慢慢逼近。',
+    quota: 16,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'bat', weight: 6 },
+      { kind: 'slime', weight: 4 }
+    ]
+  },
+  {
+    id: 'frost-court',
+    name: '凛冬庭院',
+    en: 'FROST COURT',
+    subtitle: '霜灵与史莱姆共享这片冻土，减速之后就是灼烧。',
+    quota: 16,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'wisp', weight: 6 },
+      { kind: 'slime', weight: 6 }
+    ]
+  },
+  {
+    id: 'ash-gallery',
+    name: '灰烬回廊',
+    en: 'ASH GALLERY',
+    subtitle: '焦黑的梁柱下，爆裂甲虫与铁刺甲虫轮番逼近。',
+    quota: 16,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'bomber', weight: 6 },
+      { kind: 'beetle', weight: 6 }
+    ]
+  },
+  {
     id: 'sunder-pit',
     name: '裂甲竞技场',
     en: 'SUNDER PIT',

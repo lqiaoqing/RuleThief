@@ -7,8 +7,8 @@ export const PACING = {
   rewardTime: 12,
   eventTime: 12,
   bossTime: 75,
-  targetMinMinutes: 6.5,
-  targetMaxMinutes: 10
+  targetMinMinutes: 9,
+  targetMaxMinutes: 14
 } as const;
 
 export function estimateRoomSeconds(room: RoomDef): number {
