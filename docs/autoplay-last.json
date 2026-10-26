@@ -2,56 +2,34 @@
   {
     "run": 1,
     "result": "规则耗尽",
-    "rooms": "8 / 13",
-    "time": "06:24",
-    "seconds": 390,
+    "rooms": "4 / 13",
+    "time": "04:14",
+    "seconds": 258,
     "roomLog": [
       {
         "room": 1,
-        "seconds": 48,
+        "seconds": 57,
         "hpAtStart": 100,
-        "hpAtEnd": 76,
-        "kills": 12
+        "hpAtEnd": 100,
+        "kills": 14
       },
       {
         "room": 2,
-        "seconds": 67,
-        "hpAtStart": 96,
-        "hpAtEnd": 98,
-        "kills": 30
+        "seconds": 72,
+        "hpAtStart": 100,
+        "hpAtEnd": 78,
+        "kills": 35
       },
       {
         "room": 3,
-        "seconds": 55,
-        "hpAtStart": 118,
-        "hpAtEnd": 122,
-        "kills": 52
-      },
-      {
-        "room": 5,
-        "seconds": 58,
-        "hpAtStart": 140,
-        "hpAtEnd": 92,
-        "kills": 72
-      },
-      {
-        "room": 6,
-        "seconds": 63,
-        "hpAtStart": 92,
-        "hpAtEnd": 112,
-        "kills": 92
-      },
-      {
-        "room": 8,
-        "seconds": 57,
-        "hpAtStart": 112,
-        "hpAtEnd": 96,
-        "kills": 112
+        "seconds": 65,
+        "hpAtStart": 78,
+        "hpAtEnd": 38,
+        "kills": 61
       }
     ],
-    "picks": 6,
+    "picks": 3,
     "eventsSeen": [
-      "BLOOD ALTAR:A",
       "UNSTABLE LAB:A"
     ],
     "errors": []
