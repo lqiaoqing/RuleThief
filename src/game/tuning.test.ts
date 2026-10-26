@@ -33,9 +33,12 @@ describe('pacing model', () => {
   });
 
   it('elite rooms trade quota for a leader', () => {
+    const standardQuota = Math.max(
+      ...ROOMS.filter((item) => !item.elite && !item.boss).map((item) => item.quota)
+    );
     for (const room of ROOMS.filter((item) => item.elite)) {
       expect(room.leader).toBeDefined();
-      expect(room.quota).toBeLessThanOrEqual(13);
+      expect(room.quota).toBeLessThan(standardQuota);
       expect(room.rewardCount).toBe(4);
     }
   });

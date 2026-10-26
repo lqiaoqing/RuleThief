@@ -179,7 +179,7 @@ try {
   check('preview shows room 1 of 13', /ROOM 01 \/ 13/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
   check(
     'preview shows the room name and quota',
-    overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '10',
+    overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '12',
     `${overlay.roomTitle} / ${overlay.roomQuota}`
   );
   check('preview pauses the run', overlay.paused, String(overlay.paused));
@@ -200,7 +200,7 @@ try {
     'HUD shows room 1 and the codex',
     roomHud.roomNum === '01' &&
       roomHud.roomTotal === '/ 13' &&
-      roomHud.objective === '0 / 10' &&
+      roomHud.objective === '0 / 12' &&
       roomHud.objectiveLabel === 'ANTECHAMBER' &&
       roomHud.codexRows === 1,
     JSON.stringify(roomHud)
@@ -790,7 +790,7 @@ try {
     JSON.stringify({ hp: state.hp, roomIndex: state.roomIndex, kills: state.kills, build: state.build })
   );
   check('restart reopens room 1 preview', overlay.roomVisible, String(overlay.roomVisible));
-  check('restart resets the HUD and codex', roomHud.roomNum === '01' && roomHud.objective === '0 / 10' && roomHud.codexRows === 1, JSON.stringify(roomHud));
+  check('restart resets the HUD and codex', roomHud.roomNum === '01' && roomHud.objective === '0 / 12' && roomHud.codexRows === 1, JSON.stringify(roomHud));
 
   await enterRoom(page);
   await page.evaluate(() => window.__RT_DAMAGE__?.(500));
@@ -1102,7 +1102,8 @@ try {
     })
   );
 
-  await mobile.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(8));
+  const mobileQuota = Number((await snapshot(mobile)).roomQuota);
+  await mobile.evaluate((value) => window.__RT_SET_ROOM_KILLS__?.(value), mobileQuota - 1);
   await mobile.evaluate(() => window.__RT_SPAWN__?.('beetle'));
   await sleep(760);
   await mobile.evaluate(() => window.__RT_KILL_ALL__?.());

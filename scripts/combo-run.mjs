@@ -70,7 +70,9 @@ const browser = await puppeteer.launch({
 
 const rows = [];
 try {
+  const only = process.env.ONLY;
   for (const [trajectory, impact] of COMBOS) {
+    if (only && `${trajectory}+${impact}` !== only) continue;
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
     await page.goto(`${BASE}/?arena=1&build=${trajectory},${impact},3,3`, { waitUntil: 'networkidle0' });
