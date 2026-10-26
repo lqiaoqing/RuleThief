@@ -856,6 +856,59 @@ try {
   check('desktop no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await page.close();
 
+  const landscape = await newPage(browser, {
+    width: 844,
+    height: 390,
+    deviceScaleFactor: 1,
+    isMobile: true,
+    hasTouch: true
+  });
+  await landscape.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await waitReady(landscape);
+  await landscape.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(500);
+  const measureCard = async (target, selector) =>
+    target.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        h: Math.round(rect.height),
+        w: Math.round(rect.width),
+        vh: window.innerHeight,
+        vw: window.innerWidth,
+        clipped: el.scrollHeight > el.clientHeight + 1
+      };
+    }, selector);
+
+  const landRoom = await measureCard(landscape, '#room-screen .altar-card');
+  check(
+    'landscape room preview fits the viewport',
+    Boolean(landRoom) && landRoom.h <= landRoom.vh + 1 && landRoom.w <= landRoom.vw + 1,
+    JSON.stringify(landRoom)
+  );
+  await landscape.tap('#room-enter-btn');
+  await sleep(500);
+  await landscape.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 2, 1));
+  await landscape.evaluate(() => window.__RT_SCENE__?.debugOpenReward());
+  await landscape.waitForFunction(() => !document.getElementById('altar-screen')?.hidden, { timeout: 6000 });
+  await sleep(350);
+  const landReward = await measureCard(landscape, '#altar-screen .altar-card');
+  check(
+    'landscape reward overlay fits the viewport',
+    Boolean(landReward) && landReward.h <= landReward.vh + 1 && landReward.w <= landReward.vw + 1,
+    JSON.stringify(landReward)
+  );
+  await landscape.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
+  await sleep(450);
+  const landRoute = await measureCard(landscape, '#route-screen .altar-card');
+  check(
+    'landscape route overlay fits the viewport',
+    Boolean(landRoute) && landRoute.h <= landRoute.vh + 1 && landRoute.w <= landRoute.vw + 1,
+    JSON.stringify(landRoute)
+  );
+  await landscape.close();
+
   const maxed = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await maxed.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
   await waitReady(maxed);
