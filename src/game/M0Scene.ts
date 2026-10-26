@@ -165,6 +165,8 @@ const IMPACT_TRIGGER_BUDGET = 3;
 const SPREAD_COLOR = 0xffb3d9;
 const PIERCE_COLOR = 0xb69bff;
 const FROST_COLOR = 0x8ceafa;
+const MAX_DAMAGE_NUMBERS = 48;
+const MAX_HIT_SPARKS = 64;
 
 const RULE_TINTS: Record<RuleKey, number> = {
   pierce: PIERCE_COLOR,
@@ -227,6 +229,8 @@ export class M0Scene extends Phaser.Scene {
 
   private slowTime = 0;
   private slowFactor = 0;
+  private liveDamageNumbers = 0;
+  private liveHitSparks = 0;
 
   private mutation: MutationState = createMutationState();
   private bossPhase = 0;
@@ -1087,6 +1091,8 @@ export class M0Scene extends Phaser.Scene {
       acquired: [...this.acquired] as RuleKey[],
       enemies: this.enemies.length,
       hazards: this.hazards.length,
+      liveDamageNumbers: this.liveDamageNumbers,
+      liveHitSparks: this.liveHitSparks,
       slowTime: this.slowTime,
       invuln: this.invuln,
       mutation: this.mutation.id,
@@ -1136,6 +1142,8 @@ export class M0Scene extends Phaser.Scene {
     }
     this.slowTime = 0;
     this.slowFactor = 0;
+    this.liveDamageNumbers = 0;
+    this.liveHitSparks = 0;
     this.sealSlot = null;
     this.sealTime = 0;
     this.bossRef = null;
@@ -3517,6 +3525,8 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private spawnHitSpark(x: number, y: number): void {
+    if (this.liveHitSparks >= MAX_HIT_SPARKS) return;
+    this.liveHitSparks += 1;
     const ring = this.add
       .circle(x, y, 8, 0x000000, 0)
       .setStrokeStyle(1.5, COLORS.yellow, 0.8)
@@ -3527,7 +3537,10 @@ export class M0Scene extends Phaser.Scene {
       scale: 2.2,
       alpha: 0,
       duration: 220,
-      onComplete: () => ring.destroy()
+      onComplete: () => {
+        this.liveHitSparks = Math.max(0, this.liveHitSparks - 1);
+        ring.destroy();
+      }
     });
   }
 
@@ -3632,6 +3645,8 @@ export class M0Scene extends Phaser.Scene {
     color: string,
     fontSize = 22
   ): void {
+    if (this.liveDamageNumbers >= MAX_DAMAGE_NUMBERS) return;
+    this.liveDamageNumbers += 1;
     const label = this.add
       .text(x, y, text, {
         fontFamily: 'Bahnschrift, "Noto Sans SC", sans-serif',
@@ -3651,7 +3666,10 @@ export class M0Scene extends Phaser.Scene {
       scale: 0.86,
       duration: 650,
       ease: 'Cubic.easeOut',
-      onComplete: () => label.destroy()
+      onComplete: () => {
+        this.liveDamageNumbers = Math.max(0, this.liveDamageNumbers - 1);
+        label.destroy();
+      }
     });
   }
 
