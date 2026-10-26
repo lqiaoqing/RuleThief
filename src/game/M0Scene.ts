@@ -223,6 +223,7 @@ export class M0Scene extends Phaser.Scene {
   private runToken = 0;
   private nextEnemyId = 1;
 
+  private scenePaused = false;
   private roomState: RoomState = 'preview';
   private plan: RunStep[] = [];
   private stepIndex = 0;
@@ -356,7 +357,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public startNewRun(): void {
-    this.scene.resume();
+    this.resumeScene();
     this.time.removeAllEvents();
     this.runToken += 1;
     this.clearTransient();
@@ -473,7 +474,7 @@ export class M0Scene extends Phaser.Scene {
       this.roomState = 'route';
       this.playEnabled = false;
       this.joystick.set(0, 0);
-      this.scene.pause();
+      this.pauseScene();
       this.refreshRoomHud();
       this.game.events.emit('m3-route', {
         index,
@@ -507,7 +508,7 @@ export class M0Scene extends Phaser.Scene {
     this.roomState = 'preview';
     this.playEnabled = false;
     this.joystick.set(0, 0);
-    this.scene.pause();
+    this.pauseScene();
     setRoomEnemies(getRoomEnemyKinds(this.getRoom()));
     this.refreshRoomHud();
     this.game.events.emit('m2-room-preview', {
@@ -526,7 +527,7 @@ export class M0Scene extends Phaser.Scene {
     this.roomState = 'event';
     this.playEnabled = false;
     this.joystick.set(0, 0);
-    this.scene.pause();
+    this.pauseScene();
     setRoomEnemies([]);
     this.refreshRoomHud();
     this.game.events.emit('m3-event', {
@@ -670,7 +671,7 @@ export class M0Scene extends Phaser.Scene {
     const room = this.getRoom();
     setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
-    this.scene.resume();
+    this.resumeScene();
     audio.play('spawn');
 
     if (room.leader) {
@@ -734,7 +735,7 @@ export class M0Scene extends Phaser.Scene {
     this.bolts = [];
     this.hp = Math.min(this.maxHp, this.hp + 10);
     setHp(this.hp, this.maxHp);
-    this.scene.pause();
+    this.pauseScene();
     audio.play('rule');
     const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
       hasMutation: Boolean(this.mutation.id),
@@ -807,10 +808,22 @@ export class M0Scene extends Phaser.Scene {
 
   public pauseGame(): void {
     this.joystick.set(0, 0);
-    this.scene.pause();
+    this.pauseScene();
   }
 
   public resumeGame(): void {
+    this.resumeScene();
+  }
+
+  private pauseScene(): void {
+    if (this.scenePaused) return;
+    this.scenePaused = true;
+    this.scene.pause();
+  }
+
+  private resumeScene(): void {
+    if (!this.scenePaused) return;
+    this.scenePaused = false;
     this.scene.resume();
   }
 
@@ -897,7 +910,7 @@ export class M0Scene extends Phaser.Scene {
       this.tweens.killTweensOf(enemy.root);
       enemy.root.setScale(1).setAlpha(1);
     });
-    this.time.delayedCall(340, () => this.scene.pause());
+    this.time.delayedCall(340, () => this.pauseScene());
   }
 
   public runSummary(): string {
@@ -1086,7 +1099,7 @@ export class M0Scene extends Phaser.Scene {
           impact === 'frost' ? '#65dcf0' : '#ffe399'
         );
       });
-      this.scene.pause();
+      this.pauseScene();
     });
   }
 

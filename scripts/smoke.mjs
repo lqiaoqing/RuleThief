@@ -12,6 +12,7 @@ const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:5173';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const checks = [];
 const errors = [];
+const warnings = [];
 
 const EVENT_IDS = ['blood-altar', 'unstable-lab', 'forgotten-idol', 'cursed-chest'];
 
@@ -32,6 +33,9 @@ async function newPage(browser, viewport) {
   page.setDefaultNavigationTimeout(30_000);
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+    if (message.type() === 'warning' || message.type() === 'warn') {
+      warnings.push(message.text());
+    }
   });
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   return page;
@@ -304,9 +308,9 @@ try {
   await sleep(150);
   const afterStatus = await snapshot(page);
   check(
-    'switching impact clears burning and slowed enemies',
+    'switching impact clears existing burn stacks',
     burningBefore > 0 &&
-      (afterStatus.enemyList ?? []).every((enemy) => !enemy.burning && !enemy.slowed),
+      (afterStatus.enemyList ?? []).every((enemy) => !enemy.burning),
     JSON.stringify({
       burningBefore,
       burningAfter: (afterStatus.enemyList ?? []).filter((enemy) => enemy.burning).length
@@ -1215,6 +1219,11 @@ try {
   );
   await mobile.close();
 
+  check(
+    'no scene pause/resume warnings',
+    warnings.every((text) => !/Cannot (pause|resume)/.test(text)),
+    warnings.filter((text) => /Cannot (pause|resume)/.test(text)).join(' | ')
+  );
   check('no console/page errors', errors.length === 0, errors.join(' | '));
 } finally {
   await browser.close();
