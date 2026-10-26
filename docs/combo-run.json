@@ -1,0 +1,86 @@
+{
+  "limitMs": 75000,
+  "rows": [
+    {
+      "combo": "pierce+burn",
+      "cleared": true,
+      "died": false,
+      "seconds": 30,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "pierce+frost",
+      "cleared": true,
+      "died": false,
+      "seconds": 34,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "pierce+blast",
+      "cleared": true,
+      "died": false,
+      "seconds": 35,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "chain+burn",
+      "cleared": true,
+      "died": false,
+      "seconds": 31,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "chain+frost",
+      "cleared": true,
+      "died": false,
+      "seconds": 34,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "chain+blast",
+      "cleared": true,
+      "died": false,
+      "seconds": 33,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "spread+burn",
+      "cleared": true,
+      "died": false,
+      "seconds": 30,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "spread+frost",
+      "cleared": true,
+      "died": false,
+      "seconds": 31,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    },
+    {
+      "combo": "spread+blast",
+      "cleared": true,
+      "died": false,
+      "seconds": 30,
+      "hp": 100,
+      "kills": 10,
+      "roomKills": 10
+    }
+  ]
+}

@@ -103,6 +103,7 @@ npm run dev
 
 - `scripts/combo-bench.mjs`：9 种组合对 3 个聚怪木桩的 DPS 基准（写 `docs/combo-bench.json`）。
 - `scripts/autoplay.mjs`：自动试玩一整局，输出逐房数据。
+- `scripts/combo-run.mjs`：9 套预设组合各自的清房实测（时间/剩余生命）。
 - 结算页会显示累计战绩（localStorage，最近 20 局）。
 
 ## 试玩记录
