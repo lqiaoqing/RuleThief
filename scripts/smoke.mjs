@@ -291,12 +291,19 @@ try {
   await sleep(300);
   check('resuming after background works', await page.$eval('#pause-screen', (el) => el.hidden));
 
+  const countKind = (state, kind) => Number((state.enemyCounts ?? {})[kind] ?? 0);
   for (const kind of ['spore', 'slime', 'wisp', 'bomber']) {
-    const before = Number((await snapshot(page)).enemies);
+    const beforeState = await snapshot(page);
+    const before = countKind(beforeState, kind);
     await page.evaluate((k) => window.__RT_SPAWN_AT__?.(k, 560, 360), kind);
-    await sleep(260);
-    const after = Number((await snapshot(page)).enemies);
-    check(`spawns ${kind}`, after > before, `${before} -> ${after}`);
+    await sleep(300);
+    const afterState = await snapshot(page);
+    const after = countKind(afterState, kind);
+    check(
+      `spawns ${kind}`,
+      after === before + 1,
+      `${kind} ${before} -> ${after} all=${JSON.stringify(afterState.enemyCounts)}`
+    );
   }
   const hazardSeen = await poll(page, () => (window.__RT_SNAPSHOT__?.().hazards ?? 0) > 0, 7000);
   check('slime leaves burning ground', hazardSeen);
@@ -362,11 +369,38 @@ try {
         bossPreview = view;
         break;
       }
+      check(
+        `room preview lists its enemies (${view.roomKicker})`,
+        view.enemyChips >= 1,
+        String(view.enemyChips)
+      );
       const speedRisk = pendingSpeedRisk;
       const curse = pendingCurse;
       await enterRoom(page);
       roomsEntered += 1;
       const inside = await snapshot(page);
+      if (/ELITE/.test(view.roomKicker ?? '')) {
+        check(
+          `elite room ${inside.roomIndex + 1} spawns its leader immediately`,
+          Number(inside.eliteAlive) === 1,
+          String(inside.eliteAlive)
+        );
+      }
+      if (roomsEntered === 2) {
+        check(
+          'switching rooms clears bolts, enemies, hazards and slow',
+          Number(inside.bolts) === 0 &&
+            Number(inside.enemies) === 0 &&
+            Number(inside.hazards) === 0 &&
+            Number(inside.slowTime) === 0,
+          JSON.stringify({
+            bolts: inside.bolts,
+            enemies: inside.enemies,
+            hazards: inside.hazards,
+            slow: inside.slowTime
+          })
+        );
+      }
       if (speedRisk) {
         check(
           `event speed modifier applies to the next room only (room ${inside.roomIndex + 1})`,
@@ -406,9 +440,16 @@ try {
         const mutationBefore = Boolean((await snapshot(page)).mutation);
         const mutationCards = reward.cards.filter((card) => card.kind === 'mutation').length;
         check(
-          `elite room ${inside.roomIndex + 1} mutation offer is correct`,
-          mutationBefore ? mutationCards === 0 : mutationCards === 1,
+          `elite room ${inside.roomIndex + 1} offers four cards and a guaranteed mutation`,
+          reward.cards.length === 4 &&
+            (mutationBefore ? mutationCards === 0 : mutationCards === 1),
           JSON.stringify({ mutationBefore, mutationCards, cards: reward.cards.length })
+        );
+      } else {
+        check(
+          `room ${inside.roomIndex + 1} offers three cards`,
+          reward.cards.length === 3 + (curse ? 1 : 0),
+          JSON.stringify({ cards: reward.cards.length, curse })
         );
       }
       await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
