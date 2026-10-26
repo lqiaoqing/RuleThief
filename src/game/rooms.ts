@@ -214,6 +214,58 @@ export const ROOMS: readonly RoomDef[] = [
     ]
   },
   {
+    id: 'bone-gallery',
+    name: '蚀骨回廊',
+    en: 'BONE GALLERY',
+    subtitle: '骨梁上挂着会爆炸的茧，别在下面停留。',
+    quota: 12,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'bat', weight: 6 },
+      { kind: 'bomber', weight: 4 }
+    ]
+  },
+  {
+    id: 'ember-rift',
+    name: '灼热裂隙',
+    en: 'EMBER RIFT',
+    subtitle: '地面在缓慢燃烧，站得越久越危险。',
+    quota: 12,
+    maxAlive: 7,
+    spawnInterval: 2.5,
+    mix: [
+      { kind: 'slime', weight: 6 },
+      { kind: 'bomber', weight: 4 }
+    ]
+  },
+  {
+    id: 'mycelium-hall',
+    name: '菌毯回廊',
+    en: 'MYCELIUM HALL',
+    subtitle: '孢子与霜冻一起飘，正面推进会付出代价。',
+    quota: 12,
+    maxAlive: 8,
+    spawnInterval: 2.5,
+    mix: [
+      { kind: 'spore', weight: 7 },
+      { kind: 'wisp', weight: 3 }
+    ]
+  },
+  {
+    id: 'cinder-court',
+    name: '焦土庭院',
+    en: 'CINDER COURT',
+    subtitle: '霜灵在焦土上徘徊，甲虫在等你露出破绽。',
+    quota: 12,
+    maxAlive: 7,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'beetle', weight: 4 },
+      { kind: 'wisp', weight: 6 }
+    ]
+  },
+  {
     id: 'sunder-pit',
     name: '裂甲竞技场',
     en: 'SUNDER PIT',
@@ -366,10 +418,10 @@ export function buildRoomRewards(
   build: PlayerBuild,
   room: RoomDef,
   random: () => number = Math.random,
-  options: { hasMutation?: boolean } = {}
+  options: { hasMutation?: boolean; bonusCards?: number } = {}
 ): Reward[] {
   const pool = getRoomRuleKeys(room);
-  const count = room.rewardCount ?? 3;
+  const count = (room.rewardCount ?? 3) + (options.bonusCards ?? 0);
   const rewards: Reward[] = [];
 
   if (room.elite && !options.hasMutation) {

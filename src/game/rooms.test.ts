@@ -45,9 +45,9 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships seven rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(7);
-    expect(ROOMS.map((room) => room.quota)).toEqual([8, 10, 12, 14, 9, 10, 1]);
+  it('ships eleven rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(11);
+    expect(ROOMS.map((room) => room.quota)).toEqual([8, 10, 12, 14, 12, 12, 12, 12, 9, 10, 1]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
   });
 
@@ -70,16 +70,19 @@ describe('room definitions', () => {
   });
 
   it('covers all six playable rules across the run', () => {
-    const rules = new Set(ROOMS.slice(0, 6).flatMap((room) => getRoomRuleKeys(room)));
+    const rules = new Set(
+      ROOMS.filter((room) => !room.boss).flatMap((room) => getRoomRuleKeys(room))
+    );
     expect(rules.size).toBe(6);
   });
 
   it('derives each room rule pool from its real enemies', () => {
-    expect(getRoomRuleKeys(ROOMS[0])).toEqual(['pierce']);
-    expect(new Set(getRoomRuleKeys(ROOMS[1]))).toEqual(new Set(['pierce', 'burn']));
-    expect(new Set(getRoomRuleKeys(ROOMS[2]))).toEqual(new Set(['spread', 'burn']));
-    expect(new Set(getRoomRuleKeys(ROOMS[3]))).toEqual(new Set(['chain', 'frost']));
-    expect(new Set(getRoomRuleKeys(ROOMS[4]))).toEqual(new Set(['pierce', 'blast']));
+    const byId = (id: string) => ROOMS.find((room) => room.id === id)!;
+    expect(getRoomRuleKeys(byId('antechamber'))).toEqual(['pierce']);
+    expect(new Set(getRoomRuleKeys(byId('ember-nursery')))).toEqual(new Set(['pierce', 'burn']));
+    expect(new Set(getRoomRuleKeys(byId('spore-vault')))).toEqual(new Set(['spread', 'burn']));
+    expect(new Set(getRoomRuleKeys(byId('echo-gallery')))).toEqual(new Set(['chain', 'frost']));
+    expect(new Set(getRoomRuleKeys(byId('sunder-pit')))).toEqual(new Set(['pierce', 'blast']));
   });
 
   it('elite rooms declare a leader and four reward choices', () => {
@@ -125,14 +128,16 @@ describe('room rewards', () => {
   });
 
   it('offers four rewards in elite rooms', () => {
-    expect(buildRoomRewards(createEmptyBuild(), ROOMS[4], random)).toHaveLength(4);
-    expect(buildRoomRewards(createEmptyBuild(), ROOMS[5], random)).toHaveLength(4);
+    for (const room of ROOMS.filter((item) => item.elite)) {
+      expect(buildRoomRewards(createEmptyBuild(), room, random)).toHaveLength(4);
+    }
   });
 
   it('elite rooms guarantee a mutation until one is equipped', () => {
-    const rewards = buildRoomRewards(createEmptyBuild(), ROOMS[4], random);
+    const elite = ROOMS.find((room) => room.elite)!;
+    const rewards = buildRoomRewards(createEmptyBuild(), elite, random);
     expect(rewards.filter((reward) => reward.kind === 'mutation')).toHaveLength(1);
-    const withMutation = buildRoomRewards(createEmptyBuild(), ROOMS[4], random, { hasMutation: true });
+    const withMutation = buildRoomRewards(createEmptyBuild(), elite, random, { hasMutation: true });
     expect(withMutation.some((reward) => reward.kind === 'mutation')).toBe(false);
     expect(withMutation).toHaveLength(4);
   });

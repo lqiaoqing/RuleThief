@@ -35,23 +35,68 @@ async function shot(page, name) {
   console.log(`shot ${name}`);
 }
 
-async function openArena(page, roomsToAdvance = 0) {
+async function view(page) {
+  return page.evaluate(() => ({
+    room: !document.getElementById('room-screen')?.hidden,
+    reward: !document.getElementById('altar-screen')?.hidden,
+    route: !document.getElementById('route-screen')?.hidden,
+    event: !document.getElementById('event-screen')?.hidden
+  }));
+}
+
+async function clickRoute(page) {
+  await page.evaluate(() => document.querySelector('#route-options .route-option')?.click());
+  await sleep(380);
+}
+
+async function clickEvent(page) {
+  await page.evaluate(() => document.querySelector('#event-options .event-option')?.click());
+  await sleep(380);
+}
+
+async function clickReward(page) {
+  await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
+  await sleep(380);
+}
+
+async function goToRoom(page, roomIndex) {
+  let index = 0;
+  for (let guard = 0; guard < 40; guard += 1) {
+    const v = await view(page);
+    if (v.route) {
+      await clickRoute(page);
+      continue;
+    }
+    if (v.event) {
+      await clickEvent(page);
+      continue;
+    }
+    if (v.reward) {
+      await clickReward(page);
+      continue;
+    }
+    if (v.room) {
+      if (index === roomIndex) return true;
+      await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
+      await sleep(420);
+      await page.evaluate(() => window.__RT_SCENE__?.debugOpenReward());
+      await sleep(320);
+      await clickReward(page);
+      index += 1;
+      continue;
+    }
+    return false;
+  }
+  return false;
+}
+
+async function openArena(page) {
   await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
   await waitReady(page);
   await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
-  await sleep(500);
-  for (let index = 0; index < roomsToAdvance; index += 1) {
-    await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
-    await sleep(320);
-    await page.evaluate(() => window.__RT_SCENE__?.debugOpenReward());
-    await sleep(320);
-    await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
-    await sleep(380);
-  }
-  if (roomsToAdvance === 0) {
-    await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
-    await sleep(420);
-  }
+  await sleep(450);
+  await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
+  await sleep(450);
 }
 
 const browser = await puppeteer.launch({
@@ -121,8 +166,12 @@ async function captureTableau(viewport, name, kinds, build) {
 
 async function captureReward(viewport, name, roomsToAdvance, build) {
   const page = await createPage(browser, viewport);
-  await openArena(page, roomsToAdvance);
-  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await waitReady(page);
+  await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(450);
+  await goToRoom(page, roomsToAdvance);
+  await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
   await sleep(520);
   await page.evaluate((b) => window.__RT_SET_BUILD__?.(b[0], b[1], b[2], b[3]), build);
   await page.evaluate(() => window.__RT_SET_STATS__?.(190, 32));
@@ -151,10 +200,89 @@ async function captureResult(viewport, name, victory, build) {
   await page.close();
 }
 
+async function clickIf(page, selector) {
+  const found = await page.$(selector);
+  if (!found) return false;
+  const hidden = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    return !el || el.closest('[hidden]') !== null;
+  }, selector);
+  if (hidden) return false;
+  await page.click(selector);
+  await sleep(380);
+  return true;
+}
+
+async function advance(page, stopAt) {
+  for (let guard = 0; guard < 24; guard += 1) {
+    const view = await page.evaluate(() => ({
+      room: !document.getElementById('room-screen')?.hidden,
+      reward: !document.getElementById('altar-screen')?.hidden,
+      route: !document.getElementById('route-screen')?.hidden,
+      event: !document.getElementById('event-screen')?.hidden
+    }));
+    if (stopAt === 'route' && view.route) return true;
+    if (stopAt === 'event' && view.event) return true;
+    if (view.reward) {
+      await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
+      await sleep(400);
+      continue;
+    }
+    if (view.route) {
+      await page.evaluate(() => document.querySelector('#route-options .route-option')?.click());
+      await sleep(400);
+      continue;
+    }
+    if (view.room) {
+      await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
+      await sleep(500);
+      await page.evaluate(() => window.__RT_SCENE__?.debugOpenReward());
+      await sleep(400);
+      continue;
+    }
+    if (view.event) {
+      await page.evaluate(() => document.querySelector('#event-options .event-option')?.click());
+      await sleep(400);
+      continue;
+    }
+    return false;
+  }
+  return false;
+}
+
+async function captureRoute(viewport, name) {
+  const page = await createPage(browser, viewport);
+  await openArena(page);
+  await page.evaluate(() => window.__RT_SET_STATS__?.(120, 18));
+  await page.evaluate(() => window.__RT_SCENE__?.debugOpenReward());
+  await page.waitForFunction(() => !document.getElementById('altar-screen')?.hidden, { timeout: 6000 });
+  await sleep(300);
+  await advance(page, 'route');
+  await sleep(500);
+  await shot(page, name);
+  await page.close();
+}
+
+async function captureEvent(viewport, name) {
+  const page = await createPage(browser, viewport);
+  await openArena(page);
+  await page.evaluate(() => window.__RT_SET_STATS__?.(186, 29));
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 2, 2));
+  await page.evaluate(() => window.__RT_OPEN_EVENT__?.('unstable-lab'));
+  await page.waitForFunction(() => !document.getElementById('event-screen')?.hidden, { timeout: 8000 });
+  await sleep(500);
+  await shot(page, name);
+  await page.close();
+}
+
 async function captureBoss(viewport, name, damage, phaseWait, build) {
   const page = await createPage(browser, viewport);
-  await openArena(page, 6);
-  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await waitReady(page);
+  await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(450);
+  await goToRoom(page, 6);
+  await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
   await sleep(900);
   await page.evaluate(
     (b) => window.__RT_SET_BUILD__?.(b[0], b[1], b[2], b[3]),
@@ -171,8 +299,12 @@ async function captureBoss(viewport, name, damage, phaseWait, build) {
 
 async function captureBossVictory(viewport, name, build) {
   const page = await createPage(browser, viewport);
-  await openArena(page, 6);
-  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await waitReady(page);
+  await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(450);
+  await goToRoom(page, 6);
+  await page.evaluate(() => document.querySelector('#room-enter-btn')?.click());
   await sleep(900);
   await page.evaluate(
     (b) => window.__RT_SET_BUILD__?.(b[0], b[1], b[2], b[3]),
@@ -191,7 +323,9 @@ const PHONE = { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, h
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
 
 try {
-  await captureMenu(DESKTOP, 'm3b-menu-desktop.png');
+  await captureMenu(DESKTOP, 'm3c-menu-desktop.png');
+  await captureRoute(DESKTOP, 'm3c-route-desktop.png');
+  await captureEvent(DESKTOP, 'm3c-event-desktop.png');
   await captureRoomPreview(DESKTOP, 'm3b-boss-preview-desktop.png', 6);
   await captureBoss(DESKTOP, 'm3b-boss-phase1-desktop.png', 0, 1700);
   await captureBoss(DESKTOP, 'm3b-boss-phase3-desktop.png', 1250, 2000);
@@ -208,8 +342,10 @@ try {
     trajectoryLevel: 3,
     impactLevel: 3
   });
-  await captureBossVictory(DESKTOP, 'm3b-victory-desktop.png');
-  await captureMenu(PHONE, 'm3b-menu-mobile.png');
+  await captureBossVictory(DESKTOP, 'm3c-victory-desktop.png');
+  await captureMenu(PHONE, 'm3c-menu-mobile.png');
+  await captureRoute(PHONE, 'm3c-route-mobile.png');
+  await captureEvent(PHONE, 'm3c-event-mobile.png');
   await captureBoss(PHONE, 'm3b-boss-mobile.png', 0, 1600);
   await captureReward(PHONE, 'm3b-mutation-reward-mobile.png', 4, ['pierce', 'burn', 1, 1]);
   await captureTableau(LANDSCAPE, 'm3b-landscape.png', ['arbiter', 'thunder', 'bomber'], {

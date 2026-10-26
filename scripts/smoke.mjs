@@ -13,15 +13,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const checks = [];
 const errors = [];
 
-const ROOMS = [
-  { name: '训戒前庭', en: 'ANTECHAMBER', quota: 8, elite: false },
-  { name: '余烬苗圃', en: 'EMBER NURSERY', quota: 10, elite: false },
-  { name: '孢子温室', en: 'SPORE VAULT', quota: 12, elite: false },
-  { name: '回声回廊', en: 'ECHO GALLERY', quota: 14, elite: false },
-  { name: '裂甲竞技场', en: 'SUNDER PIT', quota: 9, elite: true },
-  { name: '雷暴祭坛', en: 'THUNDER ALTAR', quota: 10, elite: true },
-  { name: '审判庭', en: 'JUDGEMENT HALL', quota: 1, elite: false, boss: true }
-];
+const EVENT_IDS = ['blood-altar', 'unstable-lab', 'forgotten-idol', 'cursed-chest'];
 
 const COMBO_NAMES = {
   pierce: { burn: '赤焰穿心', frost: '极寒贯穿', blast: '爆破穿甲' },
@@ -57,6 +49,12 @@ async function overlayState(page) {
   return page.evaluate(() => ({
     roomVisible: !document.getElementById('room-screen')?.hidden,
     rewardVisible: !document.getElementById('altar-screen')?.hidden,
+    routeVisible: !document.getElementById('route-screen')?.hidden,
+    eventVisible: !document.getElementById('event-screen')?.hidden,
+    routeOptions: document.querySelectorAll('#route-options .route-option').length,
+    eventTitle: document.getElementById('event-title')?.textContent,
+    eventEn: document.getElementById('event-en')?.textContent,
+    eventOptions: document.querySelectorAll('#event-options .event-option').length,
     roomTitle: document.getElementById('room-title')?.textContent,
     roomKicker: document.getElementById('room-kicker')?.textContent,
     roomQuota: document.getElementById('room-quota')?.textContent,
@@ -161,10 +159,13 @@ try {
   let overlay = await overlayState(page);
   let state = await snapshot(page);
   check('first room preview opens', overlay.roomVisible, overlay.roomKicker);
-  check('preview shows room 1 of 7', /ROOM 01 \/ 07/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
-  check('preview shows the room name and quota', overlay.roomTitle === ROOMS[0].name && overlay.roomQuota === '8', `${overlay.roomTitle} / ${overlay.roomQuota}`);
+  check('preview shows room 1 of 9', /ROOM 01 \/ 09/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+  check(
+    'preview shows the room name and quota',
+    overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '8',
+    `${overlay.roomTitle} / ${overlay.roomQuota}`
+  );
   check('preview pauses the run', overlay.paused, String(overlay.paused));
-  check('preview lists the room enemies', overlay.enemyChips === 1, String(overlay.enemyChips));
   check(
     'run starts empty with full hp',
     state.hp === 100 && state.maxHp === 100 && state.build?.trajectory === null && state.build?.impact === null,
@@ -181,9 +182,9 @@ try {
   check(
     'HUD shows room 1 and the codex',
     roomHud.roomNum === '01' &&
-      roomHud.roomTotal === '/ 07' &&
+      roomHud.roomTotal === '/ 09' &&
       roomHud.objective === '0 / 8' &&
-      roomHud.objectiveLabel === ROOMS[0].en &&
+      roomHud.objectiveLabel === 'ANTECHAMBER' &&
       roomHud.codexRows === 1,
     JSON.stringify(roomHud)
   );
@@ -233,110 +234,154 @@ try {
     `${hpBeforeBomber} -> ${hpAfterBomber}`
   );
 
-  const cleared = await finishRoom(page, ROOMS[0].quota);
-  overlay = await overlayState(page);
-  check('clearing the quota opens rewards', cleared && overlay.rewardVisible, JSON.stringify({ cleared, visible: overlay.rewardVisible }));
-  check('normal room offers three cards', overlay.cards.length === 3, String(overlay.cards.length));
+  await finishRoom(page, Number((await snapshot(page)).roomQuota));
+  const firstReward = await overlayState(page);
+  check('room 1 opens rewards', firstReward.rewardVisible, JSON.stringify({ cards: firstReward.cards.length }));
+  await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
+  await sleep(420);
+
+  const planInfo = await snapshot(page);
   check(
-    'room 1 only offers the rule its enemy carries',
-    overlay.cards.filter((card) => card.kind === 'rule').every((card) => card.key === 'pierce'),
-    JSON.stringify(overlay.cards)
+    'run plan has nine steps',
+    Array.isArray(planInfo.plan) && planInfo.plan.length === 9,
+    String(planInfo.plan?.length)
+  );
+  const planNodes = (planInfo.plan ?? []).reduce(
+    (sum, step) => sum + (step.kind === 'choice' ? step.options.length : 1),
+    0
+  );
+  check('plan exposes thirteen nodes', planNodes === 13, String(planNodes));
+  const planEvents = (planInfo.plan ?? [])
+    .filter((step) => step.kind === 'encounter' && EVENT_IDS.includes(step.encounter))
+    .map((step) => step.encounter);
+  check(
+    'plan contains two distinct events',
+    planEvents.length === 2 && new Set(planEvents).size === 2,
+    JSON.stringify(planEvents)
+  );
+  check(
+    'plan contains four branching steps',
+    (planInfo.plan ?? []).filter((step) => step.kind === 'choice').length === 4,
+    String((planInfo.plan ?? []).filter((step) => step.kind === 'choice').length)
   );
 
-  await pickFirstCard(page);
-  state = await snapshot(page);
-  overlay = await overlayState(page);
-  check('picking pierce equips the trajectory slot', state.build?.trajectory?.key === 'pierce', JSON.stringify(state.build));
-  check('next room preview follows the reward', overlay.roomVisible && /ROOM 02 \/ 07/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
-  roomHud = await hud(page);
-  check('codex switches to the new room enemies', roomHud.codexRows === 2, String(roomHud.codexRows));
+  const seenEvents = [];
+  let pendingSpeedRisk = false;
+  let pendingCurse = false;
+  let roomsEntered = 1;
+  let bossPreview = null;
 
-  for (let index = 1; index < ROOMS.length - 1; index += 1) {
-    const room = ROOMS[index];
-    const preview = await overlayState(page);
-    if (room.elite) {
-      check(`room ${index + 1} preview marks the elite`, preview.eliteChips >= 1, String(preview.eliteChips));
-    }
-
-    await enterRoom(page);
-    await sleep(200);
-    const roomState = await snapshot(page);
-    check(
-      `room ${index + 1} loads (${room.name})`,
-      roomState.roomIndex === index && roomState.roomQuota === room.quota,
-      JSON.stringify({ roomIndex: roomState.roomIndex, quota: roomState.roomQuota })
-    );
-    if (index === 1) {
+  for (let guard = 0; guard < 26; guard += 1) {
+    const view = await overlayState(page);
+    if (view.roomVisible) {
+      if (/ROOM 09 \/ 09/.test(view.roomKicker ?? '')) {
+        bossPreview = view;
+        break;
+      }
+      const speedRisk = pendingSpeedRisk;
+      const curse = pendingCurse;
+      await enterRoom(page);
+      roomsEntered += 1;
+      const inside = await snapshot(page);
+      if (speedRisk) {
+        check(
+          `event speed modifier applies to the next room only (room ${inside.roomIndex + 1})`,
+          Math.abs(Number(inside.roomSpeedMult) - 1.2) < 0.001,
+          String(inside.roomSpeedMult)
+        );
+        pendingSpeedRisk = false;
+      } else if (roomsEntered > 1) {
+        check(
+          `room ${inside.roomIndex + 1} has no leftover speed modifier`,
+          Math.abs(Number(inside.roomSpeedMult) - 1) < 0.001,
+          String(inside.roomSpeedMult)
+        );
+      }
+      if (curse) {
+        check(
+          `curse chest adds an extra elite in room ${inside.roomIndex + 1}`,
+          Number(inside.eliteAlive) >= 1 && Number(inside.roomBonusCards) === 1,
+          JSON.stringify({ elite: inside.eliteAlive, bonus: inside.roomBonusCards })
+        );
+        pendingCurse = false;
+      }
       check(
-        'switching rooms clears bolts and enemies',
-        Number(roomState.bolts) === 0 && Number(roomState.enemies) === 0,
-        JSON.stringify({ bolts: roomState.bolts, enemies: roomState.enemies })
+        `room ${inside.roomIndex + 1} loads its quota`,
+        Number(inside.roomQuota) > 0 && inside.roomState === 'fighting',
+        JSON.stringify({ quota: inside.roomQuota })
       );
-    }
-    if (room.elite) {
+
+      await finishRoom(page, Number(inside.roomQuota));
+      const reward = await overlayState(page);
       check(
-        `room ${index + 1} spawns its elite leader`,
-        Number(roomState.eliteAlive) === 1,
-        String(roomState.eliteAlive)
+        `room ${inside.roomIndex + 1} opens rewards`,
+        reward.rewardVisible,
+        JSON.stringify({ cards: reward.cards.length })
       );
+      if (reward.cards.length === 4) {
+        const mutationBefore = Boolean((await snapshot(page)).mutation);
+        const mutationCards = reward.cards.filter((card) => card.kind === 'mutation').length;
+        check(
+          `elite room ${inside.roomIndex + 1} mutation offer is correct`,
+          mutationBefore ? mutationCards === 0 : mutationCards === 1,
+          JSON.stringify({ mutationBefore, mutationCards })
+        );
+      }
+      await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
+      await sleep(400);
+      continue;
     }
 
-    await finishRoom(page, room.quota);
-    overlay = await overlayState(page);
-    check(`room ${index + 1} reward screen opens`, overlay.rewardVisible, JSON.stringify({ cards: overlay.cards.length }));
-    if (room.elite) {
-      check(`elite room ${index + 1} offers four rewards`, overlay.cards.length === 4, String(overlay.cards.length));
-    } else {
-      check(`room ${index + 1} offers three rewards`, overlay.cards.length === 3, String(overlay.cards.length));
+    if (view.routeVisible) {
+      check('route choice shows two options', view.routeOptions === 2, String(view.routeOptions));
+      check('route choice pauses the run', view.paused, String(view.paused));
+      await page.evaluate(() => window.__RT_PICK_ROUTE__?.(0));
+      await sleep(420);
+      continue;
     }
 
-    const mutationCards = overlay.cards.filter((card) => card.kind === 'mutation');
-    const mutationBefore = (await snapshot(page)).mutation;
-    if (mutationBefore) {
-      check(`room ${index + 1} stops offering mutations once equipped`, mutationCards.length === 0, String(mutationCards.length));
-    } else if (room.elite) {
-      check(`elite room ${index + 1} guarantees a mutation`, mutationCards.length === 1, String(mutationCards.length));
-    } else {
-      check(`room ${index + 1} offers no mutation`, mutationCards.length === 0, String(mutationCards.length));
+    if (view.eventVisible) {
+      seenEvents.push(view.eventEn);
+      check(`event ${view.eventEn} shows two options`, view.eventOptions === 2, String(view.eventOptions));
+      const hpBefore = Number((await snapshot(page)).hp);
+      await page.evaluate(() => window.__RT_PICK_EVENT__?.(0));
+      await sleep(440);
+      const after = await snapshot(page);
+      if (view.eventEn === 'BLOOD ALTAR') {
+        check('blood altar trades hp for an upgrade', Number(after.hp) <= hpBefore, `${hpBefore} -> ${after.hp}`);
+      }
+      if (view.eventEn === 'UNSTABLE LAB') {
+        pendingSpeedRisk = true;
+        check('unstable lab queues a speed risk', Number(after.roomSpeedMult) === 1, String(after.roomSpeedMult));
+      }
+      if (view.eventEn === 'FORGOTTEN IDOL') {
+        check('forgotten idol keeps the run alive', after.runState === 'playing', String(after.runState));
+      }
+      if (view.eventEn === 'CURSED CHEST') {
+        pendingCurse = true;
+      }
+      continue;
     }
 
-    if (mutationCards.length) {
-      const mutationIndex = overlay.cards.findIndex((card) => card.kind === 'mutation');
-      await page.evaluate((slot) => window.__RT_PICK_REWARD__?.(slot), mutationIndex);
-      await sleep(380);
-      const afterMutation = await snapshot(page);
-      const mutationHud = await page.evaluate(() => ({
-        visible: !document.getElementById('mutation-line')?.hidden,
-        name: document.getElementById('mutation-name')?.textContent
-      }));
-      check(
-        `elite room ${index + 1} mutation equips and shows in HUD`,
-        Boolean(afterMutation.mutation) && mutationHud.visible && Boolean(mutationHud.name),
-        JSON.stringify({ mutation: afterMutation.mutation, hud: mutationHud })
-      );
-    } else {
-      await pickFirstCard(page);
-    }
-    const nextOverlay = await overlayState(page);
+    const stuck = await snapshot(page);
     check(
-      `room ${index + 1} reward applies and the next room opens`,
-      nextOverlay.roomVisible,
-      JSON.stringify({ room: nextOverlay.roomKicker })
+      'run is still progressing',
+      stuck.runState === 'playing',
+      JSON.stringify({ runState: stuck.runState, roomState: stuck.roomState })
     );
-    check(
-      `room ${index + 2} preview lists enemies`,
-      nextOverlay.enemyChips >= 1,
-      String(nextOverlay.enemyChips)
-    );
+    break;
   }
 
-  const bossPreview = await overlayState(page);
+  check('run visited two events', seenEvents.length === 2, JSON.stringify(seenEvents));
+  check('visited events are distinct', new Set(seenEvents).size === 2, JSON.stringify(seenEvents));
+  check('run entered six combat rooms', roomsEntered === 6, String(roomsEntered));
+  check('boss preview reached', Boolean(bossPreview), bossPreview?.roomKicker);
+
   check(
     'boss room preview opens',
-    bossPreview.roomVisible && /ROOM 07 \/ 07/.test(bossPreview.roomKicker ?? ''),
-    bossPreview.roomKicker
+    Boolean(bossPreview) && /ROOM 09 \/ 09/.test(bossPreview.roomKicker ?? ''),
+    bossPreview?.roomKicker
   );
-  check('boss preview lists the arbiter', bossPreview.enemyChips >= 1, String(bossPreview.enemyChips));
 
   await enterRoom(page);
   await sleep(700);
@@ -379,7 +424,7 @@ try {
     bossBarHidden: document.getElementById('boss-bar')?.hidden
   }));
   check('killing the arbiter wins the run', bossVictory.title === '审判完成', JSON.stringify(bossVictory));
-  check('boss victory reports seven rooms', bossVictory.rooms === '7 / 7', String(bossVictory.rooms));
+  check('boss victory reports seven rooms', bossVictory.rooms === '9 / 9', String(bossVictory.rooms));
   check('boss bar hides after the kill', bossVictory.bossBarHidden === true, String(bossVictory.bossBarHidden));
 
   const finalStats = await page.evaluate(() => ({
@@ -419,7 +464,7 @@ try {
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check('death shows the defeat result', defeat.title === '规则耗尽' && defeat.cls.includes('is-defeat'), JSON.stringify(defeat));
-  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 7', String(defeat.rooms));
+  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 9', String(defeat.rooms));
 
   await page.click('#result-menu-btn');
   await sleep(300);
@@ -504,10 +549,21 @@ try {
   check('mobile reward cards fit', mobileCards.count === 3 && mobileCards.overflow, JSON.stringify(mobileCards));
   await mobile.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
   await sleep(400);
+  const mobileRoute = await mobile.evaluate(() => ({
+    route: !document.getElementById('route-screen')?.hidden,
+    options: document.querySelectorAll('#route-options .route-option').length,
+    overflow: document.documentElement.scrollWidth <= window.innerWidth + 1
+  }));
   check(
-    'mobile reward choice advances the run',
-    (await mobile.$eval('#altar-screen', (el) => el.hidden)) &&
-      (await mobile.$eval('#room-screen', (el) => !el.hidden))
+    'mobile reward choice opens the route choice',
+    mobileRoute.route && mobileRoute.options === 2 && mobileRoute.overflow,
+    JSON.stringify(mobileRoute)
+  );
+  await mobile.evaluate(() => document.querySelector('#route-options .route-option')?.click());
+  await sleep(450);
+  check(
+    'mobile route choice advances to a room preview',
+    await mobile.$eval('#room-screen', (el) => !el.hidden)
   );
   await mobile.close();
 

@@ -7,14 +7,21 @@ import { audio } from './game/audio';
 import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
+import type { EventPayload, RouteChoicePayload } from './game/run';
 import {
+  isEventVisible,
   isRewardVisible,
   isRoomVisible,
+  isRouteVisible,
   pickReward,
+  renderEvent,
   renderRewards,
   renderRoomPreview,
+  renderRoute,
+  setEventVisible,
   setRewardVisible,
-  setRoomVisible
+  setRoomVisible,
+  setRouteVisible
 } from './ui/altar';
 
 declare global {
@@ -54,8 +61,13 @@ declare global {
     ) => void;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
+    __RT_OPEN_EVENT__?: (id: string) => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
+    __RT_ROUTE__?: () => boolean;
+    __RT_EVENT__?: () => boolean;
+    __RT_PICK_ROUTE__?: (index: number) => void;
+    __RT_PICK_EVENT__?: (index: number) => void;
     __RT_PICK_REWARD__?: (index: number) => void;
     __RT_PICK_SUPPORT__?: (id: SupportId) => void;
     __RT_AUDIO_STATE__?: () => { muted: boolean; unlocked: boolean; state: string };
@@ -159,7 +171,31 @@ function showResult(payload: RunEndPayload): void {
 function hideOverlays(): void {
   setRewardVisible(false);
   setRoomVisible(false);
+  setRouteVisible(false);
+  setEventVisible(false);
   pendingRewards = [];
+}
+
+function showRoute(payload: RouteChoicePayload): void {
+  hideOverlays();
+  renderRoute(payload, (index) => {
+    if (!scene) return;
+    setRouteVisible(false);
+    scene.chooseRoute(index);
+  });
+  setRouteVisible(true);
+  pauseScreen.hidden = true;
+}
+
+function showEvent(payload: EventPayload): void {
+  hideOverlays();
+  renderEvent(payload, (index) => {
+    if (!scene) return;
+    setEventVisible(false);
+    scene.chooseEventOption(index as 0 | 1);
+  });
+  setEventVisible(true);
+  pauseScreen.hidden = true;
 }
 
 function showRoomPreview(payload: RoomPreview): void {
@@ -182,7 +218,7 @@ function chooseReward(reward: RoomCleared['rewards'][number]): void {
   setRewardVisible(false);
   pendingRewards = [];
   scene.applyReward(reward);
-  if (scene.isRoomPreviewOpen()) return;
+  if (scene.isRoomPreviewOpen() || scene.isRouteOpen() || scene.isEventOpen()) return;
   scene.resumeGame();
   void audio.resume();
 }
@@ -243,7 +279,9 @@ function pauseGame(): void {
     !pauseScreen.hidden ||
     !resultScreen.hidden ||
     isRewardVisible() ||
-    isRoomVisible()
+    isRoomVisible() ||
+    isRouteVisible() ||
+    isEventVisible()
   ) {
     return;
   }
@@ -303,8 +341,17 @@ function handleReady(): void {
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
+  window.__RT_OPEN_EVENT__ = (id) => scene?.debugOpenEvent(id as never);
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
+  window.__RT_ROUTE__ = () => isRouteVisible();
+  window.__RT_EVENT__ = () => isEventVisible();
+  window.__RT_PICK_ROUTE__ = (index) => {
+    document.querySelectorAll<HTMLElement>('.route-option')[index]?.click();
+  };
+  window.__RT_PICK_EVENT__ = (index) => {
+    document.querySelectorAll<HTMLElement>('.event-option')[index]?.click();
+  };
   window.__RT_PICK_REWARD__ = (index) => {
     pickReward(index);
   };
@@ -337,6 +384,14 @@ game.events.on('m2-room-preview', (payload: RoomPreview) => {
 game.events.on('m2-room-cleared', (payload: RoomCleared) => {
   if (!entered) return;
   showRewards(payload);
+});
+game.events.on('m3-route', (payload: RouteChoicePayload) => {
+  if (!entered) return;
+  showRoute(payload);
+});
+game.events.on('m3-event', (payload: EventPayload) => {
+  if (!entered) return;
+  showEvent(payload);
 });
 
 window.setTimeout(() => {
@@ -438,6 +493,15 @@ for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'] as const
 window.addEventListener('keydown', (event) => {
   if (event.code === 'Space') {
     event.preventDefault();
+  }
+  if (isRouteVisible() || isEventVisible()) {
+    const slot = ['Digit1', 'Digit2'].indexOf(event.code);
+    if (slot >= 0) {
+      event.preventDefault();
+      const selector = isRouteVisible() ? '.route-option' : '.event-option';
+      document.querySelectorAll<HTMLElement>(selector)[slot]?.click();
+    }
+    return;
   }
   if (isRewardVisible()) {
     const slot = ['Digit1', 'Digit2', 'Digit3'].indexOf(event.code);

@@ -38,6 +38,7 @@ import {
   type TrajectoryProfile
 } from './rules';
 import { ROOMS, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
+import { EVENTS, buildRunPlan, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import {
   MUTATIONS,
   createMutationState,
@@ -54,7 +55,7 @@ import {
 } from './mutations';
 
 type RunState = 'idle' | 'playing' | 'ended';
-type RoomState = 'preview' | 'fighting' | 'reward';
+type RoomState = 'preview' | 'fighting' | 'reward' | 'route' | 'event';
 type EnemyState = 'approach' | 'telegraph' | 'charge' | 'recover' | 'idle' | 'cast';
 
 interface EnemyUnit {
@@ -207,7 +208,9 @@ export class M0Scene extends Phaser.Scene {
   private nextEnemyId = 1;
 
   private roomState: RoomState = 'preview';
-  private roomIndex = 0;
+  private plan: RunStep[] = [];
+  private stepIndex = 0;
+  private encounter: Encounter | null = null;
   private roomKills = 0;
   private roomSpawned = 0;
   private pendingSpawns = 0;
@@ -228,6 +231,11 @@ export class M0Scene extends Phaser.Scene {
   private mutation: MutationState = createMutationState();
   private bossPhase = 0;
   private bossRef: EnemyUnit | null = null;
+  private roomSpeedMult = 1;
+  private roomBonusCards = 0;
+  private pendingSpeedMult = 1;
+  private pendingBonusCards = 0;
+  private pendingBonusElite = false;
   private sealSlot: 'trajectory' | 'impact' | null = null;
   private sealTime = 0;
   private bossAttackCd = 0;
@@ -339,7 +347,9 @@ export class M0Scene extends Phaser.Scene {
     this.nextEnemyId = 1;
     this.build = createEmptyBuild();
     this.acquired.clear();
-    this.roomIndex = 0;
+    this.plan = buildRunPlan();
+    this.stepIndex = 0;
+    this.encounter = null;
     this.roomKills = 0;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
@@ -355,20 +365,24 @@ export class M0Scene extends Phaser.Scene {
     this.bossChargeCd = 0;
     this.bossSummonCd = 0;
     this.bossSealCd = 0;
+    this.roomSpeedMult = 1;
+    this.roomBonusCards = 0;
+    this.pendingSpeedMult = 1;
+    this.pendingBonusCards = 0;
+    this.pendingBonusElite = false;
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
     this.playerSprite.setFlipX(false);
     resetM0Hud();
     setRunClock(0);
-    this.refreshRoomHud();
     setBuild(this.build, this.acquired);
     setDash(1, 0);
-    this.openRoomPreview();
+    this.loadStep(0);
   }
 
   public getRoom(): RoomDef {
-    return ROOMS[this.roomIndex];
+    return this.encounter?.kind === 'room' ? this.encounter.room : ROOMS[ROOMS.length - 1];
   }
 
   public isRewardOpen(): boolean {
@@ -379,11 +393,38 @@ export class M0Scene extends Phaser.Scene {
     return this.roomState === 'preview';
   }
 
+  public isEventOpen(): boolean {
+    return this.roomState === 'event';
+  }
+
+  public isRouteOpen(): boolean {
+    return this.roomState === 'route';
+  }
+
+  private get stepTotal(): number {
+    return this.plan.length;
+  }
+
   private refreshRoomHud(): void {
+    const total = this.stepTotal;
+    if (this.encounter?.kind === 'event') {
+      setRoomProgress({
+        index: this.stepIndex + 1,
+        total,
+        name: this.encounter.event.name,
+        en: this.encounter.event.en,
+        cleared: 0,
+        quota: 1,
+        kills: this.kills,
+        hp: this.hp,
+        maxHp: this.maxHp
+      });
+      return;
+    }
     const room = this.getRoom();
     setRoomProgress({
-      index: this.roomIndex + 1,
-      total: ROOMS.length,
+      index: this.stepIndex + 1,
+      total,
       name: room.name,
       en: room.en,
       cleared: this.roomKills,
@@ -394,6 +435,47 @@ export class M0Scene extends Phaser.Scene {
     });
   }
 
+  private loadStep(index: number): void {
+    const step = this.plan[index];
+    if (!step) {
+      this.endRun(true);
+      return;
+    }
+    this.stepIndex = index;
+    if (step.kind === 'choice') {
+      this.roomState = 'route';
+      this.playEnabled = false;
+      this.joystick.set(0, 0);
+      this.scene.pause();
+      this.refreshRoomHud();
+      this.game.events.emit('m3-route', {
+        index,
+        total: this.stepTotal,
+        options: step.options
+      });
+      return;
+    }
+    this.loadEncounter(step.encounter);
+  }
+
+  private loadEncounter(encounter: Encounter): void {
+    this.encounter = encounter;
+    if (encounter.kind === 'room') {
+      this.openRoomPreview();
+    } else {
+      this.openEvent(encounter.event);
+    }
+  }
+
+  public chooseRoute(optionIndex: number): void {
+    if (this.roomState !== 'route') return;
+    const step = this.plan[this.stepIndex];
+    if (!step || step.kind !== 'choice') return;
+    const encounter = step.options[optionIndex];
+    if (!encounter) return;
+    this.loadEncounter(encounter);
+  }
+
   private openRoomPreview(): void {
     this.roomState = 'preview';
     this.playEnabled = false;
@@ -402,8 +484,8 @@ export class M0Scene extends Phaser.Scene {
     setRoomEnemies(getRoomEnemyKinds(this.getRoom()));
     this.refreshRoomHud();
     this.game.events.emit('m2-room-preview', {
-      index: this.roomIndex,
-      total: ROOMS.length,
+      index: this.stepIndex,
+      total: this.stepTotal,
       room: this.getRoom(),
       hp: this.hp,
       maxHp: this.maxHp,
@@ -413,8 +495,134 @@ export class M0Scene extends Phaser.Scene {
     });
   }
 
+  private openEvent(event: EventDef): void {
+    this.roomState = 'event';
+    this.playEnabled = false;
+    this.joystick.set(0, 0);
+    this.scene.pause();
+    setRoomEnemies([]);
+    this.refreshRoomHud();
+    this.game.events.emit('m3-event', {
+      index: this.stepIndex,
+      total: this.stepTotal,
+      event,
+      hp: this.hp,
+      maxHp: this.maxHp,
+      kills: this.kills,
+      build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild
+    });
+  }
+
+  public chooseEventOption(optionIndex: 0 | 1): void {
+    if (this.roomState !== 'event' || this.encounter?.kind !== 'event') return;
+    const option = this.encounter.event.options[optionIndex];
+    if (!option) return;
+    audio.play('rule');
+    this.applyEventEffect(option.effect);
+    this.advanceStep();
+  }
+
+  private applyEventEffect(effect: EventEffect): void {
+    switch (effect.kind) {
+      case 'none':
+        break;
+      case 'heal':
+        this.hp = Math.min(this.maxHp, this.hp + effect.amount);
+        setHp(this.hp, this.maxHp);
+        break;
+      case 'loseHpUpgrade':
+        this.hp = Math.max(1, this.hp - effect.hp);
+        setHp(this.hp, this.maxHp);
+        if (!this.upgradeRandomRule()) {
+          this.hp = Math.min(this.maxHp, this.hp + 20);
+          setHp(this.hp, this.maxHp);
+        }
+        break;
+      case 'upgradeAndSpeedRisk':
+        this.upgradeRandomRule();
+        this.pendingSpeedMult = 1 + effect.percent / 100;
+        break;
+      case 'swapRuleHeal':
+        this.swapRandomRule();
+        this.hp = Math.min(this.maxHp, this.hp + effect.heal);
+        setHp(this.hp, this.maxHp);
+        break;
+      case 'curseElite':
+        this.pendingBonusElite = true;
+        this.pendingBonusCards = 1;
+        break;
+    }
+    this.refreshRoomHud();
+  }
+
+  private upgradeRandomRule(): boolean {
+    const slots: ('trajectory' | 'impact')[] = [];
+    if (this.build.trajectory && this.build.trajectory.level < 3) slots.push('trajectory');
+    if (this.build.impact && this.build.impact.level < 3) slots.push('impact');
+    if (!slots.length) return false;
+    const slot = slots[Math.floor(Math.random() * slots.length)];
+    const ref = slot === 'trajectory' ? this.build.trajectory : this.build.impact;
+    if (!ref) return false;
+    const next: PlayerBuild = {
+      trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
+      impact: this.build.impact ? { ...this.build.impact } : null
+    };
+    const level = (ref.level + 1) as RuleLevel;
+    if (slot === 'trajectory') {
+      next.trajectory = { key: ref.key as TrajectoryKey, level };
+    } else {
+      next.impact = { key: ref.key as ImpactKey, level };
+    }
+    this.applyBuildState(next, {
+      key: ref.key,
+      title: '事件 · 规则升级',
+      sub: `${getRuleDef(ref.key).name} Lv.${level}`
+    });
+    return true;
+  }
+
+  private swapRandomRule(): boolean {
+    const slots: ('trajectory' | 'impact')[] = [];
+    if (this.build.trajectory) slots.push('trajectory');
+    if (this.build.impact) slots.push('impact');
+    if (!slots.length) return false;
+    const slot = slots[Math.floor(Math.random() * slots.length)];
+    const current = slot === 'trajectory' ? this.build.trajectory : this.build.impact;
+    if (!current) return false;
+    const pool: RuleKey[] =
+      slot === 'trajectory' ? ['pierce', 'chain', 'spread'] : ['burn', 'frost', 'blast'];
+    const options = pool.filter((key) => key !== current.key);
+    const key = options[Math.floor(Math.random() * options.length)];
+    const next: PlayerBuild = {
+      trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
+      impact: this.build.impact ? { ...this.build.impact } : null
+    };
+    if (slot === 'trajectory') {
+      next.trajectory = { key: key as TrajectoryKey, level: 1 };
+    } else {
+      next.impact = { key: key as ImpactKey, level: 1 };
+    }
+    this.applyBuildState(next, {
+      key,
+      title: '事件 · 规则更换',
+      sub: `${getRuleDef(key).name} Lv.1`
+    });
+    return true;
+  }
+
+  private advanceStep(): void {
+    if (this.runState !== 'playing') return;
+    const next = this.stepIndex + 1;
+    if (next >= this.plan.length) {
+      this.endRun(true);
+      return;
+    }
+    this.loadStep(next);
+  }
+
   public beginRoom(): void {
     if (this.runState !== 'playing') return;
+    if (this.encounter?.kind !== 'room') return;
     this.clearTransient();
     this.roomState = 'fighting';
     this.rewardOpen = false;
@@ -422,6 +630,10 @@ export class M0Scene extends Phaser.Scene {
     this.roomKills = 0;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
+    this.roomSpeedMult = this.pendingSpeedMult;
+    this.roomBonusCards = this.pendingBonusCards;
+    this.pendingSpeedMult = 1;
+    this.pendingBonusCards = 0;
     this.spawnCd = 1.1;
     this.attackCd = 0.5;
     this.invuln = 1.0;
@@ -450,6 +662,17 @@ export class M0Scene extends Phaser.Scene {
       this.bossSealCd = 6;
       this.spawnLeaderBurst(ARENA * 0.5, 235);
       this.cameras.main.shake(420, 0.005);
+    }
+    if (this.pendingBonusElite) {
+      this.pendingBonusElite = false;
+      if (room.elite || room.boss) {
+        this.pendingBonusCards = 0;
+      } else {
+        const kind: EnemyKind = Math.random() < 0.5 ? 'sunder' : 'thunder';
+        this.spawnEnemy(kind, ARENA - 150, 200, false);
+        this.spawnLeaderBurst(ARENA - 150, 200);
+        showRuleToast('blast', '诅咒宝箱', `额外出现 ${ENEMY_SPECS[kind].name} · 本房奖励 +1 张`);
+      }
     }
   }
 
@@ -485,11 +708,12 @@ export class M0Scene extends Phaser.Scene {
     this.scene.pause();
     audio.play('rule');
     const rewards = buildRoomRewards(this.build, this.getRoom(), Math.random, {
-      hasMutation: Boolean(this.mutation.id)
+      hasMutation: Boolean(this.mutation.id),
+      bonusCards: this.roomBonusCards
     });
     this.game.events.emit('m2-room-cleared', {
-      index: this.roomIndex,
-      total: ROOMS.length,
+      index: this.stepIndex,
+      total: this.stepTotal,
       room: this.getRoom(),
       kills: this.kills,
       elapsed: this.elapsed,
@@ -521,13 +745,7 @@ export class M0Scene extends Phaser.Scene {
     } else {
       this.applySupport(reward.support.id);
     }
-
-    if (this.roomIndex >= ROOMS.length - 1) {
-      this.endRun(true);
-      return;
-    }
-    this.roomIndex += 1;
-    this.openRoomPreview();
+    this.advanceStep();
   }
 
   private applySupport(id: SupportId): void {
@@ -662,6 +880,12 @@ export class M0Scene extends Phaser.Scene {
     if (!boss || boss.dead) return;
     this.applyDamage(boss, amount, 'blast');
     this.refreshBossHud();
+  }
+
+  public debugOpenEvent(id: EventId): void {
+    if (this.runState !== 'playing') return;
+    this.encounter = { kind: 'event', event: EVENTS[id] };
+    this.openEvent(this.encounter.event);
   }
 
   public debugOpenReward(): void {
@@ -847,7 +1071,9 @@ export class M0Scene extends Phaser.Scene {
     return {
       runState: this.runState,
       roomState: this.roomState,
-      roomIndex: this.roomIndex,
+      roomIndex: this.stepIndex,
+      stepTotal: this.stepTotal,
+      encounterKind: this.encounter?.kind ?? null,
       roomKills: this.roomKills,
       roomQuota: this.getRoom().quota,
       rewardOpen: this.rewardOpen,
@@ -866,6 +1092,21 @@ export class M0Scene extends Phaser.Scene {
       mutation: this.mutation.id,
       mutationReady: this.mutation.overloadReady,
       dashfireTime: this.mutation.dashfireTime,
+      roomSpeedMult: this.roomSpeedMult,
+      roomBonusCards: this.roomBonusCards,
+      plan: this.plan.map((step) =>
+        step.kind === 'choice'
+          ? {
+              kind: 'choice',
+              options: step.options.map((option) =>
+                option.kind === 'room' ? option.room.id : option.event.id
+              )
+            }
+          : {
+              kind: 'encounter',
+              encounter: step.encounter.kind === 'room' ? step.encounter.room.id : step.encounter.event.id
+            }
+      ),
       bossPhase: this.bossPhase,
       bossHp: this.bossRef ? Math.round(this.bossRef.hp) : 0,
       sealSlot: this.sealSlot,
@@ -2160,7 +2401,7 @@ export class M0Scene extends Phaser.Scene {
       hp: spec.hp,
       maxHp: spec.hp,
       radius: spec.radius,
-      speed: spec.speed,
+      speed: spec.speed * this.roomSpeedMult,
       dead: false,
       state: startsCasting ? 'idle' : 'approach',
       stateTimer: 0,
@@ -3206,8 +3447,8 @@ export class M0Scene extends Phaser.Scene {
       rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
       combo: getBuildCombo(this.build).name,
       levelSum: buildLevelSum(this.build),
-      roomsCleared: victory ? ROOMS.length : this.roomIndex,
-      roomsTotal: ROOMS.length
+      roomsCleared: victory ? this.stepTotal : this.stepIndex,
+      roomsTotal: this.stepTotal
     } satisfies RunEndPayload);
   }
 

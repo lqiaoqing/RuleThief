@@ -1,5 +1,6 @@
-import { getRuleSlotLabel, type RuleOffer } from '../game/rules';
-import { ENEMY_SPECS, getRoomEnemyKinds, type Reward, type RoomPreview } from '../game/rooms';
+import { getRuleName, getRuleSlotLabel, type RuleOffer } from '../game/rules';
+import { ENEMY_SPECS, getRoomEnemyKinds, getRoomRuleKeys, type Reward, type RoomPreview } from '../game/rooms';
+import type { EventPayload, RouteChoicePayload } from '../game/run';
 import { RULE_COLORS } from './hud';
 
 const ACTION_LABEL: Record<RuleOffer['action'], string> = {
@@ -239,4 +240,131 @@ export function setRoomVisible(visible: boolean): void {
 
 export function isRoomVisible(): boolean {
   return !roomScreen.hidden;
+}
+
+const routeScreen = requireId<HTMLElement>('route-screen');
+const routeKicker = requireId<HTMLElement>('route-kicker');
+const routeOptions = requireId<HTMLElement>('route-options');
+const routeProgress = requireId<HTMLElement>('route-progress');
+const eventScreen = requireId<HTMLElement>('event-screen');
+const eventKicker = requireId<HTMLElement>('event-kicker');
+const eventTitle = requireId<HTMLElement>('event-title');
+const eventEn = requireId<HTMLElement>('event-en');
+const eventSub = requireId<HTMLElement>('event-sub');
+const eventOptions = requireId<HTMLElement>('event-options');
+const eventFoot = requireId<HTMLElement>('event-foot');
+const eventHp = requireId<HTMLElement>('event-hp');
+
+export function renderRoute(
+  payload: RouteChoicePayload,
+  onPick: (index: number) => void
+): void {
+  routeKicker.textContent = `ROUTE ${payload.index + 1} / ${payload.total}`;
+  routeProgress.textContent = `第 ${payload.index + 1} 步 / 共 ${payload.total} 步`;
+  routeOptions.textContent = '';
+
+  payload.options.forEach((option, index) => {
+    const isEvent = option.kind === 'event';
+    const elite = !isEvent && Boolean(option.room.elite);
+    const card = el(
+      'button',
+      `route-option${isEvent ? ' is-event' : elite ? ' is-elite' : ''}`
+    );
+    card.type = 'button';
+    card.dataset.kind = option.kind;
+    card.dataset.index = String(index);
+
+    const head = el('div', 'route-option-head');
+    head.append(
+      el('span', 'route-option-tag', isEvent ? '事件' : elite ? '精英' : '战斗'),
+      el('b', 'route-option-name', isEvent ? option.event.name : option.room.name)
+    );
+    card.append(head);
+    card.append(
+      el('span', 'route-option-en', isEvent ? option.event.en : option.room.en)
+    );
+
+    if (isEvent) {
+      card.append(el('p', 'route-option-desc', option.event.subtitle));
+      card.append(el('div', 'route-option-foot', '不战斗 · 直接二选一'));
+    } else {
+      const chips = el('div', 'route-enemies');
+      for (const kind of getRoomEnemyKinds(option.room)) {
+        const spec = ENEMY_SPECS[kind];
+        const chip = el('span', `route-enemy${spec.elite ? ' is-elite' : ''}`);
+        const img = el('img');
+        img.src = `./assets/sprites/${spec.sprite}.png`;
+        img.alt = spec.name;
+        chip.append(img, el('span', undefined, spec.name));
+        chips.append(chip);
+      }
+      card.append(chips);
+
+      const rules = el('div', 'route-rules');
+      for (const key of getRoomRuleKeys(option.room)) {
+        const badge = el('span', 'codex-rule', getRuleName(key));
+        badge.style.color = RULE_COLORS[key];
+        badge.style.borderColor = `${RULE_COLORS[key]}59`;
+        rules.append(badge);
+      }
+      card.append(rules);
+      card.append(
+        el(
+          'div',
+          'route-option-foot',
+          `清场配额 ${option.room.quota} · ${elite ? '四选一奖励' : '三选一奖励'}`
+        )
+      );
+    }
+
+    card.addEventListener('click', () => onPick(index));
+    routeOptions.append(card);
+  });
+}
+
+export function setRouteVisible(visible: boolean): void {
+  routeScreen.hidden = !visible;
+  if (visible) {
+    routeOptions.querySelector<HTMLElement>('.route-option')?.focus({ preventScroll: true });
+  }
+}
+
+export function isRouteVisible(): boolean {
+  return !routeScreen.hidden;
+}
+
+export function renderEvent(
+  payload: EventPayload,
+  onPick: (index: number) => void
+): void {
+  eventKicker.textContent = `EVENT ${payload.index + 1} / ${payload.total}`;
+  eventTitle.textContent = payload.event.name;
+  eventEn.textContent = payload.event.en;
+  eventSub.textContent = payload.event.subtitle;
+  eventHp.textContent = `当前生命 ${Math.ceil(payload.hp)} / ${payload.maxHp}`;
+  eventFoot.textContent = '二选一，选择后立刻结算。';
+  eventOptions.textContent = '';
+
+  payload.event.options.forEach((option, index) => {
+    const card = el('button', `event-option is-${option.tone}`);
+    card.type = 'button';
+    card.dataset.index = String(index);
+    const head = el('div', 'event-option-head');
+    head.append(el('span', 'event-option-label', option.label), el('b', undefined, option.title));
+    card.append(head, el('p', 'event-option-desc', option.description));
+    card.append(el('span', 'event-option-detail', option.detail));
+    card.addEventListener('click', () => onPick(index));
+    eventOptions.append(card);
+  });
+}
+
+export function setEventVisible(visible: boolean): void {
+  eventScreen.hidden = !visible;
+  if (visible) {
+    eventOptions.querySelector<HTMLElement>('.event-option')?.focus({ preventScroll: true });
+  }
+}
+
+export function isEventVisible(): boolean {
+  return !eventScreen.hidden;
 }
