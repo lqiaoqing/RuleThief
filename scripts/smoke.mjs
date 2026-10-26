@@ -208,6 +208,8 @@ try {
   });
   await sleep(200);
 
+  // keep the quota from being reached while probing combat rules
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
   await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 3, 3));
   await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
   for (const [x, y] of [[500, 420], [560, 440], [620, 470], [680, 500], [740, 530], [500, 520]]) {
@@ -258,6 +260,19 @@ try {
   await page.click('#resume-btn');
   await sleep(300);
   check('resuming after blur works', await page.$eval('#pause-screen', (el) => el.hidden));
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await sleep(300);
+  check('backgrounding the tab pauses the run', await page.$eval('#pause-screen', (el) => !el.hidden));
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+  });
+  await page.click('#resume-btn');
+  await sleep(300);
+  check('resuming after background works', await page.$eval('#pause-screen', (el) => el.hidden));
 
   for (const kind of ['spore', 'slime', 'wisp', 'bomber']) {
     const before = Number((await snapshot(page)).enemies);
