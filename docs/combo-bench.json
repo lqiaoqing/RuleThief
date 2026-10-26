@@ -1,0 +1,77 @@
+{
+  "sampleMs": 5000,
+  "rows": [
+    {
+      "combo": "pierce+burn",
+      "samples": [
+        45,
+        35
+      ],
+      "avgDps": 40
+    },
+    {
+      "combo": "pierce+frost",
+      "samples": [
+        26,
+        25
+      ],
+      "avgDps": 26
+    },
+    {
+      "combo": "pierce+blast",
+      "samples": [
+        116,
+        82
+      ],
+      "avgDps": 99
+    },
+    {
+      "combo": "chain+burn",
+      "samples": [
+        80,
+        76
+      ],
+      "avgDps": 78
+    },
+    {
+      "combo": "chain+frost",
+      "samples": [
+        61,
+        64
+      ],
+      "avgDps": 63
+    },
+    {
+      "combo": "chain+blast",
+      "samples": [
+        128,
+        125
+      ],
+      "avgDps": 127
+    },
+    {
+      "combo": "spread+burn",
+      "samples": [
+        80,
+        96
+      ],
+      "avgDps": 88
+    },
+    {
+      "combo": "spread+frost",
+      "samples": [
+        76,
+        70
+      ],
+      "avgDps": 73
+    },
+    {
+      "combo": "spread+blast",
+      "samples": [
+        142,
+        134
+      ],
+      "avgDps": 138
+    }
+  ]
+}

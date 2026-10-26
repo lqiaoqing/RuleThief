@@ -49,6 +49,7 @@
 | 状态 | 死亡/暂停/失焦/切后台/重开；无旧弹幕/旧状态 | 自动 | 冒烟 blur / visibilitychange / 切房清理 / 重开 |
 | 体验 | 预警可读；受击来源清楚；构筑面板常驻；结算显示构筑 | 自动 + 截图 | 受击方向弧、结算组合+突变行、截图 |
 | 移动 | 安全区；横竖屏；音频解锁 | 自动 | 冒烟 390×844 / 844×390 无溢出；音频 running |
+| 平衡 | 9 组合强度基准 | 自动 | `combo-bench.mjs`：爆裂 99–138 / 燃烧 40–88 / 冰霜 26–73（聚怪木桩） |
 | 移动 | **低端机性能** | **人工** | 需真实低端设备 |
 | 工程 | 单测/构建/静态部署/无 console error | 自动 | 见下 |
 
@@ -61,6 +62,7 @@ npm run verify                 31/31 通过（资源与服务）
 npm run smoke                 111/111 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）
+scripts/combo-bench.mjs        9 组合 DPS 基准（2 次采样 × 5 秒）
 ```
 
 - 单测文件：`rules` 19、`rooms` 23、`mutations` 12、`run` 12、`tuning` 6、`telemetry` 7、`theme` 3。

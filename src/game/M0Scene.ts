@@ -106,6 +106,7 @@ interface PlayerBolt {
   budget: TriggerBudget;
   impact: PlayerBuild['impact'];
   power: number;
+  pierceHits: number;
   chainJumps: number;
   chainRange: number;
   chainMultiplier: number;
@@ -235,6 +236,7 @@ export class M0Scene extends Phaser.Scene {
   private liveHitSparks = 0;
   private impactProcs = 0;
   private blastDamageEvents = 0;
+  private damageDealt = 0;
 
   private mutation: MutationState = createMutationState();
   private bossPhase = 0;
@@ -882,6 +884,13 @@ export class M0Scene extends Phaser.Scene {
     this.clearPlayerBolts();
   }
 
+  public debugHeal(amount: number): void {
+    if (this.runState !== 'playing') return;
+    this.hp = Math.min(this.maxHp, this.hp + Math.max(0, amount));
+    setHp(this.hp, this.maxHp);
+    this.refreshRoomHud();
+  }
+
   public debugVolley(): number {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return -1;
     const target = this.findNearestEnemy(this.playerRoot.x, this.playerRoot.y);
@@ -1100,6 +1109,7 @@ export class M0Scene extends Phaser.Scene {
       liveHitSparks: this.liveHitSparks,
       impactProcs: this.impactProcs,
       blastDamageEvents: this.blastDamageEvents,
+      damageDealt: Math.round(this.damageDealt),
       slowTime: this.slowTime,
       invuln: this.invuln,
       mutation: this.mutation.id,
@@ -1167,6 +1177,7 @@ export class M0Scene extends Phaser.Scene {
     this.liveHitSparks = 0;
     this.impactProcs = 0;
     this.blastDamageEvents = 0;
+    this.damageDealt = 0;
     this.sealSlot = null;
     this.sealTime = 0;
     this.bossRef = null;
@@ -1807,6 +1818,7 @@ export class M0Scene extends Phaser.Scene {
       budget: options.budget,
       impact: options.impact ?? null,
       power: options.power ?? 1,
+      pierceHits: 0,
       chainJumps: options.chainJumps ?? 0,
       chainRange: options.chainRange ?? 0,
       chainMultiplier: options.chainMultiplier ?? 1,
@@ -1928,7 +1940,9 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private handleBoltHit(bolt: PlayerBolt, enemy: EnemyUnit): void {
-    this.applyDamage(enemy, bolt.damage, 'hit');
+    const pierceBonus = bolt.mode === 'pierce' ? 1 + 0.2 * bolt.pierceHits : 1;
+    bolt.pierceHits += 1;
+    this.applyDamage(enemy, bolt.damage * pierceBonus, 'hit');
     if (this.registerOverloadHit()) {
       this.showOverloadReady();
     }
@@ -1995,7 +2009,7 @@ export class M0Scene extends Phaser.Scene {
           this.showOverloadReady();
         }
         if (this.build.impact && budget.tryConsume()) {
-          this.applyImpact(target, damage, this.build.impact, 1);
+          this.applyImpact(target, damage, this.build.impact, 0.6);
         }
       });
     });
@@ -2125,6 +2139,7 @@ export class M0Scene extends Phaser.Scene {
     visual: 'hit' | 'blast' | 'dot'
   ): void {
     if (enemy.dead) return;
+    this.damageDealt += Math.max(0, amount);
     if (visual === 'blast') this.blastDamageEvents += 1;
     enemy.hp -= amount;
     enemy.hpFill.setScale(Math.max(0, enemy.hp / enemy.maxHp), 1);

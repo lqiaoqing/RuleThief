@@ -93,6 +93,12 @@ npm run dev
 - [胜利结算](screenshots/m3a-victory-desktop.png)
 - [手机战斗](screenshots/m3a-combat-mobile.png)
 
+## 平衡与试玩工具
+
+- `scripts/combo-bench.mjs`：9 种组合对 3 个聚怪木桩的 DPS 基准（写 `docs/combo-bench.json`）。
+- `scripts/autoplay.mjs`：自动试玩一整局，输出逐房数据。
+- 结算页会显示累计战绩（localStorage，最近 20 局）。
+
 ## 试玩记录
 
 每局结束会把结果写入 localStorage（最近 20 局），结算页显示「累计 N 局 · 通关数 · 最快用时 · 最常构筑」。这些记录用于后续调优，不需要账号或后端。
