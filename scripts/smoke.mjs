@@ -318,13 +318,13 @@ try {
         reward.rewardVisible,
         JSON.stringify({ cards: reward.cards.length })
       );
-      if (reward.cards.length === 4) {
+      if (inside.roomElite) {
         const mutationBefore = Boolean((await snapshot(page)).mutation);
         const mutationCards = reward.cards.filter((card) => card.kind === 'mutation').length;
         check(
           `elite room ${inside.roomIndex + 1} mutation offer is correct`,
           mutationBefore ? mutationCards === 0 : mutationCards === 1,
-          JSON.stringify({ mutationBefore, mutationCards })
+          JSON.stringify({ mutationBefore, mutationCards, cards: reward.cards.length })
         );
       }
       await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
