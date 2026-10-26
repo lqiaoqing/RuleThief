@@ -62,6 +62,7 @@ declare global {
     ) => void;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
+    __RT_VOLLEY__?: () => number;
     __RT_OPEN_EVENT__?: (id: string) => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
@@ -357,6 +358,7 @@ function handleReady(): void {
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
+  window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;
   window.__RT_OPEN_EVENT__ = (id) => scene?.debugOpenEvent(id as never);
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();

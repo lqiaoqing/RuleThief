@@ -207,6 +207,33 @@ try {
     window.__RT_KILL_ALL__?.();
   });
   await sleep(200);
+
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 3, 3));
+  for (const [x, y] of [[500, 420], [560, 440], [620, 470], [680, 500], [740, 530], [500, 520]]) {
+    await page.evaluate(([px, py]) => window.__RT_SPAWN_AT__?.('spore', px, py), [x, y]);
+  }
+  await sleep(320);
+  const beforeVolley = await snapshot(page);
+  await page.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(1500);
+  const afterVolley = await snapshot(page);
+  const volleyProcs = Number(afterVolley.impactProcs) - Number(beforeVolley.impactProcs);
+  check(
+    'single volley never exceeds the 3-impact budget',
+    volleyProcs >= 1 && volleyProcs <= 3,
+    JSON.stringify({
+      procs: volleyProcs,
+      blastEvents: Number(afterVolley.blastDamageEvents) - Number(beforeVolley.blastDamageEvents)
+    })
+  );
+
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await sleep(300);
+  check('window blur pauses the run', await page.$eval('#pause-screen', (el) => !el.hidden));
+  await page.click('#resume-btn');
+  await sleep(300);
+  check('resuming after blur works', await page.$eval('#pause-screen', (el) => el.hidden));
+
   for (const kind of ['spore', 'slime', 'wisp', 'bomber']) {
     const before = Number((await snapshot(page)).enemies);
     await page.evaluate((k) => window.__RT_SPAWN_AT__?.(k, 560, 360), kind);

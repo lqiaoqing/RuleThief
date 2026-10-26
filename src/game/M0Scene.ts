@@ -233,6 +233,8 @@ export class M0Scene extends Phaser.Scene {
   private slowFactor = 0;
   private liveDamageNumbers = 0;
   private liveHitSparks = 0;
+  private impactProcs = 0;
+  private blastDamageEvents = 0;
 
   private mutation: MutationState = createMutationState();
   private bossPhase = 0;
@@ -883,6 +885,15 @@ export class M0Scene extends Phaser.Scene {
     this.time.delayedCall(340, () => this.scene.pause());
   }
 
+  public debugVolley(): number {
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return -1;
+    const target = this.findNearestEnemy(this.playerRoot.x, this.playerRoot.y);
+    if (!target) return -1;
+    this.attackCd = 99;
+    this.fireAttack(target);
+    return this.impactProcs;
+  }
+
   public debugDamageBoss(amount: number): void {
     const boss = this.bossRef;
     if (!boss || boss.dead) return;
@@ -1100,6 +1111,8 @@ export class M0Scene extends Phaser.Scene {
       hazards: this.hazards.length,
       liveDamageNumbers: this.liveDamageNumbers,
       liveHitSparks: this.liveHitSparks,
+      impactProcs: this.impactProcs,
+      blastDamageEvents: this.blastDamageEvents,
       slowTime: this.slowTime,
       invuln: this.invuln,
       mutation: this.mutation.id,
@@ -1164,6 +1177,8 @@ export class M0Scene extends Phaser.Scene {
     this.slowFactor = 0;
     this.liveDamageNumbers = 0;
     this.liveHitSparks = 0;
+    this.impactProcs = 0;
+    this.blastDamageEvents = 0;
     this.sealSlot = null;
     this.sealTime = 0;
     this.bossRef = null;
@@ -2007,6 +2022,7 @@ export class M0Scene extends Phaser.Scene {
     void directDamage;
     const sealed = this.sealSlot === 'impact' ? null : impact;
     if (!sealed) return;
+    this.impactProcs += 1;
     const profile = getImpactProfile(sealed.key, sealed.level);
     if (profile.kind === 'blast') {
       this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy, {
@@ -2121,6 +2137,7 @@ export class M0Scene extends Phaser.Scene {
     visual: 'hit' | 'blast' | 'dot'
   ): void {
     if (enemy.dead) return;
+    if (visual === 'blast') this.blastDamageEvents += 1;
     enemy.hp -= amount;
     enemy.hpFill.setScale(Math.max(0, enemy.hp / enemy.maxHp), 1);
     const x = enemy.root.x + Phaser.Math.Between(-8, 8);
