@@ -32,10 +32,10 @@
 ## 3. 验证入口
 
 ```bash
-npm test                                    # 83/83
+npm test                                    # 88/88
 npm run build
 npm run preview -- --port 4177
-BASE_URL=http://127.0.0.1:4177 npm run smoke     # 168/168
+BASE_URL=http://127.0.0.1:4177 npm run smoke     # 170/170
 BASE_URL=http://127.0.0.1:4177 npm run verify    # 31/31
 BASE_URL=http://127.0.0.1:4177 npm run lowend    # CPU 节流 57/55.7/43.7 fps
 BASE_URL=http://127.0.0.1:4177 node scripts/stress.mjs      # 40 敌 57fps

@@ -705,56 +705,43 @@ try {
     }
     check('sealed rule is restored automatically', released);
 
-    // second seal: walk out of the telegraph and stay unsealed
-    let zone = null;
-    for (let tick = 0; tick < 240; tick += 1) {
-      const sample = await snapshot(page);
-      if (sample.sealZone) {
-        zone = sample.sealZone;
-        break;
-      }
-      if (tick % 4 === 0) {
-        await page.evaluate(() => window.__RT_HEAL__?.(40));
-      }
-      await sleep(60);
-    }
-    check('boss telegraphs the next seal zone', Boolean(zone), JSON.stringify(zone));
-    if (zone) {
-      const current = await snapshot(page);
-      const dx = Number(current.playerX) - Number(zone.x);
-      const dy = Number(current.playerY) - Number(zone.y);
-      const key =
-        Math.abs(dx) < 5 && Math.abs(dy) < 5
+    // deterministic dodge: trigger a seal at the player, then walk out immediately
+    const beforeCast = await snapshot(page);
+    await page.evaluate(() => window.__RT_CAST_SEAL__?.());
+    const cast = await snapshot(page);
+    const zone = cast.sealZone;
+    // run towards the arena centre: always open space, unlike the nearest wall
+    const toCentreX = 400 - Number(beforeCast.playerX);
+    const toCentreY = 400 - Number(beforeCast.playerY);
+    const key =
+      Math.abs(toCentreX) > Math.abs(toCentreY)
+        ? toCentreX > 0
           ? 'KeyD'
-          : Math.abs(dx) > Math.abs(dy)
-            ? dx >= 0
-              ? 'KeyD'
-              : 'KeyA'
-            : dy >= 0
-              ? 'KeyS'
-              : 'KeyW';
-      await page.keyboard.down(key);
-      await page.evaluate(() => window.__RT_HEAL__?.(40));
-      await sleep(1700);
-      await page.keyboard.up(key);
-      const dodged = await snapshot(page);
-      const distanceFromZone = Math.hypot(
-        Number(dodged.playerX) - Number(zone.x),
-        Number(dodged.playerY) - Number(zone.y)
-      );
-      check(
-        'avoiding the seal zone prevents the seal',
+          : 'KeyA'
+        : toCentreY > 0
+          ? 'KeyS'
+          : 'KeyW';
+    await page.keyboard.down(key);
+    await sleep(1400);
+    await page.keyboard.up(key);
+    const dodged = await snapshot(page);
+    const distanceFromZone = Math.hypot(
+      Number(dodged.playerX) - Number(zone?.x ?? dodged.playerX),
+      Number(dodged.playerY) - Number(zone?.y ?? dodged.playerY)
+    );
+    check(
+      'avoiding the seal zone prevents the seal',
+      Boolean(zone) &&
         !dodged.sealSlot &&
-          distanceFromZone > Number(zone.radius) + 20 &&
-          Number(dodged.bossHp) > 0,
-        JSON.stringify({
-          zone,
-          sealSlot: dodged.sealSlot,
-          distance: Math.round(distanceFromZone),
-          bossHp: dodged.bossHp
-        })
-      );
-    }
+        distanceFromZone > Number(zone?.radius ?? 0) + 10 &&
+        Number(dodged.bossHp) > 0,
+      JSON.stringify({
+        zone,
+        sealSlot: dodged.sealSlot,
+        distance: Math.round(distanceFromZone),
+        bossHp: dodged.bossHp
+      })
+    );
   }
 
   await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(900));

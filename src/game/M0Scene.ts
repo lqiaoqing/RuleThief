@@ -926,6 +926,11 @@ export class M0Scene extends Phaser.Scene {
     return lines.join(String.fromCharCode(10));
   }
 
+  public debugCastSeal(): void {
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
+    this.castRuleSeal();
+  }
+
   public debugJumpToBoss(withStarterBuild = true): void {
     if (this.runState !== 'playing') return;
     this.stepIndex = Math.max(0, this.plan.length - 1);
