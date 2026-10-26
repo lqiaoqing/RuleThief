@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { ARENA, ASSETS, COLORS } from './theme';
+import { ARENA, ASSETS, COLORS, formatTime } from './theme';
 import {
   resetM0Hud,
   setBossBar,
@@ -896,6 +896,16 @@ export class M0Scene extends Phaser.Scene {
       enemy.root.setScale(1).setAlpha(1);
     });
     this.time.delayedCall(340, () => this.scene.pause());
+  }
+
+  public runSummary(): string {
+    const combo = getBuildCombo(this.build);
+    const mutation = this.mutation.id ? MUTATIONS[this.mutation.id].name : '无';
+    const lines = [
+      `${combo.name} · 等级 ${buildLevelSum(this.build)} / 6 · 突变 ${mutation}`,
+      `第 ${this.stepIndex + 1} / ${this.stepTotal} 步 · ${formatTime(this.elapsed)} · 击杀 ${this.kills} · 生命 ${Math.ceil(this.hp)} / ${this.maxHp}`
+    ];
+    return lines.join(String.fromCharCode(10));
   }
 
   public debugFreezeAttack(): void {

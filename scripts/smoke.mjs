@@ -602,6 +602,12 @@ try {
   await page.click('#pause-btn');
   await sleep(220);
   check('pause overlay visible', await page.$eval('#pause-screen', (el) => !el.hidden));
+  const pauseSummary = await page.$eval('#pause-stats', (el) => el.textContent ?? '');
+  check(
+    'pause shows build and run progress',
+    pauseSummary.includes('突变') && /第 \d+ \/ \d+ 步/.test(pauseSummary),
+    pauseSummary.split(String.fromCharCode(10)).join(' | ')
+  );
   await page.click('#resume-btn');
   await sleep(220);
   check('pause overlay hidden after resume', await page.$eval('#pause-screen', (el) => el.hidden));

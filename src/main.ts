@@ -127,6 +127,7 @@ const resultEmblemUse = document.querySelector<SVGUseElement>('#result-emblem us
 const roomEnterButton = byId<HTMLButtonElement>('room-enter-btn');
 const introScreen = byId<HTMLElement>('intro-screen');
 const introStartButton = byId<HTMLButtonElement>('intro-start-btn');
+const pauseStats = byId<HTMLElement>('pause-stats');
 
 const resultKicker = byId<HTMLElement>('result-kicker');
 const resultTitle = byId<HTMLElement>('result-title');
@@ -341,6 +342,7 @@ function pauseGame(): void {
   ) {
     return;
   }
+  pauseStats.textContent = scene.runSummary();
   scene.pauseGame();
   pauseScreen.hidden = false;
   void audio.suspend();
