@@ -43,7 +43,7 @@
 | 规则 | 9 组合生效、等级、替换即时生效、满级处理 | 自动 | 冒烟：切弹道清在飞弹体（1→0）、切命中清燃烧（3→0）、替换后 Lv.1 且另一槽保级、满级构筑只出强化卡 |
 | 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕；图鉴跟随房间 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
 | 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化生效 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟卡数与突变断言、`support reward applies a stat change`（生命 47→67、上限 100→120） |
-| 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts` + 冒烟 |
+| 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts`；冒烟固定 seed=5（诅咒宝箱 + 不稳定实验），两条条件断言每次都跑 |
 | 突变 | 3 种；每局最多 1；精英保底 | 自动 | `mutations.test.ts`；冒烟 `elite room N spawns its leader immediately` + 突变卡数量 |
 | BOSS | 3 阶段阈值；封印 4s 可躲可恢复；召唤物清理 | 自动 | 冒烟：phase 2 召唤 3 个杂兵、击杀 BOSS 后场上归零；封印预警截图 |
 | 状态 | 死亡/暂停/失焦/切后台/重开（含暂停页一键重开）；无旧弹幕/旧状态；无 pause/resume 告警 | 自动 | 冒烟 blur / visibilitychange / 切房清理 / 重开 / 暂停重开 |
@@ -72,7 +72,7 @@
 npm test                       88/88 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 170/170 通过，无 console/page error
+npm run smoke                 170/170 通过（主流程固定 seed=5，两次运行 0 失败）
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：57.0 / 55.7 / 43.7 fps（30 敌人，对象池后）
 scripts/combo-run.mjs          9 组合清第 1 房：30–35s，全部满血

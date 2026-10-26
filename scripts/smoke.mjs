@@ -143,7 +143,8 @@ const browser = await puppeteer.launch({
 
 try {
   const page = await newPage(browser, { width: 1440, height: 900, deviceScaleFactor: 1 });
-  await page.goto(`${BASE}/`, { waitUntil: 'networkidle0' });
+  // seed 5 always rolls cursed-chest + unstable-lab, so both event assertions run
+  await page.goto(`${BASE}/?seed=5`, { waitUntil: 'networkidle0' });
   await waitReady(page);
   await sleep(350);
 
