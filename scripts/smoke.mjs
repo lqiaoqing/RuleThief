@@ -1096,6 +1096,26 @@ try {
   check('mobile controls visible', await mobile.$eval('#joystick', (el) => getComputedStyle(el).display !== 'none'));
   check('mobile codex renders room enemies', (await mobile.$$('#codex-list .codex-row')).length === 1);
 
+  await mobile.tap('#pause-btn');
+  await sleep(280);
+  const mobilePause = await mobile.evaluate(() => {
+    const card = document.querySelector('.pause-card');
+    const actions = document.querySelector('.pause-actions');
+    const rect = card?.getBoundingClientRect();
+    return {
+      fits: Boolean(rect && rect.height <= window.innerHeight + 1 && rect.width <= window.innerWidth + 1),
+      buttons: actions?.children.length ?? 0,
+      overflow: actions ? actions.scrollWidth > actions.clientWidth + 1 : true
+    };
+  });
+  check(
+    'mobile pause menu fits with three actions',
+    mobilePause.fits && mobilePause.buttons === 3 && !mobilePause.overflow,
+    JSON.stringify(mobilePause)
+  );
+  await mobile.tap('#resume-btn');
+  await sleep(280);
+
   const mobileBefore = Number((await snapshot(mobile)).playerX);
   const joyBox = await mobile.$eval('#joystick', (el) => {
     const rect = el.getBoundingClientRect();
