@@ -861,12 +861,58 @@ try {
     pauseSummary.includes('突变') && /第 \d+ \/ \d+ 步/.test(pauseSummary),
     pauseSummary.split(String.fromCharCode(10)).join(' | ')
   );
+  await page.click('#pause-restart-btn');
+  await sleep(600);
+  const restartedFromPause = await snapshot(page);
+  check(
+    'pause menu can restart the run',
+    restartedFromPause.roomIndex === 0 &&
+      restartedFromPause.hp === 100 &&
+      restartedFromPause.kills === 0 &&
+      (await page.$eval('#pause-screen', (el) => el.hidden)),
+    JSON.stringify({ roomIndex: restartedFromPause.roomIndex, hp: restartedFromPause.hp })
+  );
+  await enterRoom(page);
+  await page.click('#pause-btn');
+  await sleep(220);
   await page.click('#resume-btn');
   await sleep(220);
   check('pause overlay hidden after resume', await page.$eval('#pause-screen', (el) => el.hidden));
 
   check('desktop no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await page.close();
+
+  const mobileBoss = await newPage(browser, {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    isMobile: true,
+    hasTouch: true
+  });
+  await mobileBoss.goto(`${BASE}/?arena=1&boss=1`, { waitUntil: 'networkidle0' });
+  await waitReady(mobileBoss);
+  await mobileBoss.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(400);
+  await mobileBoss.tap('#room-enter-btn');
+  await sleep(900);
+  const mobileBossLayout = await mobileBoss.evaluate(() => {
+    const hud = document.querySelector('.hud-top')?.getBoundingClientRect();
+    const bar = document.getElementById('boss-bar')?.getBoundingClientRect();
+    return {
+      hudBottom: Math.round(hud?.bottom ?? 0),
+      barTop: Math.round(bar?.top ?? 0),
+      barHidden: document.getElementById('boss-bar')?.hidden ?? true,
+      overflow: document.documentElement.scrollWidth > window.innerWidth + 1
+    };
+  });
+  check(
+    'mobile boss bar sits below the HUD without overflow',
+    !mobileBossLayout.barHidden &&
+      mobileBossLayout.barTop >= mobileBossLayout.hudBottom &&
+      !mobileBossLayout.overflow,
+    JSON.stringify(mobileBossLayout)
+  );
+  await mobileBoss.close();
 
   const buildPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await buildPreset.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });

@@ -505,6 +505,7 @@ document.getElementById('pause-btn')?.addEventListener('click', pauseGame);
 document.getElementById('resume-btn')?.addEventListener('click', resumeGame);
 document.getElementById('back-menu-btn')?.addEventListener('click', backToMenu);
 document.getElementById('restart-btn')?.addEventListener('click', restartRun);
+document.getElementById('pause-restart-btn')?.addEventListener('click', restartRun);
 document.getElementById('result-menu-btn')?.addEventListener('click', backToMenu);
 roomEnterButton.addEventListener('click', enterRoom);
 introStartButton.addEventListener('click', dismissIntro);
