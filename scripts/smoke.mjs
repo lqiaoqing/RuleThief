@@ -143,6 +143,23 @@ try {
   await waitReady(page);
   await sleep(350);
 
+  check('first-run manual is shown', await page.evaluate(() => window.__RT_INTRO__?.() === true));
+  check(
+    'manual explains dash invulnerability and rule flow',
+    await page.evaluate(() => {
+      const text = document.getElementById('intro-screen')?.textContent ?? '';
+      return text.includes('0.3 秒无敌') && text.includes('清空房间才拿规则');
+    })
+  );
+  await page.click('#intro-start-btn');
+  await sleep(220);
+  check(
+    'manual dismisses and is remembered',
+    await page.evaluate(
+      () => window.__RT_INTRO__?.() === false && localStorage.getItem('rulethief.intro.v1') === '1'
+    )
+  );
+
   check('menu visible on load', await page.$eval('#menu', (el) => !el.hidden));
   check('hud hidden on load', await page.$eval('#hud', (el) => el.hidden));
   check(

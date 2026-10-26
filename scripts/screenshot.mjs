@@ -113,6 +113,25 @@ const browser = await puppeteer.launch({
   ]
 });
 
+async function captureManual(viewport, name) {
+  const page = await createPage(browser, viewport);
+  await page.evaluateOnNewDocument(() => {
+    try {
+      localStorage.removeItem('rulethief.intro.v1');
+    } catch {
+      /* ignore */
+    }
+  });
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle0' });
+  await waitReady(page);
+  await page.waitForFunction(() => !document.getElementById('intro-screen')?.hidden, { timeout: 8000 });
+  await sleep(500);
+  await shot(page, name);
+  await page.click('#intro-start-btn');
+  await sleep(200);
+  await page.close();
+}
+
 async function captureMenu(viewport, name) {
   const page = await createPage(browser, viewport);
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle0' });
@@ -323,6 +342,7 @@ const PHONE = { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, h
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
 
 try {
+  await captureManual(DESKTOP, 'm7-manual-desktop.png');
   await captureMenu(DESKTOP, 'm3c-menu-desktop.png');
   await captureRoute(DESKTOP, 'm3c-route-desktop.png');
   await captureEvent(DESKTOP, 'm3c-event-desktop.png');
@@ -343,6 +363,7 @@ try {
     impactLevel: 3
   });
   await captureBossVictory(DESKTOP, 'm3c-victory-desktop.png');
+  await captureManual(PHONE, 'm7-manual-mobile.png');
   await captureMenu(PHONE, 'm3c-menu-mobile.png');
   await captureRoute(PHONE, 'm3c-route-mobile.png');
   await captureEvent(PHONE, 'm3c-event-mobile.png');

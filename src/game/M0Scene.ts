@@ -1135,6 +1135,10 @@ export class M0Scene extends Phaser.Scene {
       sealSlot: this.sealSlot,
       sealTime: this.sealTime,
       eliteAlive: this.enemies.filter((enemy) => enemy.elite && !enemy.dead).length,
+      enemyCounts: this.enemies.reduce<Record<string, number>>((acc, enemy) => {
+        acc[enemy.kind] = (acc[enemy.kind] ?? 0) + 1;
+        return acc;
+      }, {}),
       enemyList: this.enemies.slice(0, 24).map((enemy) => ({
         kind: enemy.kind,
         x: Math.round(enemy.root.x),

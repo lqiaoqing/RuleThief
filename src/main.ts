@@ -65,6 +65,7 @@ declare global {
     __RT_VOLLEY__?: () => number;
     __RT_FREEZE_ATTACK__?: () => void;
     __RT_HEAL__?: (amount: number) => void;
+    __RT_INTRO__?: () => boolean;
     __RT_OPEN_EVENT__?: (id: string) => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
@@ -124,6 +125,8 @@ const soundOn = soundButton.querySelector<SVGElement>('.sound-on');
 const soundOff = soundButton.querySelector<SVGElement>('.sound-off');
 const resultEmblemUse = document.querySelector<SVGUseElement>('#result-emblem use');
 const roomEnterButton = byId<HTMLButtonElement>('room-enter-btn');
+const introScreen = byId<HTMLElement>('intro-screen');
+const introStartButton = byId<HTMLButtonElement>('intro-start-btn');
 
 const resultKicker = byId<HTMLElement>('result-kicker');
 const resultTitle = byId<HTMLElement>('result-title');
@@ -144,6 +147,27 @@ let pointerId: number | null = null;
 let pendingRewards: RoomCleared['rewards'] = [];
 
 const autoArena = new URLSearchParams(window.location.search).get('arena') === '1';
+const INTRO_KEY = 'rulethief.intro.v1';
+
+function maybeShowIntro(): void {
+  if (autoArena) return;
+  let seen = false;
+  try {
+    seen = Boolean(localStorage.getItem(INTRO_KEY));
+  } catch {
+    seen = false;
+  }
+  introScreen.hidden = seen;
+}
+
+function dismissIntro(): void {
+  introScreen.hidden = true;
+  try {
+    localStorage.setItem(INTRO_KEY, '1');
+  } catch {
+    /* storage disabled — show the manual again next time */
+  }
+}
 
 function updateSoundIcon(): void {
   const muted = audio.isMuted;
@@ -363,6 +387,7 @@ function handleReady(): void {
   window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;
   window.__RT_FREEZE_ATTACK__ = () => scene?.debugFreezeAttack();
   window.__RT_HEAL__ = (amount) => scene?.debugHeal(amount);
+  window.__RT_INTRO__ = () => !introScreen.hidden;
   window.__RT_OPEN_EVENT__ = (id) => scene?.debugOpenEvent(id as never);
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
@@ -389,6 +414,7 @@ function handleReady(): void {
     state: audio.contextState
   });
   document.body.dataset.ready = '1';
+  maybeShowIntro();
   updateSoundIcon();
   if (autoArena || pendingArena) {
     enterArena(true);
@@ -439,6 +465,7 @@ document.getElementById('back-menu-btn')?.addEventListener('click', backToMenu);
 document.getElementById('restart-btn')?.addEventListener('click', restartRun);
 document.getElementById('result-menu-btn')?.addEventListener('click', backToMenu);
 roomEnterButton.addEventListener('click', enterRoom);
+introStartButton.addEventListener('click', dismissIntro);
 
 soundButton.addEventListener('click', async () => {
   await audio.unlock();
