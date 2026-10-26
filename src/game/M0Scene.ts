@@ -885,6 +885,11 @@ export class M0Scene extends Phaser.Scene {
     this.time.delayedCall(340, () => this.scene.pause());
   }
 
+  public debugFreezeAttack(): void {
+    this.attackCd = 99;
+    this.clearPlayerBolts();
+  }
+
   public debugVolley(): number {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return -1;
     const target = this.findNearestEnemy(this.playerRoot.x, this.playerRoot.y);
@@ -1143,6 +1148,7 @@ export class M0Scene extends Phaser.Scene {
         x: Math.round(enemy.root.x),
         y: Math.round(enemy.root.y),
         radius: enemy.radius,
+        hp: Math.round(enemy.hp),
         elite: enemy.elite,
         charging: enemy.state === 'charge'
       })),

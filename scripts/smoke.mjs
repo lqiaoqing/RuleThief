@@ -209,6 +209,7 @@ try {
   await sleep(200);
 
   await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 3, 3));
+  await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
   for (const [x, y] of [[500, 420], [560, 440], [620, 470], [680, 500], [740, 530], [500, 520]]) {
     await page.evaluate(([px, py]) => window.__RT_SPAWN_AT__?.('spore', px, py), [x, y]);
   }
@@ -224,6 +225,30 @@ try {
     JSON.stringify({
       procs: volleyProcs,
       blastEvents: Number(afterVolley.blastDamageEvents) - Number(beforeVolley.blastDamageEvents)
+    })
+  );
+
+  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'burn', 3, 3));
+  await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
+  for (const [x, y] of [[520, 430], [580, 470], [640, 500], [700, 530]]) {
+    await page.evaluate(([px, py]) => window.__RT_SPAWN_AT__?.('beetle', px, py), [x, y]);
+  }
+  await sleep(320);
+  const beforeDot = await snapshot(page);
+  await page.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(900);
+  const midDot = await snapshot(page);
+  await sleep(2600);
+  const afterDot = await snapshot(page);
+  const dotProcs = Number(afterDot.impactProcs) - Number(midDot.impactProcs);
+  const hpSum = (state) => (state.enemyList ?? []).reduce((sum, enemy) => sum + Number(enemy.hp), 0);
+  check(
+    'burn DOT keeps dealing damage without new impact procs',
+    dotProcs === 0 && hpSum(afterDot) < hpSum(midDot),
+    JSON.stringify({
+      procs: dotProcs,
+      hpMid: hpSum(midDot),
+      hpAfter: hpSum(afterDot)
     })
   );
 
