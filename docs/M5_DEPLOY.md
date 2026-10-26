@@ -46,6 +46,7 @@ BASE_URL=http://127.0.0.1:4177 npm run verify
 
 - `npm run verify` 会校验：JS/CSS bundle、8 个精灵、地砖、菜单图、构建体积（<8MB）以及 HTML 中没有 dev server 引用。
 - 当前产物：`dist` 1.85MB；`public/assets` 约 460KB。
+- 试玩记录保存在浏览器 localStorage（`rulethief.runs.v1`，最多 20 局），不涉及后端。
 - 部署方式：把 `dist` 整个目录上传到任意静态托管（Nginx / OSS / GitHub Pages / Netlify）。项目没有后端、没有环境变量、没有运行时配置。
 - 注意：`index.html` 使用相对路径 `./assets/...`，因此可以部署在子目录下（例如 `https://example.com/rule-thief/`）。
 

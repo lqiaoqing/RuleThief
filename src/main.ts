@@ -8,6 +8,7 @@ import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
+import { formatRecordLine, saveRun, summarize } from './game/telemetry';
 import {
   isEventVisible,
   isRewardVisible,
@@ -130,6 +131,7 @@ const resultRooms = byId<HTMLElement>('result-rooms');
 const resultCombo = byId<HTMLElement>('result-combo');
 const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
+const resultRecord = byId<HTMLElement>('result-record');
 
 let scene: M0Scene | null = null;
 let entered = false;
@@ -162,6 +164,18 @@ function showResult(payload: RunEndPayload): void {
   resultComboName.textContent = payload.combo;
   resultComboLevel.textContent = `等级 ${payload.levelSum} / 6`;
   resultCombo.classList.toggle('is-complete', payload.rules === 2);
+  const runs = saveRun({
+    at: Date.now(),
+    victory: payload.victory,
+    rooms: payload.roomsCleared,
+    total: payload.roomsTotal,
+    seconds: Math.floor(payload.time),
+    kills: payload.kills,
+    combo: payload.combo,
+    levelSum: payload.levelSum,
+    mutation: payload.mutation
+  });
+  resultRecord.textContent = formatRecordLine(summarize(runs));
   resultScreen.hidden = false;
   pauseScreen.hidden = true;
   hideOverlays();

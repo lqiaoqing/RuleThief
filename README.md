@@ -69,8 +69,8 @@ npm run dev
 
 ## 验证结果
 
-- 单元测试：**75/75 通过**（`rules` 19 + `rooms` 23 + `mutations` 12 + `run` 12 + `tuning` 6 + `theme` 3）。
-- 生产构建浏览器冒烟：**91/91 通过**，无 console/page error。
+- 单元测试：**82/82 通过**（`rules` 19 + `rooms` 23 + `mutations` 12 + `run` 12 + `tuning` 6 + `telemetry` 7 + `theme` 3）。
+- 生产构建浏览器冒烟：**90–91/91 通过**（部分事件分支随机触发），无 console/page error。
 - 冒烟覆盖：7 房逐房推进、每房配额与敌人、精英领袖必出、精英房四选一、精英房保底突变且只能装 1 条、BOSS 三阶段切换、第三阶段封印、击杀 BOSS 结算 7/7、动态图鉴、9 组合名称、重开重置、死亡失败、手机流程。
 - 真实 Chrome（硬件 WebGL，headed）：房间 1（19 敌人 + 5 处火焰地面）**59.3fps**；BOSS 第三阶段（11 发扇形弹幕 + 召唤物）**60.3fps**；音频上下文 `running`。
 - 部署体积：`dist` 约 1.8MB；`public/assets` 约 460KB。
@@ -92,6 +92,12 @@ npm run dev
 - [精英房四选一](screenshots/m3a-elite-reward-desktop.png)
 - [胜利结算](screenshots/m3a-victory-desktop.png)
 - [手机战斗](screenshots/m3a-combat-mobile.png)
+
+## 试玩记录
+
+每局结束会把结果写入 localStorage（最近 20 局），结算页显示「累计 N 局 · 通关数 · 最快用时 · 最常构筑」。这些记录用于后续调优，不需要账号或后端。
+
+自动试玩机器人：`BASE_URL=http://127.0.0.1:4177 node scripts/autoplay.mjs`，会完整打一局并把逐房数据写到 `docs/autoplay-last.json`。
 
 ## 控制
 

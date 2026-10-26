@@ -149,6 +149,8 @@ export interface RunEndPayload {
   levelSum: number;
   roomsCleared: number;
   roomsTotal: number;
+  mutation: string | null;
+  maxHp: number;
 }
 
 const PLAYER_MAX_HP = 100;
@@ -3471,7 +3473,9 @@ export class M0Scene extends Phaser.Scene {
       combo: getBuildCombo(this.build).name,
       levelSum: buildLevelSum(this.build),
       roomsCleared: victory ? this.stepTotal : this.stepIndex,
-      roomsTotal: this.stepTotal
+      roomsTotal: this.stepTotal,
+      mutation: this.mutation.id ? MUTATIONS[this.mutation.id].name : null,
+      maxHp: this.maxHp
     } satisfies RunEndPayload);
   }
 
