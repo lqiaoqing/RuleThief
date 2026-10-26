@@ -2,63 +2,56 @@
   {
     "run": 1,
     "result": "规则耗尽",
-    "rooms": "9 / 13",
-    "time": "05:53",
-    "seconds": 360,
+    "rooms": "8 / 13",
+    "time": "06:24",
+    "seconds": 390,
     "roomLog": [
       {
         "room": 1,
-        "seconds": 41,
+        "seconds": 48,
         "hpAtStart": 100,
-        "hpAtEnd": 46,
-        "kills": 10
+        "hpAtEnd": 76,
+        "kills": 12
       },
       {
         "room": 2,
-        "seconds": 52,
-        "hpAtStart": 91,
-        "hpAtEnd": 62,
-        "kills": 24
+        "seconds": 67,
+        "hpAtStart": 96,
+        "hpAtEnd": 98,
+        "kills": 30
       },
       {
         "room": 3,
-        "seconds": 45,
-        "hpAtStart": 62,
-        "hpAtEnd": 32,
-        "kills": 42
+        "seconds": 55,
+        "hpAtStart": 118,
+        "hpAtEnd": 122,
+        "kills": 52
       },
       {
         "room": 5,
-        "seconds": 49,
-        "hpAtStart": 52,
-        "hpAtEnd": 50,
-        "kills": 58
+        "seconds": 58,
+        "hpAtStart": 140,
+        "hpAtEnd": 92,
+        "kills": 72
       },
       {
         "room": 6,
-        "seconds": 50,
-        "hpAtStart": 95,
-        "hpAtEnd": 115,
-        "kills": 74
+        "seconds": 63,
+        "hpAtStart": 92,
+        "hpAtEnd": 112,
+        "kills": 92
       },
       {
         "room": 8,
-        "seconds": 44,
-        "hpAtStart": 135,
-        "hpAtEnd": 140,
-        "kills": 90
-      },
-      {
-        "room": 9,
-        "seconds": 49,
-        "hpAtStart": 140,
-        "hpAtEnd": 22,
-        "kills": 102
+        "seconds": 57,
+        "hpAtStart": 112,
+        "hpAtEnd": 96,
+        "kills": 112
       }
     ],
-    "picks": 7,
+    "picks": 6,
     "eventsSeen": [
-      "FORGOTTEN IDOL:B",
+      "BLOOD ALTAR:A",
       "UNSTABLE LAB:A"
     ],
     "errors": []

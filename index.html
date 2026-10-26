@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05080f" />
-    <meta name="description" content="规则掠夺者 RULE THIEF · M3 敌人与精英切片：6 种敌人、2 个精英、6 个房间。" />
-    <title>规则掠夺者 RULE THIEF · M3 敌人与精英切片</title>
+    <meta name="description" content="规则掠夺者 RULE THIEF · 单人肉鸽动作：6 种敌人、2 个精英、4 种事件、三阶段 BOSS，单局 13 步。" />
+    <title>规则掠夺者 RULE THIEF · 13 步肉鸽行动</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="preload" as="image" href="./assets/art/menu-key.webp" />
   </head>
@@ -134,7 +134,7 @@
               </div>
 
               <div class="run-actions">
-                <div class="style-badge">M3<br />BOSS</div>
+                <div class="style-badge">13<br />STEP</div>
                 <button class="icon-btn sound-btn" id="sound-btn" aria-label="静音" aria-pressed="false">
                   <svg class="sound-on"><use href="#i-sound" /></svg>
                   <svg class="sound-off" hidden><use href="#i-mute" /></svg>
@@ -199,7 +199,7 @@
 
             <div class="boss-watch">
               <span class="boss-dot"></span>
-              M3 SLICE <b>训练回廊</b>
+              FULL RUN <b>13 步行动</b>
             </div>
 
             <div class="rule-toast" id="rule-toast" hidden>
@@ -232,7 +232,7 @@
             <div class="brand-mark">RT</div>
             <div class="brand-copy">
               <b>RULE THIEF</b>
-              <small>M3 可玩切片 / 0.4</small>
+              <small>可玩版本 / v0.5</small>
             </div>
             <span class="brand-line"></span>
           </div>
@@ -292,7 +292,7 @@
           </section>
 
           <section class="panel notes-panel">
-            <div class="panel-head"><span>M3 验证</span><span class="panel-sub">QA</span></div>
+            <div class="panel-head"><span>当前验证</span><span class="panel-sub">QA</span></div>
             <ul class="check-list">
               <li><i></i>6 种敌人 + 2 精英 + 3 阶段 BOSS</li>
               <li><i></i>精英房领袖必出，四选一奖励</li>
@@ -302,7 +302,7 @@
           </section>
 
           <div class="sidebar-foot">
-            <span>M3 BUILD</span>
+            <span>BUILD v0.5</span>
             <b>BLENDER + PROCEDURAL</b>
           </div>
         </aside>
@@ -400,7 +400,7 @@
           <div class="result-emblem" id="result-emblem">
             <svg><use href="#i-crown" /></svg>
           </div>
-          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">M3 · RUN COMPLETE</span></div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> <span id="result-kicker">RUN COMPLETE</span></div>
           <h2 id="result-title">审判完成</h2>
           <p id="result-sub">你在训练回廊中完成了本局。</p>
           <div class="result-stats">
@@ -432,7 +432,7 @@
         <div class="menu-grid" aria-hidden="true"></div>
 
         <div class="menu-content">
-          <div class="eyebrow"><span class="eyebrow-dot"></span> M3 PLAYABLE / 0.4 · 2026</div>
+          <div class="eyebrow"><span class="eyebrow-dot"></span> PLAYABLE BUILD / v0.5 · 2026</div>
           <h1>
             <span class="title-cn">规则</span>
             <span class="title-cn title-accent">掠夺者</span>
@@ -443,26 +443,26 @@
             <em>让每一次命中，都改写战斗。</em>
           </p>
 
-          <div class="slice-chip"><span class="slice-dot"></span>M3 · 6 敌人 + 2 精英切片</div>
+          <div class="slice-chip"><span class="slice-dot"></span>13 步路线 · 10 场战斗 + 2 事件 + BOSS</div>
 
           <div class="stats-row">
-            <div class="stat"><b>03:00</b><span>本局目标</span></div>
-            <div class="stat"><b>2</b><span>可掠夺敌人</span></div>
+            <div class="stat"><b>13</b><span>路线步数</span></div>
+            <div class="stat"><b>6</b><span>可掠夺敌人</span></div>
             <div class="stat"><b>9</b><span>规则组合</span></div>
-            <div class="stat"><b>3</b><span>规则上限等级</span></div>
+            <div class="stat"><b>3</b><span>突变天赋</span></div>
           </div>
 
           <div class="menu-actions">
             <button class="primary" id="enter-btn">
               <span class="btn-ico"><svg><use href="#i-play" /></svg></span>
-              <span class="btn-copy"><b>进入训练回廊</b><small>M3 · 6 ROOM RUN</small></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>13-STEP RUN</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
             <button class="ghost" id="menu-note-btn">这是什么？</button>
           </div>
 
           <div class="menu-foot">
-            <span>M3 可玩切片 · 非最终画面</span>
+            <span>可玩版本 v0.5 · 非最终画面</span>
             <span class="menu-foot-line"></span>
             <span>BLENDER + PROCEDURAL ASSETS</span>
           </div>
@@ -499,7 +499,7 @@
 
         <div class="menu-status">
           <span class="status-dot"></span>
-          M3 · 6 敌人 2 精英 · 竖屏 / 横屏双端适配
+          13 步 · 6 敌人 2 精英 4 事件 · 竖屏 / 横屏双端适配
         </div>
 
         <div class="note-modal" id="note-modal" hidden>
@@ -508,20 +508,21 @@
               <svg><use href="#i-close" /></svg>
             </button>
             <div class="eyebrow"><span class="eyebrow-dot"></span> WHAT IS THIS</div>
-            <h2>M3 敌人与精英切片</h2>
+            <h2>一局怎么玩</h2>
             <p>
-              3 分钟生存训练。击败敌人掠夺规则碎片，每 15 次击杀开启「规则祭坛」三选一：新规则装备、重复规则升级、同槽不同规则替换。3 条弹道 × 3 条命中 = 9 种组合，全部可玩。
+              走完 13 步路线：10 场战斗、2 个随机事件、最多 2 位精英，最后挑战规则审判者。清空房间后三选一，规则只来自本房真实敌人；精英房四选一并保底一张突变。
             </p>
             <ul class="note-list">
-              <li><b>目标</b>在训练回廊生存 03:00，把构筑推到等级 6 / 6</li>
+              <li><b>目标</b>在第 9 / 12 步挑战精英，击穿三阶段 BOSS，结算显示 13 / 13</li>
               <li><b>弹道</b>贯穿沿线穿击、弹射目标间跳跃、散射扇形多发</li>
               <li><b>命中</b>燃烧持续掉血、冰霜减速、爆裂范围引爆</li>
+              <li><b>突变</b>过载核心 / 疾行强化 / 绝境斗志，每局最多 1 条</li>
+              <li><b>事件</b>血色祭坛、不稳定实验、遗忘神像、诅咒宝箱，每局遇到 2 种</li>
               <li><b>限制</b>单次攻击最多结算 3 次命中效果，持续与爆炸不会再触发规则</li>
-              <li><b>操作</b>WASD / 摇杆移动，Space / 按钮闪避，1 · 2 · 3 选择祭坛卡片</li>
-              <li><b>音频</b>WebAudio 程序化音效与环境音，可随时静音</li>
+              <li><b>操作</b>WASD / 摇杆移动，Space / 按钮闪避，1–4 选择奖励，Esc 暂停查看构筑</li>
             </ul>
             <button class="primary compact" id="note-enter-btn">
-              <span class="btn-copy"><b>进入训练回廊</b><small>M3 · 6 ROOM RUN</small></span>
+              <span class="btn-copy"><b>进入训练回廊</b><small>13-STEP RUN</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
           </div>

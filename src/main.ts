@@ -186,7 +186,7 @@ function showResult(payload: RunEndPayload): void {
   resultScreen.classList.toggle('is-victory', payload.victory);
   resultScreen.classList.toggle('is-defeat', !payload.victory);
   resultEmblemUse?.setAttribute('href', payload.victory ? '#i-crown' : '#i-skull');
-  resultKicker.textContent = payload.victory ? 'M3 · RUN COMPLETE' : 'M3 · RUN ENDED';
+  resultKicker.textContent = payload.victory ? 'RUN COMPLETE' : 'RUN ENDED';
   resultTitle.textContent = payload.victory ? '审判完成' : '规则耗尽';
   resultSub.textContent = payload.victory
     ? '你走完了整条路线，击穿精英，并把规则审判者送回了审判席。'
