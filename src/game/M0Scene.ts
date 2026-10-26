@@ -266,6 +266,7 @@ export class M0Scene extends Phaser.Scene {
   private pendingBonusCards = 0;
   private pendingBonusElite = false;
   private sealSlot: 'trajectory' | 'impact' | null = null;
+  private sealZone: { x: number; y: number; radius: number; time: number } | null = null;
   private sealTime = 0;
   private bossAttackCd = 0;
   private bossChargeCd = 0;
@@ -1159,6 +1160,9 @@ export class M0Scene extends Phaser.Scene {
       bossHp: this.bossRef ? Math.round(this.bossRef.hp) : 0,
       sealSlot: this.sealSlot,
       sealTime: this.sealTime,
+      sealZone: this.sealZone
+        ? { x: Math.round(this.sealZone.x), y: Math.round(this.sealZone.y), radius: this.sealZone.radius }
+        : null,
       eliteAlive: this.enemies.filter((enemy) => enemy.elite && !enemy.dead).length,
       enemyCounts: this.enemies.reduce<Record<string, number>>((acc, enemy) => {
         acc[enemy.kind] = (acc[enemy.kind] ?? 0) + 1;
@@ -1210,6 +1214,7 @@ export class M0Scene extends Phaser.Scene {
     for (const key of DAMAGE_SOURCES) this.damageTaken[key] = 0;
     this.sealSlot = null;
     this.sealTime = 0;
+    this.sealZone = null;
     this.bossRef = null;
     this.bossPhase = 0;
     this.playerSprite?.clearTint();
@@ -3165,6 +3170,7 @@ export class M0Scene extends Phaser.Scene {
     const x = this.playerRoot.x;
     const y = this.playerRoot.y;
     const radius = 96;
+    this.sealZone = { x, y, radius, time: 1.15 };
     const ring = this.add
       .circle(x, y, radius, 0x8d6a39, 0.12)
       .setStrokeStyle(2.5, COLORS.gold, 0.75)
@@ -3193,6 +3199,7 @@ export class M0Scene extends Phaser.Scene {
         radius + PLAYER_RADIUS * 0.5;
       ring.destroy();
       inner.destroy();
+      this.sealZone = null;
       if (hit) this.sealRandomRule();
     });
   }

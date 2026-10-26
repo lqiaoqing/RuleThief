@@ -225,6 +225,46 @@ try {
   });
   await sleep(200);
 
+  // elite behaviours: sunder double charge, thunder three-bolt fan
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
+  await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
+  const playerAt = await snapshot(page);
+  await page.evaluate(
+    (pos) => window.__RT_SPAWN_AT__?.('sunder', pos.x + 150, pos.y),
+    { x: Number(playerAt.playerX), y: Number(playerAt.playerY) }
+  );
+  let chargeCount = 0;
+  let wasCharging = false;
+  for (let tick = 0; tick < 90; tick += 1) {
+    const sample = await snapshot(page);
+    const sunder = (sample.enemyList ?? []).find((enemy) => enemy.kind === 'sunder');
+    if (sunder?.charging && !wasCharging) chargeCount += 1;
+    wasCharging = Boolean(sunder?.charging);
+    if (chargeCount >= 2) break;
+    await page.evaluate(() => window.__RT_HEAL__?.(25));
+    await sleep(80);
+  }
+  check('sunder elite charges twice in a row', chargeCount >= 2, String(chargeCount));
+  await page.evaluate(() => window.__RT_KILL_ALL__?.());
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
+
+  const playerAt2 = await snapshot(page);
+  await page.evaluate(
+    (pos) => window.__RT_SPAWN_AT__?.('thunder', pos.x + 320, pos.y),
+    { x: Number(playerAt2.playerX), y: Number(playerAt2.playerY) }
+  );
+  let maxBolts = 0;
+  for (let tick = 0; tick < 80; tick += 1) {
+    const sample = await snapshot(page);
+    maxBolts = Math.max(maxBolts, Number(sample.enemyBolts));
+    if (maxBolts >= 3) break;
+    await page.evaluate(() => window.__RT_HEAL__?.(25));
+    await sleep(80);
+  }
+  check('thunder elite fires a three-bolt fan', maxBolts >= 3, String(maxBolts));
+  await page.evaluate(() => window.__RT_KILL_ALL__?.());
+  await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
+
   // keep the quota from being reached while probing combat rules
   await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
   await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'blast', 3, 3));
@@ -360,6 +400,7 @@ try {
   let pendingSpeedRisk = false;
   let pendingCurse = false;
   let roomsEntered = 1;
+  let supportChecked = false;
   let bossPreview = null;
 
   for (let guard = 0; guard < 40; guard += 1) {
@@ -453,6 +494,35 @@ try {
           reward.cards.length === 3 + (curse ? 1 : 0),
           JSON.stringify({ cards: reward.cards.length, curse })
         );
+      }
+      if (!supportChecked) {
+        const supportIndex = reward.cards.findIndex((card) => card.kind === 'support');
+        if (supportIndex >= 0) {
+          supportChecked = true;
+          const statsBefore = await snapshot(page);
+          await page.evaluate(
+            (slot) => document.querySelectorAll('#rule-offers .rule-card')[slot]?.click(),
+            supportIndex
+          );
+          await sleep(420);
+          const statsAfter = await snapshot(page);
+          const changed =
+            Number(statsAfter.maxHp) !== Number(statsBefore.maxHp) ||
+            Number(statsAfter.hp) !== Number(statsBefore.hp) ||
+            Math.abs(Number(statsAfter.moveSpeed) - Number(statsBefore.moveSpeed)) > 0.01 ||
+            Math.abs(Number(statsAfter.dashCdMax) - Number(statsBefore.dashCdMax)) > 0.01;
+          check(
+            'support reward applies a stat change',
+            changed,
+            JSON.stringify({
+              hp: [statsBefore.hp, statsAfter.hp],
+              maxHp: [statsBefore.maxHp, statsAfter.maxHp],
+              speed: [statsBefore.moveSpeed, statsAfter.moveSpeed],
+              dashCd: [statsBefore.dashCdMax, statsAfter.dashCdMax]
+            })
+          );
+          continue;
+        }
       }
       await page.evaluate(() => document.querySelector('#rule-offers .rule-card')?.click());
       await sleep(400);
@@ -548,8 +618,67 @@ try {
   bossState = await snapshot(page);
   check('boss enters phase 3 below 35%', bossState.bossPhase === 3, JSON.stringify({ phase: bossState.bossPhase, hp: bossState.bossHp }));
 
+  await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
   const sealSeen = await poll(page, () => Boolean(window.__RT_SNAPSHOT__?.().sealSlot), 9000);
   check('phase 3 telegraphs and seals a rule', sealSeen);
+  if (sealSeen) {
+    const sealed = await snapshot(page);
+    check(
+      'sealed rule is disabled for about four seconds',
+      Number(sealed.sealTime) > 2 && Number(sealed.sealTime) <= 4.2,
+      String(sealed.sealTime)
+    );
+    const released = await poll(page, () => !window.__RT_SNAPSHOT__?.().sealSlot, 7000);
+    check('sealed rule is restored automatically', released);
+
+    // second seal: walk out of the telegraph and stay unsealed
+    let zone = null;
+    for (let tick = 0; tick < 90; tick += 1) {
+      await page.evaluate(() => window.__RT_HEAL__?.(40));
+      const sample = await snapshot(page);
+      if (sample.sealZone) {
+        zone = sample.sealZone;
+        break;
+      }
+      await sleep(160);
+    }
+    check('boss telegraphs the next seal zone', Boolean(zone), JSON.stringify(zone));
+    if (zone) {
+      const current = await snapshot(page);
+      const dx = Number(current.playerX) - Number(zone.x);
+      const dy = Number(current.playerY) - Number(zone.y);
+      const key =
+        Math.abs(dx) < 5 && Math.abs(dy) < 5
+          ? 'KeyD'
+          : Math.abs(dx) > Math.abs(dy)
+            ? dx >= 0
+              ? 'KeyD'
+              : 'KeyA'
+            : dy >= 0
+              ? 'KeyS'
+              : 'KeyW';
+      await page.keyboard.down(key);
+      await sleep(1500);
+      await page.keyboard.up(key);
+      const dodged = await snapshot(page);
+      const distanceFromZone = Math.hypot(
+        Number(dodged.playerX) - Number(zone.x),
+        Number(dodged.playerY) - Number(zone.y)
+      );
+      check(
+        'avoiding the seal zone prevents the seal',
+        !dodged.sealSlot &&
+          distanceFromZone > Number(zone.radius) + 20 &&
+          Number(dodged.bossHp) > 0,
+        JSON.stringify({
+          zone,
+          sealSlot: dodged.sealSlot,
+          distance: Math.round(distanceFromZone),
+          bossHp: dodged.bossHp
+        })
+      );
+    }
+  }
 
   await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(900));
   await page.waitForFunction(() => !document.getElementById('result-screen')?.hidden, { timeout: 9000 });

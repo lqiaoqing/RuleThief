@@ -15,13 +15,13 @@
 | 弹射不重复选取已命中目标 | 自动 | `rules.test.ts` `selectChainTargets` 去重 |
 | 冰霜减速有上限 | 自动 | `rules.test.ts` `mergeFrost` 0.8 上限 |
 | 6 种敌人，各自携带一条规则 | 自动 | `rooms.test.ts` 敌人→规则 1:1；冒烟各敌人可生成 |
-| 2 个精英（双冲锋 / 三连雷击） | 自动 | 冒烟「elite room N spawns its elite leader」；截图 |
+| 2 个精英（双冲锋 / 三连雷击） | 自动 | 冒烟行为断言：裂甲精英连续进入冲锋 2 次、雷暴精英一次施法打出 3 发弹；截图 |
 | 3 条突变，每局最多 1 条 | 自动 | `mutations.test.ts` 12 项；冒烟精英房突变卡数量断言 |
 | 4 种随机事件，每局 2 种 | 自动 | `run.test.ts` 事件数量/唯一性；冒烟「run visited two events」「visited events are distinct」 |
 | 跨房修饰只影响下一房 | 自动 | 冒烟「event speed modifier applies to the next room only」+「room N has no leftover speed modifier」 |
 | 诅咒宝箱：额外精英 + 额外奖励 | 自动 | 冒烟「curse chest adds an extra elite」 |
 | 三阶段 BOSS（70% / 35%） | 自动 | 冒烟 phase 1/2/3 断言 + BOSS 血条截图 |
-| 第三阶段规则封印 4 秒、可躲、自动恢复 | 自动 | 冒烟「phase 3 telegraphs and seals a rule」+ 截图 |
+| 第三阶段规则封印 4 秒、可躲、自动恢复 | 自动 | 冒烟：站桩被封印（sealTime 3.9s）→ 自动解封；第二道预警时走出圈（位移 283 > 半径 96+20）不再被封印 |
 | BOSS 召唤物正确清理 | 自动 | `onBossDefeated` 清场；冒烟击杀后结算 |
 | 房间预览敌人类型 | 自动 | 冒烟「boss preview lists the arbiter」「room N preview lists enemies」 |
 | 清场三选一 / 精英四选一 | 自动 | 冒烟「room N opens rewards」「elite room N offers four rewards」 |
@@ -42,7 +42,7 @@
 | 组合 | 散射+冰霜方向正确、不无限减速 | 自动 | `rules.test.ts` 角度对称 + 减速上限 |
 | 规则 | 9 组合生效、等级、替换、满级 | 自动 | `rules.test.ts` + 冒烟 |
 | 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕；图鉴跟随房间 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
-| 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟 `room N offers three cards` / `elite room N offers four cards and a guaranteed mutation` |
+| 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化生效 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟卡数与突变断言、`support reward applies a stat change`（生命 47→67、上限 100→120） |
 | 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts` + 冒烟 |
 | 突变 | 3 种；每局最多 1；精英保底 | 自动 | `mutations.test.ts`；冒烟 `elite room N spawns its leader immediately` + 突变卡数量 |
 | BOSS | 3 阶段阈值；封印 4s 可躲可恢复；召唤物清理 | 自动 | 冒烟：phase 2 召唤 3 个杂兵、击杀 BOSS 后场上归零；封印预警截图 |
@@ -63,7 +63,7 @@
 npm test                       83/83 通过
 npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 143/143 通过，无 console/page error
+npm run smoke                 150/150 通过，无 console/page error
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.7 / 55.7 / 41.0 fps（30 敌人）
 scripts/autoplay.mjs           9/13，6:00，102 杀（机器人只做风筝走位）
