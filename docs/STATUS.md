@@ -41,6 +41,7 @@ BASE_URL=http://127.0.0.1:4177 npm run lowend    # CPU 节流 57/55.7/43.7 fps
 BASE_URL=http://127.0.0.1:4177 node scripts/stress.mjs      # 40 敌 57fps
 BASE_URL=http://127.0.0.1:4177 node scripts/autoplay.mjs    # 机器人完整一局
 BASE_URL=http://127.0.0.1:4177 node scripts/combo-bench.mjs # 9 组合 DPS
+BASE_URL=http://127.0.0.1:4177 npm run soak                    # 8 分钟浸泡（堆/监听器/帧率）
 ```
 
 条款到证据的完整映射见 [ACCEPTANCE.md](./ACCEPTANCE.md)。
@@ -50,7 +51,7 @@ BASE_URL=http://127.0.0.1:4177 node scripts/combo-bench.mjs # 9 组合 DPS
 | 项目 | 为什么必须人工 | 现状 |
 | --- | --- | --- |
 | 5–10 人真人试玩 | 手感、构筑差异、死亡归因的可理解性 | 协议与导出方式见 [PLAYTEST.md](./PLAYTEST.md) |
-| 真机触控 / 发热 / 长时运行 | 真实设备与热降频 | 已有 CPU ×6 节流近似（43.7fps） |
+| 真机触控 / 发热 / 长时运行 | 真实设备与热降频 | 已有 CPU ×6 节流（43.7fps）与 8 分钟浸泡（无泄漏、60fps）近似 |
 | 手机多点触控的真实手感 | CDP 双触点只能验证逻辑 | 逻辑已验证 |
 
 ## 5. 建议的下一步（按优先级）

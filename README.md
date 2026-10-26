@@ -131,6 +131,7 @@ BASE_URL=http://127.0.0.1:4177 npm run smoke
 BASE_URL=http://127.0.0.1:4177 npm run shot
 BASE_URL=http://127.0.0.1:4177 node scripts/perf.mjs
 BASE_URL=http://127.0.0.1:4177 npm run lowend    # CPU 节流模拟低端机
+BASE_URL=http://127.0.0.1:4177 npm run soak      # 8 分钟浸泡（内存/监听器/帧率）
 BASE_URL=http://127.0.0.1:4177 npm run verify   # 静态资源完整性
 ```
 
