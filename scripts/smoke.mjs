@@ -30,6 +30,7 @@ function check(name, ok, detail = '') {
 async function newPage(browser, viewport) {
   const page = await browser.newPage();
   await page.setViewport(viewport);
+  await page.bringToFront();
   page.setDefaultNavigationTimeout(30_000);
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
@@ -1631,6 +1632,19 @@ try {
     'swift feather opens a post-dash speed window',
     Number(featherState.featherTime) > 0,
     String(featherState.featherTime)
+  );
+  await relicPage.hover('#relic-line');
+  await sleep(100);
+  const relicTip = await relicPage.evaluate(() => ({
+    hidden: document.getElementById('item-tip')?.hidden,
+    text: document.getElementById('item-tip')?.textContent ?? ''
+  }));
+  check(
+    'relic tooltip shows the full description on hover',
+    relicTip.hidden === false &&
+      /雷鸣徽章/.test(relicTip.text) &&
+      /单次攻击命中 2 个以上目标/.test(relicTip.text),
+    JSON.stringify(relicTip)
   );
   await relicPage.evaluate(() => {
     window.__RT_SPAWN_AT__?.('beetle', 400, 300);

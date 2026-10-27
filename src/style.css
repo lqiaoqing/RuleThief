@@ -2362,3 +2362,26 @@ kbd {
 .rule-card.action-late {
   border-color: rgba(182, 155, 255, 0.4);
 }
+
+.item-tip {
+  position: fixed;
+  z-index: 95;
+  max-width: min(360px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid rgba(101, 220, 240, 0.35);
+  border-radius: 8px;
+  background: rgba(5, 12, 22, 0.97);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  color: #9fb4c9;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+.item-tip b {
+  display: block;
+  margin-bottom: 4px;
+  color: #f2f7ff;
+  font-size: 12px;
+}

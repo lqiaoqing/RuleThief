@@ -599,7 +599,7 @@ export class M0Scene extends Phaser.Scene {
       const [id] = pool.splice(combatInt(0, pool.length - 1), 1);
       if (id) this.relics.push(id);
     }
-    setRelics(this.relics.map((id) => RELICS[id].name));
+    setRelics(this.relics.map((id) => RELICS[id]));
     showRuleToast(
       'chain',
       '继承构筑',
@@ -813,7 +813,7 @@ export class M0Scene extends Phaser.Scene {
         if (available.length > 0 && this.relics.length < MAX_RELICS) {
           const id = available[combatInt(0, available.length - 1)];
           this.relics.push(id);
-          setRelics(this.relics.map((relicId) => RELICS[relicId].name));
+          setRelics(this.relics.map((relicId) => RELICS[relicId]));
           showRuleToast('chain', `虚空遗物 · ${RELICS[id].name}`, RELICS[id].description);
         } else {
           this.hp = Math.min(this.maxHp, this.hp + effect.heal);
@@ -906,7 +906,7 @@ export class M0Scene extends Phaser.Scene {
   public debugGrantRelic(id: RelicId): void {
     if (this.relics.includes(id) || this.relics.length >= MAX_RELICS) return;
     this.relics.push(id);
-    setRelics(this.relics.map((relicId) => RELICS[relicId].name));
+    setRelics(this.relics.map((relicId) => RELICS[relicId]));
   }
 
   public debugAscendRule(key: RuleKey): void {
@@ -923,7 +923,7 @@ export class M0Scene extends Phaser.Scene {
       return;
     }
     this.lateUpgrades.push(id);
-    setLate(this.lateUpgrades.map((lateId) => LATE_UPGRADES[lateId].name));
+    setLate(this.lateUpgrades.map((lateId) => LATE_UPGRADES[lateId]));
   }
 
   private openChapterReward(): void {
@@ -1167,7 +1167,7 @@ export class M0Scene extends Phaser.Scene {
     } else if (reward.kind === 'relic') {
       if (!this.relics.includes(reward.relic.id) && this.relics.length < MAX_RELICS) {
         this.relics.push(reward.relic.id);
-        setRelics(this.relics.map((id) => RELICS[id].name));
+        setRelics(this.relics.map((id) => RELICS[id]));
         audio.play('rule');
         showRuleToast('chain', `遗物 · ${reward.relic.name}`, reward.relic.description);
       }
@@ -1184,7 +1184,7 @@ export class M0Scene extends Phaser.Scene {
         this.lateUpgrades.length < MAX_LATE_UPGRADES
       ) {
         this.lateUpgrades.push(reward.upgrade.id);
-        setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id].name));
+        setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
         audio.play('rule');
         showRuleToast('chain', `高阶强化 · ${reward.upgrade.name}`, reward.upgrade.description);
       }

@@ -9,6 +9,8 @@ import {
 } from '../game/rules';
 import { ENEMY_SPECS, type EnemyKind } from '../game/rooms';
 import type { MutationDef } from '../game/mutations';
+import type { RelicDef } from '../game/relics';
+import type { LateUpgradeDef } from '../game/lateUpgrades';
 import { formatTime } from '../game/theme';
 
 export type RuleToastKind = RuleKey | 'heal';
@@ -97,6 +99,59 @@ const relicNames = byId<HTMLElement>('relic-names');
 const lateLine = byId<HTMLElement>('late-line');
 const lateCount = byId<HTMLElement>('late-count');
 const lateNames = byId<HTMLElement>('late-names');
+const itemTip = byId<HTMLElement>('item-tip');
+
+interface ItemTipData {
+  title: string;
+  lines: string[];
+}
+
+function showItemTip(anchor: HTMLElement, data: ItemTipData): void {
+  itemTip.textContent = '';
+  const title = document.createElement('b');
+  title.textContent = data.title;
+  itemTip.append(title);
+  for (const line of data.lines) {
+    const row = document.createElement('span');
+    row.textContent = line;
+    itemTip.append(row);
+  }
+  itemTip.hidden = false;
+  const rect = anchor.getBoundingClientRect();
+  const tipRect = itemTip.getBoundingClientRect();
+  const left = Math.max(8, Math.min(window.innerWidth - tipRect.width - 8, rect.left));
+  const below = rect.bottom + 8;
+  const top =
+    below + tipRect.height <= window.innerHeight - 8
+      ? below
+      : Math.max(8, rect.top - tipRect.height - 8);
+  itemTip.style.left = `${left}px`;
+  itemTip.style.top = `${top}px`;
+}
+
+function hideItemTip(): void {
+  itemTip.hidden = true;
+}
+
+function bindItemTip(anchor: HTMLElement, getData: () => ItemTipData | null): void {
+  anchor.tabIndex = 0;
+  const show = () => {
+    const data = getData();
+    if (data) showItemTip(anchor, data);
+  };
+  anchor.onmouseenter = show;
+  anchor.onfocus = show;
+  anchor.onmouseleave = hideItemTip;
+  anchor.onblur = hideItemTip;
+  anchor.onclick = (event) => {
+    event.preventDefault();
+    if (itemTip.hidden) {
+      show();
+    } else {
+      hideItemTip();
+    }
+  };
+}
 
 const PHASE_LABELS = ['秩序', '混乱', '规则剥夺'];
 const PHASE_NUMERALS = ['I', 'II', 'III'];
@@ -120,22 +175,50 @@ export function setBossBar(
 
 export function setMutation(def: MutationDef | null): void {
   mutationLine.hidden = !def;
+  bindItemTip(mutationLine, () =>
+    def
+      ? {
+          title: `突变 · ${def.name}`,
+          lines: [def.description, def.detail]
+        }
+      : null
+  );
   if (!def) return;
   mutationName.textContent = def.name;
   mutationLine.style.setProperty('--mutation-color', def.color);
   mutationIcon.setAttribute('href', def.icon);
 }
 
-export function setRelics(names: readonly string[]): void {
-  relicLine.hidden = names.length === 0;
-  relicCount.textContent = `${names.length} / 2`;
-  relicNames.textContent = names.length ? names.join(' · ') : '—';
+export function setRelics(relics: readonly RelicDef[]): void {
+  relicLine.hidden = relics.length === 0;
+  relicCount.textContent = `${relics.length} / 2`;
+  relicNames.textContent = relics.length ? relics.map((relic) => relic.name).join(' · ') : '—';
+  bindItemTip(relicLine, () =>
+    relics.length
+      ? {
+          title: `遗物 · ${relics.map((relic) => relic.name).join(' / ')}`,
+          lines: relics.map((relic) => `${relic.name}：${relic.description}\n${relic.detail}`)
+        }
+      : null
+  );
 }
 
-export function setLate(names: readonly string[]): void {
-  lateLine.hidden = names.length === 0;
-  lateCount.textContent = `${names.length} / 2`;
-  lateNames.textContent = names.length ? names.join(' · ') : '—';
+export function setLate(upgrades: readonly LateUpgradeDef[]): void {
+  lateLine.hidden = upgrades.length === 0;
+  lateCount.textContent = `${upgrades.length} / 2`;
+  lateNames.textContent = upgrades.length
+    ? upgrades.map((upgrade) => upgrade.name).join(' · ')
+    : '—';
+  bindItemTip(lateLine, () =>
+    upgrades.length
+      ? {
+          title: `高阶强化 · ${upgrades.map((upgrade) => upgrade.name).join(' / ')}`,
+          lines: upgrades.map(
+            (upgrade) => `${upgrade.name}：${upgrade.description}\n${upgrade.detail}`
+          )
+        }
+      : null
+  );
 }
 
 export function setSealedRule(slot: 'trajectory' | 'impact' | null, visible: boolean): void {
