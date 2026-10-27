@@ -73,6 +73,8 @@ describe('meta progression', () => {
     expect(first.state.runs).toBe(1);
     expect(first.state.victories).toBe(1);
     expect(first.state.chaptersCleared).toBe(2);
+    expect(first.state.maxMutator).toBe(1);
+    expect(first.newMutator).toBe(1);
     expect(first.unlocked).toContain('first-run');
     expect(first.unlocked).toContain('chapter-one');
     expect(first.unlocked).toContain('two-chapters');
@@ -82,6 +84,22 @@ describe('meta progression', () => {
     const second = applyRunToMeta(first.state, fullRun);
     expect(second.unlocked).toEqual([]);
     expect(second.state.shards).toBe(130);
+  });
+
+  it('scales shards with mutator level and records daily clears', () => {
+    const base = shardsForRun(fullRun);
+    expect(shardsForRun({ ...fullRun, mutatorLevel: 5 })).toBe(base * 2);
+    const daily = applyRunToMeta(defaultMeta(), {
+      ...fullRun,
+      mutatorLevel: 5,
+      daily: true,
+      date: '2026-10-27'
+    });
+    expect(daily.state.dailyBest).toBe('2026-10-27');
+    expect(daily.state.maxMutator).toBe(5);
+    expect(daily.unlocked).toContain('mutator-iii');
+    expect(daily.unlocked).toContain('mutator-v');
+    expect(daily.unlocked).toContain('daily-clear');
   });
 
   it('unlocks paid content only when the shard cost is met', () => {

@@ -421,10 +421,13 @@
             <div><b id="meta-runs">0</b><span>完成局数</span></div>
             <div><b id="meta-victories">0</b><span>通关次数</span></div>
           </div>
+          <div class="meta-mutators" id="meta-mutators"></div>
+          <div class="meta-daily" id="meta-daily">每日挑战 · 未完成</div>
           <div class="meta-unlocks" id="meta-unlocks"></div>
           <div class="meta-achievements" id="meta-achievements"></div>
           <div class="altar-foot">
             <span>先闭环再扩充：碎片 → 解锁 → 下一局奖励池变化。</span>
+            <button class="ghost compact" id="meta-daily-btn">每日挑战</button>
             <button class="ghost compact" id="meta-close-btn">返回</button>
           </div>
         </div>
@@ -458,6 +461,7 @@
           </div>
           <div class="result-record" id="result-record">本局已记录</div>
           <div class="result-shards" id="result-shards">法则碎片 · 0</div>
+          <div class="result-mutation" id="result-mode">模式 · 标准</div>
           <div class="result-mutation" id="result-mutation">突变 · 无</div>
           <div class="result-mutation" id="result-relics">遗物 · 无</div>
           <div class="result-damage" id="result-damage">承伤构成：—</div>
@@ -511,6 +515,7 @@
             </button>
             <button class="ghost" id="menu-note-btn">这是什么？</button>
             <button class="ghost" id="menu-meta-btn">法则图鉴</button>
+            <button class="ghost" id="menu-daily-btn">每日挑战</button>
           </div>
 
           <div class="menu-foot">

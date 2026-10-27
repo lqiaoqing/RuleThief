@@ -1,5 +1,6 @@
 import { ASCENSION_IDS, ASCENSIONS, type AscensionId } from './ascensions';
 import { RELIC_IDS, RELICS, type RelicId } from './relics';
+import { clampMutator, getMutator } from './mutators';
 
 export const META_KEY = 'rulethief.meta.v1';
 
@@ -9,6 +10,9 @@ export interface MetaState {
   runs: number;
   chaptersCleared: number;
   victories: number;
+  maxMutator: number;
+  selectedMutator: number;
+  dailyBest: string | null;
   unlockedRelics: RelicId[];
   unlockedAscensions: AscensionId[];
   achievements: string[];
@@ -23,6 +27,9 @@ export interface MetaRunInput {
   seconds: number;
   relics: string[];
   ascensions: string[];
+  mutatorLevel?: number;
+  daily?: boolean;
+  date?: string;
 }
 
 export interface UnlockDef {
@@ -37,6 +44,7 @@ export interface RunMetaResult {
   state: MetaState;
   gained: number;
   unlocked: string[];
+  newMutator: number | null;
 }
 
 export const ACHIEVEMENTS: Record<string, { name: string; description: string }> = {
@@ -45,7 +53,10 @@ export const ACHIEVEMENTS: Record<string, { name: string; description: string }>
   'two-chapters': { name: '工坊深处', description: '通关两个世界。' },
   'ascended': { name: '形态变化', description: '完成一次规则升阶。' },
   'two-relics': { name: '两手准备', description: '单局装备两件遗物。' },
-  'speedrun': { name: '二十分钟', description: '在 20 分钟内通关两个世界。' }
+  'speedrun': { name: '二十分钟', description: '在 20 分钟内通关两个世界。' },
+  'mutator-iii': { name: '审判升级', description: '在异变 III 或更高难度通关。' },
+  'mutator-v': { name: '终极禁令', description: '在异变 V 通关。' },
+  'daily-clear': { name: '今日法则', description: '完成一次每日种子挑战。' }
 };
 
 export const UNLOCKS: readonly UnlockDef[] = [
@@ -100,6 +111,9 @@ export function defaultMeta(): MetaState {
     runs: 0,
     chaptersCleared: 0,
     victories: 0,
+    maxMutator: 0,
+    selectedMutator: 0,
+    dailyBest: null,
     unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
     unlockedAscensions: ['thunder-domain'],
     achievements: []
@@ -127,6 +141,9 @@ function sanitize(value: unknown): MetaState {
     runs: Math.max(0, Math.floor(Number(source.runs) || 0)),
     chaptersCleared: Math.max(0, Math.floor(Number(source.chaptersCleared) || 0)),
     victories: Math.max(0, Math.floor(Number(source.victories) || 0)),
+    maxMutator: clampMutator(Number(source.maxMutator) || 0),
+    selectedMutator: clampMutator(Number(source.selectedMutator) || 0),
+    dailyBest: typeof source.dailyBest === 'string' ? source.dailyBest : null,
     unlockedRelics: [...new Set([...base.unlockedRelics, ...relics])],
     unlockedAscensions: [...new Set([...base.unlockedAscensions, ...ascensions])],
     achievements: [...new Set(achievements)]
@@ -168,7 +185,8 @@ export function shardsForRun(input: MetaRunInput): number {
   const depth = 15 * Math.max(0, clearedChapters);
   const victoryBonus = input.victory ? 20 : 0;
   const killBonus = Math.floor(Math.max(0, input.kills) / 10);
-  return depth + victoryBonus + killBonus;
+  const base = depth + victoryBonus + killBonus;
+  return Math.floor(base * getMutator(input.mutatorLevel ?? 0).shardBonus);
 }
 
 export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaResult {
@@ -176,12 +194,18 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
   const clearedChapters = input.victory
     ? input.chaptersTotal
     : input.chapterIndex + (input.stageOnly ? 1 : 0);
+  const mutatorLevel = clampMutator(input.mutatorLevel ?? 0);
   const next: MetaState = {
     ...state,
     shards: state.shards + gained,
     runs: state.runs + 1,
     chaptersCleared: Math.max(state.chaptersCleared, clearedChapters),
     victories: state.victories + (input.victory ? 1 : 0),
+    maxMutator: input.victory
+      ? Math.max(state.maxMutator, Math.min(5, mutatorLevel + 1))
+      : state.maxMutator,
+    dailyBest:
+      input.daily && input.victory && input.date ? input.date : state.dailyBest,
     unlockedRelics: [...state.unlockedRelics],
     unlockedAscensions: [...state.unlockedAscensions],
     achievements: [...state.achievements]
@@ -199,8 +223,16 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
   if (input.ascensions.length > 0) award('ascended');
   if (input.relics.length >= 2) award('two-relics');
   if (input.victory && input.seconds <= 20 * 60) award('speedrun');
+  if (input.victory && mutatorLevel >= 3) award('mutator-iii');
+  if (input.victory && mutatorLevel >= 5) award('mutator-v');
+  if (input.victory && input.daily) award('daily-clear');
 
-  return { state: next, gained, unlocked: newlyUnlocked };
+  return {
+    state: next,
+    gained,
+    unlocked: newlyUnlocked,
+    newMutator: next.maxMutator > state.maxMutator ? next.maxMutator : null
+  };
 }
 
 export function canUnlock(state: MetaState, unlock: UnlockDef): boolean {

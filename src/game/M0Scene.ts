@@ -41,6 +41,7 @@ import {
 } from './rules';
 import { RELICS, MAX_RELICS, RELIC_IDS, type RelicId } from './relics';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionId } from './ascensions';
+import { getMutator, clampMutator } from './mutators';
 import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
@@ -173,6 +174,8 @@ export interface RunEndPayload {
   chapterIndex: number;
   chaptersTotal: number;
   chapterName: string;
+  mutatorLevel: number;
+  mutatorName: string;
   mutation: string | null;
   relics: string[];
   ascensions: string[];
@@ -270,6 +273,7 @@ export class M0Scene extends Phaser.Scene {
   private build: PlayerBuild = createEmptyBuild();
   private acquired = new Set<RuleKey>();
   private relics: RelicId[] = [];
+  private mutatorLevel = 0;
   private unlockedRelics: RelicId[] = [...RELIC_IDS];
   private unlockedAscensions: AscensionId[] = [...ASCENSION_IDS];
   private chapterRewardOpen = false;
@@ -526,6 +530,7 @@ export class M0Scene extends Phaser.Scene {
         total,
         chapterIndex: this.chapterIndex,
         chapterTotal: CHAPTERS.length,
+        mutator: this.mutatorLevel > 0 ? `M${this.mutatorLevel}` : undefined,
         name: this.encounter.event.name,
         en: this.encounter.event.en,
         cleared: 0,
@@ -542,6 +547,7 @@ export class M0Scene extends Phaser.Scene {
       total,
       chapterIndex: this.chapterIndex,
       chapterTotal: CHAPTERS.length,
+      mutator: this.mutatorLevel > 0 ? `M${this.mutatorLevel}` : undefined,
       name: room.name,
       en: room.en,
       cleared: this.roomKills,
@@ -750,6 +756,10 @@ export class M0Scene extends Phaser.Scene {
     this.unlockedAscensions = [...ascensions];
   }
 
+  public setMutator(level: number): void {
+    this.mutatorLevel = clampMutator(level);
+  }
+
   private openChapterReward(): void {
     if (this.runState !== 'playing') return;
     this.chapterRewardOpen = true;
@@ -899,6 +909,19 @@ export class M0Scene extends Phaser.Scene {
         this.spawnLeaderBurst(ARENA - 150, 200);
         showRuleToast('blast', '诅咒宝箱', `额外出现 ${ENEMY_SPECS[kind].name} · 本房奖励 +1 张`);
       }
+    }
+    const mutator = getMutator(this.mutatorLevel);
+    if (
+      !room.elite &&
+      !room.boss &&
+      mutator.eliteChance > 0 &&
+      combatRandom() < mutator.eliteChance
+    ) {
+      const kinds: EnemyKind[] = ['sunder', 'thunder', 'seer'];
+      const kind = kinds[combatInt(0, kinds.length - 1)];
+      this.spawnEnemy(kind, ARENA - 160, 240, false);
+      this.spawnLeaderBurst(ARENA - 160, 240);
+      showRuleToast('blast', '异变 · 额外精英', `${ENEMY_SPECS[kind].name} 进入本房`);
     }
   }
 
@@ -1135,7 +1158,7 @@ export class M0Scene extends Phaser.Scene {
     const mutation = this.mutation.id ? MUTATIONS[this.mutation.id].name : '无';
     const lines = [
       `${this.chapter.name} · ${combo.name} · 等级 ${buildLevelSum(this.build)} / 6 · 突变 ${mutation}`,
-      `第 ${this.stepIndex + 1} / ${this.stepTotal} 步 · ${formatTime(this.elapsed)} · 击杀 ${this.kills} · 生命 ${Math.ceil(this.hp)} / ${this.maxHp}`
+      `异变 ${getMutator(this.mutatorLevel).name} · 第 ${this.stepIndex + 1} / ${this.stepTotal} 步 · ${formatTime(this.elapsed)} · 击杀 ${this.kills} · 生命 ${Math.ceil(this.hp)} / ${this.maxHp}`
     ];
     return lines.join(String.fromCharCode(10));
   }
@@ -1423,6 +1446,8 @@ export class M0Scene extends Phaser.Scene {
       chaptersTotal: CHAPTERS.length,
       chapterName: this.chapter.name,
       chapterTransitionOpen: this.chapterTransitionOpen,
+      mutatorLevel: this.mutatorLevel,
+      mutatorName: getMutator(this.mutatorLevel).name,
       encounterKind: this.encounter?.kind ?? null,
       roomKills: this.roomKills,
       roomQuota: this.getRoom().quota,
@@ -2809,6 +2834,9 @@ export class M0Scene extends Phaser.Scene {
     this.spawnedTotal += 1;
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
+    const mutator = getMutator(this.mutatorLevel);
+    const baseHp = spec.hp * (spec.boss ? mutator.bossHp : mutator.enemyHp);
+    const baseSpeed = spec.speed * mutator.enemySpeed;
     const hover =
       kind === 'bat' ||
       kind === 'wisp' ||
@@ -2911,10 +2939,10 @@ export class M0Scene extends Phaser.Scene {
       aura,
       warning,
       castRing,
-      hp: spec.hp,
-      maxHp: spec.hp,
+      hp: baseHp,
+      maxHp: baseHp,
       radius: spec.radius,
-      speed: spec.speed * this.roomSpeedMult,
+      speed: baseSpeed * this.roomSpeedMult,
       dead: false,
       state: startsCasting ? 'idle' : 'approach',
       stateTimer: 0,
@@ -2968,6 +2996,9 @@ export class M0Scene extends Phaser.Scene {
       this.updateEnemyStatuses(enemy, dt);
       if (enemy.dead) continue;
       enemy.contactCd = Math.max(0, enemy.contactCd - dt);
+      if (enemy.elite && this.mutatorLevel > 0) {
+        enemy.attackCd -= dt * 0.12 * this.mutatorLevel;
+      }
       switch (enemy.kind) {
         case 'beetle':
           this.updateBeetle(enemy, dt);
@@ -3644,7 +3675,11 @@ export class M0Scene extends Phaser.Scene {
 
     if (this.bossAttackCd <= 0) {
       this.bossAttackCd = phase >= 3 ? 1.7 : phase === 2 ? 2.05 : 2.5;
-      this.fireBossFan(enemy, phase >= 3 ? 7 : 5, phase >= 3 ? 1.15 : 0.85);
+      this.fireBossFan(
+        enemy,
+        (phase >= 3 ? 7 : 5) + (this.mutatorLevel >= 3 ? 2 : 0),
+        phase >= 3 ? 1.15 : 0.85
+      );
     }
     if (this.bossSummonCd <= 0) {
       this.bossSummonCd = 8;
@@ -3761,7 +3796,11 @@ export class M0Scene extends Phaser.Scene {
 
     if (this.bossAttackCd <= 0) {
       this.bossAttackCd = phase >= 3 ? 1.5 : phase === 2 ? 1.9 : 2.3;
-      this.fireBossFan(enemy, phase >= 3 ? 13 : phase === 2 ? 9 : 7, phase >= 3 ? 1.2 : 1.0);
+      this.fireBossFan(
+        enemy,
+        (phase >= 3 ? 13 : phase === 2 ? 9 : 7) + (this.mutatorLevel >= 3 ? 2 : 0),
+        phase >= 3 ? 1.2 : 1.0
+      );
       this.cameras.main.shake(80, 0.001);
     }
     if (phase >= 2 && this.bossSummonCd <= 0) {
@@ -3987,7 +4026,11 @@ export class M0Scene extends Phaser.Scene {
 
     if (this.bossAttackCd <= 0) {
       this.bossAttackCd = this.bossPhase >= 3 ? 1.55 : this.bossPhase === 2 ? 1.95 : 2.4;
-      this.fireBossFan(enemy, this.bossPhase >= 3 ? 11 : 9, 0.95);
+      this.fireBossFan(
+        enemy,
+        (this.bossPhase >= 3 ? 11 : 9) + (this.mutatorLevel >= 3 ? 2 : 0),
+        0.95
+      );
     }
 
     if (this.bossPhase >= 2 && this.bossChargeCd <= 0) {
@@ -4449,7 +4492,7 @@ export class M0Scene extends Phaser.Scene {
     this.roomHazardCd -= dt;
     if (this.roomHazardCd > 0) return;
     if (room.hazard === 'void-rift') {
-      this.roomHazardCd = 3.6;
+      this.roomHazardCd = 3.6 * getMutator(this.mutatorLevel).hazardInterval;
       this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 70, 1.1, COLORS.purple, 17);
       for (let i = 0; i < 2; i += 1) {
         this.spawnShockZone(
@@ -4463,7 +4506,7 @@ export class M0Scene extends Phaser.Scene {
       }
       return;
     }
-    this.roomHazardCd = 4.2;
+    this.roomHazardCd = 4.2 * getMutator(this.mutatorLevel).hazardInterval;
     this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 54, 0.95);
     for (let i = 0; i < 2; i += 1) {
       const x = combatInt(110, ARENA - 110);
@@ -4608,6 +4651,8 @@ export class M0Scene extends Phaser.Scene {
       chapterIndex: this.chapterIndex,
       chaptersTotal: CHAPTERS.length,
       chapterName: this.chapter.name,
+      mutatorLevel: this.mutatorLevel,
+      mutatorName: getMutator(this.mutatorLevel).name,
       mutation: this.mutation.id ? MUTATIONS[this.mutation.id].name : null,
       relics: this.relics.map((id) => RELICS[id].name),
       ascensions: [this.build.trajectory, this.build.impact]

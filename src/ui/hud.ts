@@ -176,6 +176,7 @@ export interface RoomProgress {
   total: number;
   chapterIndex?: number;
   chapterTotal?: number;
+  mutator?: string;
   name: string;
   en: string;
   cleared: number;
@@ -196,7 +197,8 @@ export function setRoomProgress(progress: RoomProgress): void {
     progress.chapterTotal && progress.chapterTotal > 1
       ? `W${(progress.chapterIndex ?? 0) + 1} · `
       : '';
-  objectiveRoom.textContent = `${chapterPrefix}ROOM ${progress.index} / ${progress.total}`;
+  const mutatorPrefix = progress.mutator ? `${progress.mutator} · ` : '';
+  objectiveRoom.textContent = `${mutatorPrefix}${chapterPrefix}ROOM ${progress.index} / ${progress.total}`;
   objectiveTime.textContent = `${progress.cleared} / ${progress.quota}`;
   survivalFill.style.width = `${Math.min(100, (progress.cleared / progress.quota) * 100)}%`;
   threatLevel.textContent = ROMAN[progress.index - 1] ?? String(progress.index);

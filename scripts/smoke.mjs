@@ -172,11 +172,18 @@ try {
     visible: !document.getElementById('meta-screen')?.hidden,
     shards: document.getElementById('meta-shards')?.textContent,
     unlocks: document.querySelectorAll('#meta-unlocks .meta-unlock').length,
-    achievements: document.querySelectorAll('#meta-achievements .meta-achievement').length
+    achievements: document.querySelectorAll('#meta-achievements .meta-achievement').length,
+    mutators: document.querySelectorAll('#meta-mutators .meta-mutator').length,
+    daily: document.getElementById('meta-daily')?.textContent
   }));
   check(
-    'meta screen lists shards, unlocks and achievements',
-    metaPanel.visible && metaPanel.shards === '0' && metaPanel.unlocks === 6 && metaPanel.achievements === 6,
+    'meta screen lists shards, unlocks, achievements and mutators',
+    metaPanel.visible &&
+      metaPanel.shards === '0' &&
+      metaPanel.unlocks === 6 &&
+      metaPanel.achievements === 9 &&
+      metaPanel.mutators === 6 &&
+      /每日挑战/.test(metaPanel.daily ?? ''),
     JSON.stringify(metaPanel)
   );
   await page.click('#meta-close-btn');
@@ -184,6 +191,50 @@ try {
     'meta screen closes back to the menu',
     await page.evaluate(() => document.getElementById('meta-screen')?.hidden === true)
   );
+
+  const modePage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await modePage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+  await modePage.evaluate(() => {
+    localStorage.setItem(
+      'rulethief.meta.v1',
+      JSON.stringify({
+        version: 1,
+        shards: 0,
+        runs: 0,
+        chaptersCleared: 0,
+        victories: 0,
+        maxMutator: 5,
+        selectedMutator: 0,
+        dailyBest: null,
+        unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
+        unlockedAscensions: ['thunder-domain'],
+        achievements: []
+      })
+    );
+  });
+  await modePage.goto(`${BASE}/?arena=1&mutator=3&daily=1`, { waitUntil: 'networkidle0' });
+  await waitReady(modePage);
+  await modePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(250);
+  const modeState = await modePage.evaluate(() => ({
+    snapshot: window.__RT_SNAPSHOT__?.(),
+    daily: window.__RT_DAILY__?.(),
+    objective: document.getElementById('objective-room')?.textContent
+  }));
+  check(
+    'mutator and daily modes apply to a run',
+    modeState.snapshot?.mutatorLevel === 3 &&
+      /M3/.test(modeState.objective ?? '') &&
+      modeState.daily === true,
+    JSON.stringify({
+      mutator: modeState.snapshot?.mutatorLevel,
+      objective: modeState.objective,
+      daily: modeState.daily
+    })
+  );
+  await modePage.close();
   check('hud hidden on load', await page.$eval('#hud', (el) => el.hidden));
   check(
     'overlays hidden on load',

@@ -18,6 +18,7 @@ import {
   saveMeta,
   unlockMeta
 } from './game/meta';
+import { MUTATORS, clampMutator, getMutator } from './game/mutators';
 import { setRandomSeed } from './game/rng';
 import {
   isEventVisible,
@@ -82,6 +83,7 @@ declare global {
     __RT_SPAWN_HAZARD__?: (x: number, y: number) => void;
     __RT_CHAPTER_BOSS__?: (index?: number) => void;
     __RT_CHAPTER_START__?: (index: number) => void;
+    __RT_DAILY__?: () => boolean;
     __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
@@ -177,6 +179,9 @@ const metaRuns = byId<HTMLElement>('meta-runs');
 const metaVictories = byId<HTMLElement>('meta-victories');
 const metaUnlocks = byId<HTMLElement>('meta-unlocks');
 const metaAchievements = byId<HTMLElement>('meta-achievements');
+const metaMutators = byId<HTMLElement>('meta-mutators');
+const metaDaily = byId<HTMLElement>('meta-daily');
+const resultMode = byId<HTMLElement>('result-mode');
 
 let meta = loadMeta();
 
@@ -191,7 +196,24 @@ const autoArena = params.get('arena') === '1';
 const bossPractice = params.get('boss') === '1';
 const buildParam = params.get('build');
 const seedParam = params.get('seed');
+const mutatorParam = params.get('mutator');
+let dailyMode = params.get('daily') === '1';
 setRandomSeed(seedParam);
+
+function dailySeedDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dailySeed(): string {
+  return `rulethief-daily-${dailySeedDate()}`;
+}
+
+if (dailyMode) setRandomSeed(dailySeed());
+if (mutatorParam !== null) {
+  const requested = clampMutator(Number(mutatorParam));
+  meta.selectedMutator = Math.min(requested, meta.maxMutator);
+  saveMeta(meta);
+}
 const INTRO_KEY = 'rulethief.intro.v1';
 
 function maybeShowIntro(): void {
@@ -275,10 +297,14 @@ function showResult(payload: RunEndPayload): void {
     kills: payload.kills,
     seconds: payload.time,
     relics: payload.relics,
-    ascensions: payload.ascensions
+    ascensions: payload.ascensions,
+    mutatorLevel: payload.mutatorLevel,
+    daily: dailyMode,
+    date: dailySeedDate()
   });
   meta = runMeta.state;
   saveMeta(meta);
+  resultMode.textContent = `模式 · ${payload.mutatorName}${dailyMode ? ' · 每日挑战' : ''}`;
   resultShards.textContent = `法则碎片 +${runMeta.gained} · 累计 ${meta.shards}${
     runMeta.unlocked.length
       ? ` · 新成就 ${runMeta.unlocked.map((id) => ACHIEVEMENTS[id]?.name ?? id).join(' / ')}`
@@ -373,10 +399,29 @@ function renderMeta(): void {
     row.append(title, copy);
     metaAchievements.append(row);
   }
+
+  metaMutators.textContent = '';
+  for (const def of MUTATORS) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `meta-mutator${meta.selectedMutator === def.level ? ' is-selected' : ''}`;
+    button.disabled = def.level > meta.maxMutator;
+    button.textContent = def.level === 0 ? '标准' : `异变 ${def.level}`;
+    button.title = def.description;
+    button.addEventListener('click', () => {
+      meta = { ...meta, selectedMutator: def.level };
+      saveMeta(meta);
+      applyMetaToScene();
+      renderMeta();
+    });
+    metaMutators.append(button);
+  }
+  metaDaily.textContent = `每日挑战 · ${meta.dailyBest ? `最佳 ${meta.dailyBest}` : '未完成'}`;
 }
 
 function applyMetaToScene(): void {
   scene?.setMetaUnlocks(meta.unlockedRelics, meta.unlockedAscensions);
+  scene?.setMutator(meta.selectedMutator);
 }
 
 function openMeta(): void {
@@ -482,6 +527,20 @@ function enterRoom(): void {
   setRoomVisible(false);
   scene.beginRoom();
   void audio.resume();
+}
+
+function startRun(daily: boolean): void {
+  dailyMode = daily;
+  if (daily) {
+    setRandomSeed(dailySeed());
+    if (meta.selectedMutator > meta.maxMutator) {
+      meta.selectedMutator = meta.maxMutator;
+      saveMeta(meta);
+    }
+  } else {
+    setRandomSeed(seedParam);
+  }
+  enterArena();
 }
 
 function enterArena(instant = false): void {
@@ -616,6 +675,7 @@ function handleReady(): void {
   window.__RT_SPAWN_HAZARD__ = (x, y) => scene?.debugSpawnHazard(x, y);
   window.__RT_CHAPTER_BOSS__ = (index) => scene?.debugJumpToChapterBoss(index);
   window.__RT_CHAPTER_START__ = (index) => scene?.debugStartChapter(index);
+  window.__RT_DAILY__ = () => dailyMode;
   window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
@@ -680,14 +740,19 @@ window.setTimeout(() => {
   if (active && active.scene.isActive()) handleReady();
 }, 700);
 
-document.getElementById('enter-btn')?.addEventListener('click', () => enterArena());
+document.getElementById('enter-btn')?.addEventListener('click', () => startRun(false));
 document.getElementById('note-enter-btn')?.addEventListener('click', () => {
   closeNote();
-  enterArena();
+  startRun(false);
 });
 document.getElementById('menu-note-btn')?.addEventListener('click', openNote);
 document.getElementById('menu-meta-btn')?.addEventListener('click', openMeta);
 document.getElementById('result-meta-btn')?.addEventListener('click', openMeta);
+document.getElementById('menu-daily-btn')?.addEventListener('click', () => startRun(true));
+document.getElementById('meta-daily-btn')?.addEventListener('click', () => {
+  metaScreen.hidden = true;
+  startRun(true);
+});
 document.getElementById('meta-close-btn')?.addEventListener('click', closeMeta);
 document.getElementById('note-close')?.addEventListener('click', closeNote);
 noteModal.addEventListener('click', (event) => {
