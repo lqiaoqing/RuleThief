@@ -123,6 +123,7 @@ describe('meta progression', () => {
   });
 
   it('defines every achievement with a name and description', () => {
+    expect(UNLOCKS).toHaveLength(6);
     for (const def of Object.values(ACHIEVEMENTS)) {
       expect(def.name.length).toBeGreaterThan(0);
       expect(def.description.length).toBeGreaterThan(0);

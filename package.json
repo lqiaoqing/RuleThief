@@ -14,7 +14,8 @@
     "verify": "node scripts/verify-dist.mjs",
     "lowend": "node scripts/lowend.mjs",
     "combo-run": "node scripts/combo-run.mjs",
-    "soak": "node scripts/soak.mjs"
+    "soak": "node scripts/soak.mjs",
+    "fullrun": "node scripts/fullrun.mjs"
   },
   "dependencies": {
     "phaser": "3.90.0"

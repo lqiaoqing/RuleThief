@@ -1,0 +1,51 @@
+{
+  "result": {
+    "title": "审判完成",
+    "rooms": "37 / 37"
+  },
+  "chapters": [
+    "审判废墟 · 已完成",
+    "失序工坊 · 已完成"
+  ],
+  "chapterRewards": [
+    [
+      {
+        "kind": "relic",
+        "name": "雷鸣徽章"
+      },
+      {
+        "kind": "relic",
+        "name": "血焰之心"
+      },
+      {
+        "kind": "support",
+        "name": "轻装疾行"
+      }
+    ],
+    [
+      {
+        "kind": "relic",
+        "name": "血焰之心"
+      },
+      {
+        "kind": "support",
+        "name": "瞬时折叠"
+      },
+      {
+        "kind": "support",
+        "name": "规则韧性"
+      }
+    ]
+  ],
+  "chapterIndex": 2,
+  "chaptersTotal": 3,
+  "roomsCleared": 31,
+  "picks": 30,
+  "seconds": 60,
+  "relics": [
+    "thunder-emblem",
+    "bloodflame-heart"
+  ],
+  "ascensions": [],
+  "errors": []
+}

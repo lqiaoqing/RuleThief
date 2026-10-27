@@ -1,4 +1,10 @@
-export type RelicId = 'thunder-emblem' | 'bloodflame-heart' | 'frost-crown' | 'prism';
+export type RelicId =
+  | 'thunder-emblem'
+  | 'bloodflame-heart'
+  | 'frost-crown'
+  | 'prism'
+  | 'feather'
+  | 'greed';
 
 export interface RelicDef {
   id: RelicId;
@@ -46,6 +52,24 @@ export const RELICS: Record<RelicId, RelicDef> = {
     color: '#ffd27a',
     description: '范围伤害同时命中 2 个以上目标后，获得 4 秒 +20% 伤害。',
     detail: '触发期间不叠加，重复触发只刷新持续时间。'
+  },
+  feather: {
+    id: 'feather',
+    name: '疾行之羽',
+    en: 'SWIFT FEATHER',
+    icon: '#i-dash',
+    color: '#9fe8c8',
+    description: '闪避后获得 2 秒 25% 移动速度加成。',
+    detail: '与冰霜减速乘算，帮助重新选择站位。'
+  },
+  greed: {
+    id: 'greed',
+    name: '贪婪契约',
+    en: 'GREED PACT',
+    icon: '#i-crown',
+    color: '#ffb3d9',
+    description: '造成伤害 +20%，但受到伤害也 +20%。',
+    detail: '高风险高收益，不改变奖励数量。'
   }
 };
 
@@ -53,7 +77,9 @@ export const RELIC_IDS: readonly RelicId[] = [
   'thunder-emblem',
   'bloodflame-heart',
   'frost-crown',
-  'prism'
+  'prism',
+  'feather',
+  'greed'
 ];
 
 export const MAX_RELICS = 2;

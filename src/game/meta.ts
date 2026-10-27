@@ -76,6 +76,20 @@ export const UNLOCKS: readonly UnlockDef[] = [
     name: ASCENSIONS['absolute-zero'].name,
     description: ASCENSIONS['absolute-zero'].description,
     cost: 140
+  },
+  {
+    id: 'feather',
+    kind: 'relic',
+    name: RELICS.feather.name,
+    description: RELICS.feather.description,
+    cost: 150
+  },
+  {
+    id: 'greed',
+    kind: 'relic',
+    name: RELICS.greed.name,
+    description: RELICS.greed.description,
+    cost: 180
   }
 ];
 

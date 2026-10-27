@@ -154,7 +154,8 @@ async function runOnce(browser, runIndex) {
   let eventsSeen = [];
   let result = null;
 
-  for (let tick = 0; tick < 4800; tick += 1) {
+  for (let tick = 0; tick < 15000; tick += 1) {
+    if (Date.now() - started > 25 * 60 * 1000) break;
     const state = await readState(page);
     const snapshot = state.snapshot;
 

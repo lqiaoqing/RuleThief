@@ -43,9 +43,9 @@ describe('ascensions', () => {
 });
 
 describe('relics', () => {
-  it('ships four relics with unique names and icons', () => {
-    expect(RELIC_IDS).toHaveLength(4);
-    expect(new Set(RELIC_IDS.map((id) => RELICS[id].name)).size).toBe(4);
+  it('ships six relics with unique names and icons', () => {
+    expect(RELIC_IDS).toHaveLength(6);
+    expect(new Set(RELIC_IDS.map((id) => RELICS[id].name)).size).toBe(6);
     expect(MAX_RELICS).toBe(2);
   });
 

@@ -274,6 +274,32 @@ export const CHAPTERS: readonly ChapterDef[] = [
         { kind: 'encounter', encounter: room('core-chamber') }
       ];
     }
+  },
+  {
+    id: 'abyss',
+    index: 2,
+    name: '逆律深渊',
+    en: 'ABYSS OF INVERSE LAW',
+    subtitle: '规则开始反向生效，安全区与攻击条件周期变化。',
+    bossName: '规则之源',
+    bossEn: 'SOURCE OF RULES',
+    buildPlan: (random) => {
+      const events = shuffle(EVENT_IDS, random).slice(0, 2) as EventId[];
+      return [
+        { kind: 'encounter', encounter: room('abyss-gate') },
+        { kind: 'choice', options: [room('mirror-hall'), room('null-chapel')] },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[0]] } },
+        { kind: 'choice', options: [room('inverted-yard'), room('rift-corridor')] },
+        { kind: 'encounter', encounter: room('seer-arena') },
+        { kind: 'encounter', encounter: room('echo-abyss') },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[1]] } },
+        { kind: 'choice', options: [room('broken-throne'), room('void-works')] },
+        { kind: 'encounter', encounter: room('shadow-vault') },
+        { kind: 'choice', options: [room('last-approach'), room('lawless-span')] },
+        { kind: 'encounter', encounter: room('final-gate') },
+        { kind: 'encounter', encounter: room('source-chamber') }
+      ];
+    }
   }
 ];
 

@@ -15,7 +15,9 @@ export type EnemyKind =
   | 'arbiter'
   | 'sentry'
   | 'phase'
-  | 'core';
+  | 'core'
+  | 'seer'
+  | 'source';
 
 export interface EnemySpec {
   name: string;
@@ -169,6 +171,31 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     displaySize: 288,
     elite: true,
     boss: true
+  },
+  seer: {
+    name: '逆律先知',
+    rule: 'frost',
+    ruleName: '逆律',
+    hint: '精英 · 瞬移与虚空领域',
+    hp: 320,
+    radius: 38,
+    speed: 70,
+    sprite: 'wisp',
+    displaySize: 168,
+    elite: true
+  },
+  source: {
+    name: '规则之源',
+    rule: 'blast',
+    ruleName: '源律',
+    hint: '最终 BOSS · 三阶段规则风暴',
+    hp: 2200,
+    radius: 66,
+    speed: 0,
+    sprite: 'boss',
+    displaySize: 312,
+    elite: true,
+    boss: true
   }
 };
 
@@ -176,7 +203,8 @@ export const ENEMY_RULES: Record<EnemyKind, RuleKey> = Object.fromEntries(
   (Object.keys(ENEMY_SPECS) as EnemyKind[]).map((kind) => [kind, ENEMY_SPECS[kind].rule])
 ) as Record<EnemyKind, RuleKey>;
 
-export type RoomHazard = 'shock-grid';
+export type RoomHazard = 'shock-grid' | 'void-rift';
+export type RoomModifier = 'rule-null';
 
 export interface RoomDef {
   id: string;
@@ -192,6 +220,7 @@ export interface RoomDef {
   rewardCount?: number;
   elite?: boolean;
   hazard?: RoomHazard;
+  modifier?: RoomModifier;
 }
 
 export const ROOMS: readonly RoomDef[] = [
@@ -595,6 +624,205 @@ export const ROOMS: readonly RoomDef[] = [
     spawnInterval: 99,
     mix: [],
     boss: 'core',
+    rewardCount: 0
+  },
+  {
+    id: 'abyss-gate',
+    name: '深渊入口',
+    en: 'ABYSS GATE',
+    subtitle: '规则在这里开始反向生效，先确认你还能用哪一条。',
+    quota: 20,
+    maxAlive: 7,
+    spawnInterval: 2.7,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 3 }
+    ],
+    hazard: 'void-rift',
+    modifier: 'rule-null'
+  },
+  {
+    id: 'mirror-hall',
+    name: '镜像回廊',
+    en: 'MIRROR HALL',
+    subtitle: '相位机兵复制你的走位，逆律会短暂让一条规则离线。',
+    quota: 23,
+    maxAlive: 8,
+    spawnInterval: 2.5,
+    mix: [
+      { kind: 'phase', weight: 4 },
+      { kind: 'wisp', weight: 4 }
+    ],
+    modifier: 'rule-null'
+  },
+  {
+    id: 'null-chapel',
+    name: '虚无法坛',
+    en: 'NULL CHAPEL',
+    subtitle: '虚空裂隙会吞掉安全地面，炮台只需要逼你走进去。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.45,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'spore', weight: 3 }
+    ],
+    hazard: 'void-rift'
+  },
+  {
+    id: 'inverted-yard',
+    name: '逆序庭院',
+    en: 'INVERTED YARD',
+    subtitle: '规则逆流时，自爆机械的逼近会比你的闪避更快。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.45,
+    mix: [
+      { kind: 'bomber', weight: 4 },
+      { kind: 'phase', weight: 4 }
+    ],
+    modifier: 'rule-null'
+  },
+  {
+    id: 'rift-corridor',
+    name: '裂隙走廊',
+    en: 'RIFT CORRIDOR',
+    subtitle: '脚下随时会出现虚空裂隙，炮台负责封住唯一的安全路线。',
+    quota: 25,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 4 }
+    ],
+    hazard: 'void-rift'
+  },
+  {
+    id: 'seer-arena',
+    name: '先知竞技场',
+    en: 'SEER ARENA',
+    subtitle: '逆律先知会瞬移、召唤虚空领域，并让一条规则短暂失效。',
+    quota: 16,
+    maxAlive: 6,
+    spawnInterval: 2.6,
+    mix: [
+      { kind: 'phase', weight: 4 },
+      { kind: 'wisp', weight: 3 }
+    ],
+    leader: 'seer',
+    rewardCount: 4,
+    elite: true,
+    modifier: 'rule-null'
+  },
+  {
+    id: 'echo-abyss',
+    name: '回声深渊',
+    en: 'ECHO ABYSS',
+    subtitle: '深渊会重复你上一次的攻击节奏，相位机兵在回声里换位。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'phase', weight: 5 },
+      { kind: 'bomber', weight: 3 }
+    ]
+  },
+  {
+    id: 'broken-throne',
+    name: '破碎王座',
+    en: 'BROKEN THRONE',
+    subtitle: '王座周围没有规则，只有不断逼近的自爆机械。',
+    quota: 25,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'bomber', weight: 5 },
+      { kind: 'sentry', weight: 3 }
+    ],
+    modifier: 'rule-null'
+  },
+  {
+    id: 'void-works',
+    name: '虚空工坊',
+    en: 'VOID WORKS',
+    subtitle: '虚空裂隙与相位机兵共享同一片地面，停下就会失去站位。',
+    quota: 25,
+    maxAlive: 8,
+    spawnInterval: 2.35,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 4 }
+    ],
+    hazard: 'void-rift'
+  },
+  {
+    id: 'shadow-vault',
+    name: '暗影库',
+    en: 'SHADOW VAULT',
+    subtitle: '暗影库里的规则会被短暂抽离，先想好失去哪一条还能打。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'phase', weight: 5 },
+      { kind: 'wisp', weight: 3 }
+    ],
+    modifier: 'rule-null'
+  },
+  {
+    id: 'last-approach',
+    name: '最终回廊',
+    en: 'LAST APPROACH',
+    subtitle: '规则之源就在前方，虚空裂隙开始覆盖整条回廊。',
+    quota: 27,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'phase', weight: 4 },
+      { kind: 'sentry', weight: 4 }
+    ],
+    hazard: 'void-rift'
+  },
+  {
+    id: 'lawless-span',
+    name: '无法之桥',
+    en: 'LAWLESS SPAN',
+    subtitle: '桥上没有任何规则保护你，只有虚空裂隙和自爆机械。',
+    quota: 26,
+    maxAlive: 8,
+    spawnInterval: 2.35,
+    mix: [
+      { kind: 'bomber', weight: 4 },
+      { kind: 'phase', weight: 4 }
+    ],
+    hazard: 'void-rift'
+  },
+  {
+    id: 'final-gate',
+    name: '终局之门',
+    en: 'FINAL GATE',
+    subtitle: '最后一层逆律：地面、规则与敌人都不会再保持稳定。',
+    quota: 27,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 4 },
+      { kind: 'bomber', weight: 2 }
+    ],
+    hazard: 'void-rift',
+    modifier: 'rule-null'
+  },
+  {
+    id: 'source-chamber',
+    name: '规则之源',
+    en: 'SOURCE OF RULES',
+    subtitle: '规则之源不守护任何一条规则，它只会让所有规则同时失控。',
+    quota: 1,
+    maxAlive: 3,
+    spawnInterval: 99,
+    mix: [],
+    boss: 'source',
     rewardCount: 0
   }
 ] as const;

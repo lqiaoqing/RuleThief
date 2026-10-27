@@ -90,7 +90,7 @@ describe('event definitions', () => {
 
 describe('run plan', () => {
   it('exposes the first chapter as the judgement ruins', () => {
-    expect(CHAPTERS.length).toBe(2);
+    expect(CHAPTERS.length).toBe(3);
     const first = CHAPTERS[0];
     expect(first.id).toBe('judgement');
     expect(first.name).toBe('审判废墟');
@@ -117,6 +117,26 @@ describe('run plan', () => {
       .filter((encounter) => encounter.kind === 'room')
       .map((encounter) => (encounter.kind === 'room' ? encounter.room.id : ''));
     expect(new Set(rooms).size).toBe(rooms.length);
+    const events = plan
+      .flatMap((step) => stepEncounters(step))
+      .filter((encounter) => encounter.kind === 'event');
+    expect(events).toHaveLength(2);
+  });
+
+  it('builds an abyss chapter that ends at the source of rules', () => {
+    const plan = buildChapterPlan(2, random);
+    expect(planStepCount(plan)).toBe(12);
+    const last = plan[plan.length - 1];
+    expect(last.kind).toBe('encounter');
+    if (last.kind === 'encounter' && last.encounter.kind === 'room') {
+      expect(last.encounter.room.boss).toBe('source');
+    }
+    const rooms = plan
+      .flatMap((step) => stepEncounters(step))
+      .filter((encounter) => encounter.kind === 'room')
+      .map((encounter) => (encounter.kind === 'room' ? encounter.room.id : ''));
+    expect(new Set(rooms).size).toBe(rooms.length);
+    expect(rooms).toContain('seer-arena');
     const events = plan
       .flatMap((step) => stepEncounters(step))
       .filter((encounter) => encounter.kind === 'event');

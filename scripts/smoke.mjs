@@ -176,7 +176,7 @@ try {
   }));
   check(
     'meta screen lists shards, unlocks and achievements',
-    metaPanel.visible && metaPanel.shards === '0' && metaPanel.unlocks === 4 && metaPanel.achievements === 6,
+    metaPanel.visible && metaPanel.shards === '0' && metaPanel.unlocks === 6 && metaPanel.achievements === 6,
     JSON.stringify(metaPanel)
   );
   await page.click('#meta-close-btn');
@@ -896,7 +896,7 @@ try {
   }));
   check(
     'killing the arbiter clears chapter one',
-    /CHAPTER 1 \/ 2 CLEAR/.test(chapterClear.kicker ?? '') &&
+    /CHAPTER 1 \/ 3 CLEAR/.test(chapterClear.kicker ?? '') &&
       /审判废墟/.test(chapterClear.title ?? ''),
     JSON.stringify(chapterClear)
   );
@@ -1331,20 +1331,119 @@ try {
     JSON.stringify({ hp: coreState.bossHp, phase: coreState.bossPhase })
   );
   await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(2000));
+  await workshop.waitForFunction(
+    () => !document.getElementById('altar-screen')?.hidden,
+    { timeout: 9000 }
+  );
+  const workshopReward = await workshop.evaluate(() => ({
+    label: document.getElementById('reward-room')?.textContent,
+    cards: [...document.querySelectorAll('#rule-offers .rule-card')].map((card) =>
+      card.getAttribute('data-kind')
+    )
+  }));
+  check(
+    'clearing the workshop opens the chapter-two reward',
+    /章节奖励/.test(workshopReward.label ?? '') && workshopReward.cards.length === 3,
+    JSON.stringify(workshopReward)
+  );
+  await workshop.evaluate(() => {
+    document.querySelector('#rule-offers .rule-card')?.click();
+  });
+  await workshop.waitForFunction(
+    () => !document.getElementById('chapter-screen')?.hidden,
+    { timeout: 9000 }
+  );
+  const chapterTwoClear = await workshop.evaluate(() => ({
+    title: document.getElementById('chapter-title')?.textContent,
+    kicker: document.getElementById('chapter-kicker')?.textContent,
+    next: document.getElementById('chapter-continue-btn')?.textContent
+  }));
+  check(
+    'chapter two clears into the abyss',
+    /失序工坊/.test(chapterTwoClear.title ?? '') &&
+      /CHAPTER 2 \/ 3 CLEAR/.test(chapterTwoClear.kicker ?? '') &&
+      /逆律深渊/.test(chapterTwoClear.next ?? ''),
+    JSON.stringify(chapterTwoClear)
+  );
+  await workshop.click('#chapter-continue-btn');
+  await workshop.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(300);
+  const abyssPreview = await workshop.evaluate(() => ({
+    title: document.getElementById('room-title')?.textContent,
+    objective: document.getElementById('objective-room')?.textContent,
+    state: window.__RT_SNAPSHOT__?.()
+  }));
+  check(
+    'chapter three starts in the inverse-law abyss',
+    abyssPreview.state?.chapterIndex === 2 &&
+      abyssPreview.state?.chapterName === '逆律深渊' &&
+      abyssPreview.title === '深渊入口' &&
+      /W3/.test(abyssPreview.objective ?? ''),
+    JSON.stringify({
+      chapter: abyssPreview.state?.chapterName,
+      title: abyssPreview.title,
+      objective: abyssPreview.objective
+    })
+  );
+
+  await workshop.tap('#room-enter-btn');
+  await sleep(2100);
+  const abyssHazards = await snapshot(workshop);
+  check(
+    'void-rift spawns larger telegraph zones',
+    Number(abyssHazards.hazards) >= 3,
+    String(abyssHazards.hazards)
+  );
+  await sleep(2800);
+  const abyssRuleNull = await snapshot(workshop);
+  check(
+    'rule-null briefly seals an equipped rule',
+    Boolean(abyssRuleNull.sealSlot),
+    JSON.stringify({ sealSlot: abyssRuleNull.sealSlot, sealTime: abyssRuleNull.sealTime })
+  );
+
+  await workshop.evaluate(() => window.__RT_CHAPTER_BOSS__?.(2));
+  await workshop.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(300);
+  const sourcePreview = await workshop.evaluate(() => ({
+    title: document.getElementById('room-title')?.textContent,
+    kicker: document.getElementById('room-kicker')?.textContent
+  }));
+  check(
+    'source of rules practice jumps to the final abyss room',
+    sourcePreview.title === '规则之源' && /ROOM 12 \/ 12/.test(sourcePreview.kicker ?? ''),
+    JSON.stringify(sourcePreview)
+  );
+  await workshop.tap('#room-enter-btn');
+  await sleep(700);
+  const sourceState = await snapshot(workshop);
+  check(
+    'source of rules starts with its own boss bar and health',
+    sourceState.bossPhase === 1 &&
+      Number(sourceState.bossHp) > 2000 &&
+      Number(sourceState.bossHp) <= 2200 &&
+      (await workshop.$eval('#boss-bar-name', (el) => el.textContent)) === '规则之源',
+    JSON.stringify({ hp: sourceState.bossHp, phase: sourceState.bossPhase })
+  );
+  await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
   await workshop.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {
     timeout: 9000
   });
-  const coreResult = await workshop.evaluate(() => ({
+  const sourceResult = await workshop.evaluate(() => ({
     title: document.getElementById('result-title')?.textContent,
     rooms: document.getElementById('result-rooms')?.textContent,
     kicker: document.getElementById('result-kicker')?.textContent
   }));
   check(
-    'clearing the workshop wins the two-chapter run',
-    coreResult.title === '审判完成' &&
-      coreResult.kicker === 'RUN COMPLETE' &&
-      coreResult.rooms === '12 / 12',
-    JSON.stringify(coreResult)
+    'clearing the abyss wins the three-chapter run',
+    sourceResult.title === '审判完成' &&
+      sourceResult.kicker === 'RUN COMPLETE' &&
+      sourceResult.rooms === '12 / 12',
+    JSON.stringify(sourceResult)
   );
   await workshop.close();
 

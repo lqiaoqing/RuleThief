@@ -25,11 +25,19 @@ describe('pacing model', () => {
     expect(minutes).toBeLessThanOrEqual(12);
   });
 
-  it('keeps the two-chapter route near eighteen-to-twenty-two minutes', () => {
+  it('keeps the abyss chapter near the nine-to-twelve minute target', () => {
+    const minutes = estimateRunMinutes(buildChapterPlan(2, random));
+    expect(minutes).toBeGreaterThanOrEqual(8);
+    expect(minutes).toBeLessThanOrEqual(12);
+  });
+
+  it('keeps the three-chapter route near twenty-five-to-thirty-five minutes', () => {
     const total =
-      estimateRunMinutes(buildRunPlan(random)) + estimateRunMinutes(buildChapterPlan(1, random));
-    expect(total).toBeGreaterThanOrEqual(18);
-    expect(total).toBeLessThanOrEqual(22);
+      estimateRunMinutes(buildRunPlan(random)) +
+      estimateRunMinutes(buildChapterPlan(1, random)) +
+      estimateRunMinutes(buildChapterPlan(2, random));
+    expect(total).toBeGreaterThanOrEqual(25);
+    expect(total).toBeLessThanOrEqual(35);
   });
 
   it('counts events and the boss in the budget', () => {

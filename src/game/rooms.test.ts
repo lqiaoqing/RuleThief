@@ -27,13 +27,14 @@ describe('enemy catalogue', () => {
     expect(ENEMY_RULES.bomber).toBe('blast');
   });
 
-  it('marks exactly two elites, both carrying a normal rule', () => {
+  it('marks exactly three elites, all carrying a normal rule', () => {
     const elites = (Object.keys(ENEMY_SPECS) as EnemyKind[]).filter(
       (kind) => ENEMY_SPECS[kind].elite && !ENEMY_SPECS[kind].boss
     );
-    expect(elites).toEqual(['sunder', 'thunder']);
+    expect(elites).toEqual(['sunder', 'thunder', 'seer']);
     expect(ENEMY_RULES.sunder).toBe('pierce');
     expect(ENEMY_RULES.thunder).toBe('chain');
+    expect(ENEMY_RULES.seer).toBe('frost');
   });
 
   it('elites are tougher and larger than their base enemies', () => {
@@ -45,21 +46,21 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships thirty rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(30);
+  it('ships forty-four rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(44);
     expect(ROOMS.map((room) => room.quota)).toEqual([
       13, 20, 22, 24, 22, 22, 22, 22, 22, 22, 22, 22, 22, 16, 16, 1, 18, 22, 24, 16, 22, 24, 24,
-      26, 22, 23, 23, 24, 24, 1
+      26, 22, 23, 23, 24, 24, 1, 20, 23, 24, 24, 25, 16, 24, 25, 25, 24, 27, 26, 27, 1
     ]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
   });
 
-  it('ends with the disorder core boss room', () => {
+  it('ends with the source of rules boss room', () => {
     const bossRoom = ROOMS[ROOMS.length - 1];
-    expect(bossRoom.boss).toBe('core');
+    expect(bossRoom.boss).toBe('source');
     expect(bossRoom.quota).toBe(1);
     expect(bossRoom.mix).toHaveLength(0);
-    expect(getRoomEnemyKinds(bossRoom)).toEqual(['core']);
+    expect(getRoomEnemyKinds(bossRoom)).toEqual(['source']);
     expect(buildRoomRewards(createEmptyBuild(), bossRoom, random)).toHaveLength(0);
   });
 
@@ -90,7 +91,7 @@ describe('room definitions', () => {
 
   it('elite rooms declare a leader and four reward choices', () => {
     const eliteRooms = ROOMS.filter((room) => room.elite);
-    expect(eliteRooms).toHaveLength(3);
+    expect(eliteRooms).toHaveLength(4);
     for (const room of eliteRooms) {
       expect(room.leader).toBeDefined();
       expect(room.rewardCount).toBe(4);
@@ -113,6 +114,29 @@ describe('room definitions', () => {
       expect(room.boss).toBeUndefined();
       expect(room.mix.length).toBeGreaterThan(0);
     }
+  });
+
+  it('gives the abyss void-rift hazards and rule-null modifiers', () => {
+    const voidRooms = ROOMS.filter((room) => room.hazard === 'void-rift');
+    expect(voidRooms.map((room) => room.id)).toEqual([
+      'abyss-gate',
+      'null-chapel',
+      'rift-corridor',
+      'void-works',
+      'last-approach',
+      'lawless-span',
+      'final-gate'
+    ]);
+    const nullRooms = ROOMS.filter((room) => room.modifier === 'rule-null');
+    expect(nullRooms.map((room) => room.id)).toEqual([
+      'abyss-gate',
+      'mirror-hall',
+      'inverted-yard',
+      'seer-arena',
+      'broken-throne',
+      'shadow-vault',
+      'final-gate'
+    ]);
   });
 
   it('non-elite rooms keep the standard three choices', () => {
