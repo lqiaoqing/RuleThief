@@ -5,73 +5,73 @@
       "combo": "pierce+burn",
       "samples": [
         45,
-        35
+        37
       ],
-      "avgDps": 40
+      "avgDps": 41
     },
     {
       "combo": "pierce+frost",
       "samples": [
         26,
-        25
+        26
       ],
       "avgDps": 26
     },
     {
       "combo": "pierce+blast",
       "samples": [
-        116,
-        82
+        59,
+        65
       ],
-      "avgDps": 99
+      "avgDps": 62
     },
     {
       "combo": "chain+burn",
       "samples": [
-        80,
-        76
+        77,
+        77
       ],
-      "avgDps": 78
+      "avgDps": 77
     },
     {
       "combo": "chain+frost",
       "samples": [
-        61,
-        64
+        64,
+        61
       ],
       "avgDps": 63
     },
     {
       "combo": "chain+blast",
       "samples": [
-        128,
-        125
+        125,
+        102
       ],
-      "avgDps": 127
+      "avgDps": 114
     },
     {
       "combo": "spread+burn",
       "samples": [
-        80,
-        96
+        88,
+        81
       ],
-      "avgDps": 88
+      "avgDps": 85
     },
     {
       "combo": "spread+frost",
       "samples": [
-        76,
-        70
+        58,
+        62
       ],
-      "avgDps": 73
+      "avgDps": 60
     },
     {
       "combo": "spread+blast",
       "samples": [
-        142,
-        134
+        102,
+        90
       ],
-      "avgDps": 138
+      "avgDps": 96
     }
   ]
 }
