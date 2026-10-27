@@ -678,6 +678,20 @@ export class M0Scene extends Phaser.Scene {
         this.hp = Math.min(this.maxHp, this.hp + effect.heal);
         setHp(this.hp, this.maxHp);
         break;
+      case 'relicOrHeal': {
+        this.hp = Math.max(1, this.hp - effect.hp);
+        const available = this.unlockedRelics.filter((id) => !this.relics.includes(id));
+        if (available.length > 0 && this.relics.length < MAX_RELICS) {
+          const id = available[combatInt(0, available.length - 1)];
+          this.relics.push(id);
+          setRelics(this.relics.map((relicId) => RELICS[relicId].name));
+          showRuleToast('chain', `虚空遗物 · ${RELICS[id].name}`, RELICS[id].description);
+        } else {
+          this.hp = Math.min(this.maxHp, this.hp + effect.heal);
+        }
+        setHp(this.hp, this.maxHp);
+        break;
+      }
       case 'curseElite':
         this.pendingBonusElite = true;
         this.pendingBonusCards = 1;
@@ -944,7 +958,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private clearRoom(): void {
-    if (this.roomState !== 'fighting') return;
+    if (this.roomState !== 'fighting' || this.victoryLocked) return;
     this.roomState = 'reward';
     this.rewardOpen = true;
     this.playEnabled = false;
@@ -2680,6 +2694,7 @@ export class M0Scene extends Phaser.Scene {
       this.dropHeal(x, y);
     }
     if (
+      !this.victoryLocked &&
       this.roomKills >= this.getRoom().quota &&
       this.enemies.length === 0 &&
       this.pendingSpawns === 0
@@ -2817,7 +2832,7 @@ export class M0Scene extends Phaser.Scene {
     this.pendingSpawns += 1;
     this.time.delayedCall(550, () => {
       this.pendingSpawns = Math.max(0, this.pendingSpawns - 1);
-      const active = token === this.runToken && this.runState === 'playing';
+      const active = token === this.runToken && this.runState === 'playing' && !this.victoryLocked;
       if (!active) return;
       this.spawnEnemy(kind, x, y);
       if (

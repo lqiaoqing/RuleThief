@@ -1,7 +1,13 @@
 import { ROOMS, type RoomDef } from './rooms';
 import type { PlayerBuild } from './rules';
 
-export type EventId = 'blood-altar' | 'unstable-lab' | 'forgotten-idol' | 'cursed-chest';
+export type EventId =
+  | 'blood-altar'
+  | 'unstable-lab'
+  | 'forgotten-idol'
+  | 'cursed-chest'
+  | 'rule-fountain'
+  | 'void-bargain';
 
 export type EventEffect =
   | { kind: 'none' }
@@ -9,6 +15,7 @@ export type EventEffect =
   | { kind: 'loseHpUpgrade'; hp: number }
   | { kind: 'upgradeAndSpeedRisk'; percent: number }
   | { kind: 'swapRuleHeal'; heal: number }
+  | { kind: 'relicOrHeal'; hp: number; heal: number }
   | { kind: 'curseElite' };
 
 export interface EventOption {
@@ -133,6 +140,58 @@ export const EVENTS: Record<EventId, EventDef> = {
         effect: { kind: 'none' }
       }
     ]
+  },
+  'rule-fountain': {
+    id: 'rule-fountain',
+    name: '规则喷泉',
+    en: 'RULE FOUNTAIN',
+    subtitle: '泉水里漂着一条还没被夺走的规则。',
+    options: [
+      {
+        id: 'touch',
+        label: 'A',
+        title: '伸手触碰泉眼',
+        description: '失去 10 生命，随机升级一条已装备规则。',
+        detail: '没有可升级的规则时，改为回复 15 生命。',
+        tone: 'risk',
+        effect: { kind: 'loseHpUpgrade', hp: 10 }
+      },
+      {
+        id: 'drink',
+        label: 'B',
+        title: '只取泉水',
+        description: '回复 25 生命。',
+        detail: '不碰规则，只拿恢复。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 25 }
+      }
+    ]
+  },
+  'void-bargain': {
+    id: 'void-bargain',
+    name: '虚空交易',
+    en: 'VOID BARGAIN',
+    subtitle: '它不要金币，只问你愿不愿意用生命换一件遗物。',
+    options: [
+      {
+        id: 'accept',
+        label: 'A',
+        title: '接受交易',
+        description: '失去 15 生命，获得一件未装备的遗物；遗物已满时改为回复 30 生命。',
+        detail: '遗物从已解锁池中随机抽取。',
+        tone: 'risk',
+        effect: { kind: 'relicOrHeal', hp: 15, heal: 30 }
+      },
+      {
+        id: 'refuse',
+        label: 'B',
+        title: '拒绝交易',
+        description: '不付出生命，也不拿遗物。',
+        detail: '保守但安全。',
+        tone: 'safe',
+        effect: { kind: 'none' }
+      }
+    ]
   }
 };
 
@@ -140,7 +199,9 @@ export const EVENT_IDS: EventId[] = [
   'blood-altar',
   'unstable-lab',
   'forgotten-idol',
-  'cursed-chest'
+  'cursed-chest',
+  'rule-fountain',
+  'void-bargain'
 ];
 
 export function hasUpgradeableRule(build: PlayerBuild): boolean {
@@ -176,6 +237,19 @@ export function eventOptionsFor(
         detail: '不产生任何变化，也不会留下移速惩罚。',
         tone: 'safe',
         effect: { kind: 'none' }
+      },
+      event.options[1]
+    ];
+  }
+  if (event.id === 'rule-fountain' && !hasUpgradeableRule(build)) {
+    return [
+      {
+        ...event.options[0],
+        title: '接受泉水的馈赠',
+        description: '没有可升级的规则，泉水转而回复 15 生命。',
+        detail: '本次不会扣除生命。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 15 }
       },
       event.options[1]
     ];

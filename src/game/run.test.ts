@@ -28,8 +28,8 @@ const midBuild: PlayerBuild = {
 };
 
 describe('event definitions', () => {
-  it('ships four events with two options each', () => {
-    expect(EVENT_IDS).toHaveLength(4);
+  it('ships six events with two options each', () => {
+    expect(EVENT_IDS).toHaveLength(6);
     for (const id of EVENT_IDS) {
       const event = EVENTS[id];
       expect(event.options).toHaveLength(2);
@@ -54,6 +54,15 @@ describe('event definitions', () => {
     });
     expect(EVENTS['forgotten-idol'].options[0].effect).toEqual({ kind: 'swapRuleHeal', heal: 15 });
     expect(EVENTS['cursed-chest'].options[0].effect).toEqual({ kind: 'curseElite' });
+    expect(EVENTS['rule-fountain'].options[0].effect).toEqual({
+      kind: 'loseHpUpgrade',
+      hp: 10
+    });
+    expect(EVENTS['void-bargain'].options[0].effect).toEqual({
+      kind: 'relicOrHeal',
+      hp: 15,
+      heal: 30
+    });
   });
 
   it('detects whether any rule can still be upgraded', () => {
@@ -76,6 +85,13 @@ describe('event definitions', () => {
     expect(options[0].title).toContain('终止');
     expect(options[0].tone).toBe('safe');
     expect(options[0].effect).toEqual({ kind: 'none' });
+  });
+
+  it('turns the rule fountain into a heal when nothing can be upgraded', () => {
+    const options = eventOptionsFor(EVENTS['rule-fountain'], maxedBuild);
+    expect(options[0].title).toContain('馈赠');
+    expect(options[0].tone).toBe('safe');
+    expect(options[0].effect).toEqual({ kind: 'heal', amount: 15 });
   });
 
   it('keeps the original risky options while an upgrade exists', () => {

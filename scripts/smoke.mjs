@@ -895,6 +895,10 @@ try {
   }
 
   await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(900));
+  await page.evaluate(() => {
+    window.__RT_SPAWN__?.('beetle');
+    window.__RT_KILL_ALL__?.();
+  });
   await page.waitForFunction(
     () =>
       !document.getElementById('altar-screen')?.hidden ||
