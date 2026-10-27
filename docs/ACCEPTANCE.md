@@ -9,7 +9,7 @@
 npm test                       145/145 通过（13 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  221/221 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 起点世界 + 导出）
+npm run smoke                  222/222 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 起点世界 + 导出 + 终局文案）
 npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
@@ -97,7 +97,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 
 ## F. 已知偏差
 
-- `M0Scene.ts` 已约 4,984 行，超过蓝图「不扩大巨型场景类」的工程约束；`meta`/`mutators`/`relics`/`ascensions` 已独立成模块，但敌人与 BOSS AI 仍在场景类内。
+- `M0Scene.ts` 已 5,272 行，超过蓝图「不扩大巨型场景类」的工程约束；`meta`/`mutators`/`relics`/`ascensions` 已独立成模块，但敌人与 BOSS AI 仍在场景类内。
 - 遗物与升阶的 9 项战斗效果均已有定向战斗断言；真人手感、效果强度与组合强弱仍需外部试玩。
 - 自动试玩机器人在 +10% 配额下止步第 2 房（2/13），不作为难度或时长结论。
 
