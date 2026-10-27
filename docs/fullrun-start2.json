@@ -1,6 +1,6 @@
 {
   "result": {
-    "title": "审判完成",
+    "title": "规则终结",
     "rooms": "12 / 12"
   },
   "chapters": [],
@@ -11,15 +11,15 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 22,
+  "seconds": 27,
   "relics": [
     "bloodflame-heart",
     "thunder-emblem"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "pierce-momentum",
-    "ember-spread"
+    "frost-ring",
+    "rift-echo"
   ],
   "errors": []
 }

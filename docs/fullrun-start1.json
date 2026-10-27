@@ -1,6 +1,6 @@
 {
   "result": {
-    "title": "审判完成",
+    "title": "规则终结",
     "rooms": "24 / 24"
   },
   "chapters": [
@@ -18,7 +18,7 @@
       },
       {
         "kind": "support",
-        "name": "碎片缝合"
+        "name": "轻装疾行"
       }
     ]
   ],
@@ -28,7 +28,7 @@
   "expectedSteps": 24,
   "roomsCleared": 20,
   "picks": 19,
-  "seconds": 40,
+  "seconds": 51,
   "relics": [
     "bloodflame-heart"
   ],

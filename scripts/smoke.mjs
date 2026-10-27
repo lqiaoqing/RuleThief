@@ -1592,15 +1592,21 @@ try {
   });
   const sourceResult = await workshop.evaluate(() => ({
     title: document.getElementById('result-title')?.textContent,
+    sub: document.getElementById('result-sub')?.textContent,
     rooms: document.getElementById('result-rooms')?.textContent,
     kicker: document.getElementById('result-kicker')?.textContent
   }));
   check(
     'clearing the abyss wins the three-chapter run',
-    sourceResult.title === '审判完成' &&
+    sourceResult.title === '规则终结' &&
       sourceResult.kicker === 'RUN COMPLETE' &&
       sourceResult.rooms === '12 / 12',
     JSON.stringify(sourceResult)
+  );
+  check(
+    'final victory names the source of rules, not the first-world arbiter',
+    (sourceResult.sub ?? '').includes('规则之源') && !(sourceResult.sub ?? '').includes('规则审判者'),
+    JSON.stringify(sourceResult.sub)
   );
   await workshop.close();
 

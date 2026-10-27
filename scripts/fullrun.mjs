@@ -197,7 +197,7 @@ try {
   const output = START > 0 ? `docs/fullrun-start${START}.json` : 'docs/fullrun-last.json';
   fs.writeFileSync(output, JSON.stringify(summary, null, 2));
   const expected = `${EXPECTED_STEPS} / ${EXPECTED_STEPS}`;
-  if (!result || result.title !== '审判完成' || result.rooms !== expected) {
+  if (!result || result.title !== '规则终结' || result.rooms !== expected) {
     process.exitCode = 1;
   }
   if (errors.length) process.exitCode = 1;
