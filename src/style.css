@@ -2342,3 +2342,11 @@ kbd {
   gap: 8px;
   margin: 8px 0;
 }
+
+.result-actions {
+  flex-wrap: wrap;
+}
+
+.result-actions .ghost {
+  flex: 1 1 126px;
+}

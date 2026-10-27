@@ -1060,6 +1060,20 @@ try {
       Number(bossVictory.meta?.maxStartChapter) === 1,
     JSON.stringify({ shards: bossVictory.shards, meta: bossVictory.meta })
   );
+  const exported = await page.evaluate(() => JSON.parse(window.__RT_EXPORT__?.() ?? '{}'));
+  check(
+    'playtest export bundles runs, meta and build data',
+    Array.isArray(exported.runs) &&
+      exported.runs.length >= 1 &&
+      Boolean(exported.meta) &&
+      typeof exported.agent === 'string' &&
+      Boolean(exported.runs[0]?.build),
+    JSON.stringify({
+      runs: exported.runs?.length,
+      meta: Boolean(exported.meta),
+      build: exported.runs?.[0]?.build
+    })
+  );
 
   const finalStats = await page.evaluate(() => ({
     combo: document.getElementById('result-combo-name')?.textContent,

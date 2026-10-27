@@ -90,6 +90,7 @@ declare global {
     __RT_DAILY__?: () => boolean;
     __RT_RELIC__?: (id: RelicId) => void;
     __RT_ASCEND__?: (key: RuleKey) => void;
+    __RT_EXPORT__?: () => string;
     __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
@@ -494,6 +495,42 @@ function closeMeta(): void {
   metaScreen.hidden = true;
 }
 
+function collectPlaytestData(): Record<string, unknown> {
+  const read = (key: string): unknown => {
+    try {
+      return JSON.parse(localStorage.getItem(key) ?? 'null');
+    } catch {
+      return null;
+    }
+  };
+  return {
+    exportedAt: new Date().toISOString(),
+    url: window.location.href,
+    agent: navigator.userAgent,
+    runs: read('rulethief.runs.v1') ?? [],
+    meta: read('rulethief.meta.v1'),
+    introSeen: (() => {
+      try {
+        return localStorage.getItem('rulethief.intro.v1') === '1';
+      } catch {
+        return false;
+      }
+    })()
+  };
+}
+
+function exportPlaytestData(): void {
+  const blob = new Blob([JSON.stringify(collectPlaytestData(), null, 2)], {
+    type: 'application/json'
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `rulethief-playtest-${Date.now()}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function showChapterClear(payload: ChapterClearPayload): void {
   setRewardVisible(false);
   setRoomVisible(false);
@@ -740,6 +777,7 @@ function handleReady(): void {
   window.__RT_DAILY__ = () => dailyMode;
   window.__RT_RELIC__ = (id) => scene?.debugGrantRelic(id);
   window.__RT_ASCEND__ = (key) => scene?.debugAscendRule(key);
+  window.__RT_EXPORT__ = () => JSON.stringify(collectPlaytestData(), null, 2);
   window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
@@ -812,6 +850,7 @@ document.getElementById('note-enter-btn')?.addEventListener('click', () => {
 document.getElementById('menu-note-btn')?.addEventListener('click', openNote);
 document.getElementById('menu-meta-btn')?.addEventListener('click', openMeta);
 document.getElementById('result-meta-btn')?.addEventListener('click', openMeta);
+document.getElementById('result-export-btn')?.addEventListener('click', exportPlaytestData);
 document.getElementById('menu-daily-btn')?.addEventListener('click', () => startRun(true));
 document.getElementById('meta-daily-btn')?.addEventListener('click', () => {
   metaScreen.hidden = true;
