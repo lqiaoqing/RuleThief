@@ -111,6 +111,7 @@ interface EnemyUnit {
   burnTick: number;
   frostTime: number;
   frostSlow: number;
+  shieldTime: number;
   elite: boolean;
   chargesLeft: number;
   trailCd: number;
@@ -367,6 +368,12 @@ export class M0Scene extends Phaser.Scene {
   private roomBonusCards = 0;
   private roomHazardCd = 0;
   private roomModifierCd = 0;
+  private conveyorVec = new Phaser.Math.Vector2();
+  private conveyorGfx?: Phaser.GameObjects.Graphics;
+  private coreLaserCd = 0;
+  private coreLaserTime = 0;
+  private coreLaserAngle = 0;
+  private coreLaserGfx?: Phaser.GameObjects.Graphics;
   private pendingSpeedMult = 1;
   private pendingBonusCards = 0;
   private pendingBonusElite = false;
@@ -575,6 +582,13 @@ export class M0Scene extends Phaser.Scene {
     this.roomBonusCards = 0;
     this.roomHazardCd = 0;
     this.roomModifierCd = 0;
+    this.conveyorVec.set(0, 0);
+    this.conveyorGfx?.destroy();
+    this.conveyorGfx = undefined;
+    this.coreLaserCd = 0;
+    this.coreLaserTime = 0;
+    this.coreLaserGfx?.destroy();
+    this.coreLaserGfx = undefined;
     this.pendingSpeedMult = 1;
     this.pendingBonusCards = 0;
     this.pendingBonusElite = false;
@@ -1027,6 +1041,13 @@ export class M0Scene extends Phaser.Scene {
     this.roomBonusCards = 0;
     this.roomHazardCd = 0;
     this.roomModifierCd = 0;
+    this.conveyorVec.set(0, 0);
+    this.conveyorGfx?.destroy();
+    this.conveyorGfx = undefined;
+    this.coreLaserCd = 0;
+    this.coreLaserTime = 0;
+    this.coreLaserGfx?.destroy();
+    this.coreLaserGfx = undefined;
     this.pendingSpeedMult = 1;
     this.pendingBonusCards = 0;
     this.pendingBonusElite = false;
@@ -1067,6 +1088,11 @@ export class M0Scene extends Phaser.Scene {
     const room = this.getRoom();
     this.roomHazardCd = room.hazard ? (room.hazard === 'void-rift' ? 1.5 : 1.8) : 0;
     this.roomModifierCd = room.modifier === 'rule-null' ? 4.5 : 0;
+    this.conveyorVec.set(
+      room.modifier === 'conveyor' ? room.conveyor?.x ?? 0 : 0,
+      room.modifier === 'conveyor' ? room.conveyor?.y ?? 0 : 0
+    );
+    this.drawConveyor();
     setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
     this.resumeScene();
@@ -1086,6 +1112,8 @@ export class M0Scene extends Phaser.Scene {
       this.bossChargeCd = 4.5;
       this.bossSummonCd = 7;
       this.bossSealCd = 6;
+      this.coreLaserCd = 3.5;
+      this.coreLaserTime = 0;
       this.spawnLeaderBurst(ARENA * 0.5, 235);
       this.cameras.main.shake(420, 0.005);
     }
@@ -1720,6 +1748,10 @@ export class M0Scene extends Phaser.Scene {
       dashfireTime: this.mutation.dashfireTime,
       roomSpeedMult: this.roomSpeedMult,
       roomBonusCards: this.roomBonusCards,
+      conveyor: { x: this.conveyorVec.x, y: this.conveyorVec.y },
+      coreLaserActive: this.coreLaserTime > 0,
+      coreLaserAngle: this.coreLaserAngle,
+      coreLaserCd: this.coreLaserCd,
       plan: this.plan.map((step) =>
         step.kind === 'choice'
           ? {
@@ -1755,6 +1787,7 @@ export class M0Scene extends Phaser.Scene {
         burning: enemy.burnTime > 0,
         slowed: enemy.frostTime > 0,
         slow: enemy.frostSlow,
+        shielded: enemy.shieldTime > 0,
         elite: enemy.elite,
         state: enemy.state,
         charging: enemy.state === 'charge'
@@ -2058,6 +2091,36 @@ export class M0Scene extends Phaser.Scene {
     this.dustEmitter = dust;
   }
 
+  private drawConveyor(): void {
+    this.conveyorGfx?.destroy();
+    this.conveyorGfx = undefined;
+    if (this.conveyorVec.lengthSq() === 0) return;
+    const g = this.add.graphics();
+    const angle = Math.atan2(this.conveyorVec.y, this.conveyorVec.x);
+    g.lineStyle(2, getWorldTheme(this.chapterIndex).framePrimary, 0.08);
+    for (let x = 160; x <= 640; x += 120) {
+      for (let y = 150; y <= 650; y += 100) {
+        const cx = x + Math.cos(angle) * 18;
+        const cy = y + Math.sin(angle) * 18;
+        g.beginPath();
+        g.moveTo(cx - Math.cos(angle) * 16, cy - Math.sin(angle) * 16);
+        g.lineTo(cx, cy);
+        g.lineTo(
+          cx - Math.cos(angle) * 16 - Math.sin(angle) * 10,
+          cy - Math.sin(angle) * 16 + Math.cos(angle) * 10
+        );
+        g.moveTo(cx, cy);
+        g.lineTo(
+          cx - Math.cos(angle) * 16 + Math.sin(angle) * 10,
+          cy - Math.sin(angle) * 16 - Math.cos(angle) * 10
+        );
+        g.strokePath();
+      }
+    }
+    this.world.addAt(g, 1);
+    this.conveyorGfx = g;
+  }
+
   private applyWorldTheme(): void {
     const theme = getWorldTheme(this.chapterIndex);
     this.floorImage?.setTint(theme.floorTint);
@@ -2289,9 +2352,13 @@ export class M0Scene extends Phaser.Scene {
       const dir = this.dashRemaining > 0 ? this.dashDirection : input;
       this.playerRoot.x += dir.x * speed * dt;
       this.playerRoot.y += dir.y * speed * dt;
-      this.playerRoot.x = Phaser.Math.Clamp(this.playerRoot.x, 54, ARENA - 54);
-      this.playerRoot.y = Phaser.Math.Clamp(this.playerRoot.y, 74, ARENA - 54);
     }
+    if (this.conveyorVec.lengthSq() > 0) {
+      this.playerRoot.x += this.conveyorVec.x * dt;
+      this.playerRoot.y += this.conveyorVec.y * dt;
+    }
+    this.playerRoot.x = Phaser.Math.Clamp(this.playerRoot.x, 54, ARENA - 54);
+    this.playerRoot.y = Phaser.Math.Clamp(this.playerRoot.y, 74, ARENA - 54);
 
     if (this.playerSprite) {
       if (input.x !== 0) this.playerSprite.setFlipX(input.x < 0);
@@ -2940,6 +3007,13 @@ export class M0Scene extends Phaser.Scene {
       enemy.frostTime = Math.max(0, enemy.frostTime - dt);
       if (enemy.frostTime <= 0) enemy.frostSlow = 0;
     }
+    if (enemy.shieldTime > 0) {
+      enemy.shieldTime = Math.max(0, enemy.shieldTime - dt);
+      enemy.castRing.setVisible(enemy.shieldTime > 0);
+      if (enemy.shieldTime > 0) {
+        enemy.castRing.setScale(1 + Math.sin(this.time.now * 0.012) * 0.08);
+      }
+    }
     if (enemy.dead) return;
     if (enemy.burnTime > 0) {
       enemy.aura.setTint(COLORS.orange);
@@ -3005,9 +3079,10 @@ export class M0Scene extends Phaser.Scene {
     visual: 'hit' | 'blast' | 'dot'
   ): void {
     if (enemy.dead) return;
-    this.damageDealt += Math.max(0, amount);
+    const dealt = enemy.shieldTime > 0 ? amount * 0.6 : amount;
+    this.damageDealt += Math.max(0, dealt);
     if (visual === 'blast') this.blastDamageEvents += 1;
-    enemy.hp -= amount;
+    enemy.hp -= dealt;
     enemy.hpFill.setScale(Math.max(0, enemy.hp / enemy.maxHp), 1);
     const x = enemy.root.x + Phaser.Math.Between(-8, 8);
     const y = enemy.root.y - (enemy.kind === 'bat' ? 44 : 58);
@@ -3016,13 +3091,13 @@ export class M0Scene extends Phaser.Scene {
       this.time.delayedCall(44, () => {
         if (!enemy.dead) enemy.sprite.clearTint();
       });
-      this.spawnDamageNumber(x, y, String(Math.round(amount)), '#ffe399');
+      this.spawnDamageNumber(x, y, String(Math.round(dealt)), '#ffe399');
       audio.play('hit');
       this.spawnHitSpark(enemy.root.x, enemy.root.y - 10);
     } else if (visual === 'blast') {
-      this.spawnDamageNumber(x, y, String(Math.round(amount)), '#ffb078', 18);
+      this.spawnDamageNumber(x, y, String(Math.round(dealt)), '#ffb078', 18);
     } else {
-      this.spawnDamageNumber(x, y, String(Math.round(amount)), '#ff9a5c', 15);
+      this.spawnDamageNumber(x, y, String(Math.round(dealt)), '#ff9a5c', 15);
     }
     if (enemy.hp <= 0) {
       this.killEnemy(enemy);
@@ -3376,6 +3451,7 @@ export class M0Scene extends Phaser.Scene {
       burnTick: 0,
       frostTime: 0,
       frostSlow: 0,
+      shieldTime: 0,
       elite,
       chargesLeft: 0,
       trailCd: 1.2,
@@ -3461,6 +3537,9 @@ export class M0Scene extends Phaser.Scene {
           break;
         case 'source':
           this.updateSource(enemy, dt);
+          break;
+        case 'warden':
+          this.updateWarden(enemy, dt);
           break;
       }
       enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, ARENA - 58);
@@ -4114,13 +4193,64 @@ export class M0Scene extends Phaser.Scene {
       }
     }
 
+    this.updateCoreLaser(enemy, dt, phase);
+
     if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 1.0;
       this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
+  private updateCoreLaser(enemy: EnemyUnit, dt: number, phase: number): void {
+    if (this.coreLaserTime <= 0) {
+      this.coreLaserCd -= dt;
+      if (this.coreLaserCd > 0) return;
+      this.coreLaserTime = 2.2;
+      this.coreLaserAngle = combatRandom() * Math.PI * 2;
+      this.coreLaserCd = 999;
+      if (!this.coreLaserGfx) {
+        this.coreLaserGfx = this.add.graphics();
+        this.addFx(this.coreLaserGfx);
+      }
+      audio.play('spawn');
+    }
+
+    this.coreLaserTime -= dt;
+    this.coreLaserAngle += dt * (phase >= 3 ? 2.8 : 1.9);
+    const cos = Math.cos(this.coreLaserAngle);
+    const sin = Math.sin(this.coreLaserAngle);
+    const g = this.coreLaserGfx;
+    if (g) {
+      g.clear();
+      g.lineStyle(12, COLORS.red, 0.08);
+      g.beginPath();
+      g.moveTo(enemy.root.x, enemy.root.y - 10);
+      g.lineTo(enemy.root.x + cos * 900, enemy.root.y - 10 + sin * 900);
+      g.strokePath();
+      g.lineStyle(3, COLORS.orange, 0.75);
+      g.beginPath();
+      g.moveTo(enemy.root.x, enemy.root.y - 10);
+      g.lineTo(enemy.root.x + cos * 900, enemy.root.y - 10 + sin * 900);
+      g.strokePath();
+    }
+
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - (enemy.root.y - 10);
+    const along = dx * cos + dy * sin;
+    const perpendicular = Math.abs(-dx * sin + dy * cos);
+    if (along > 0 && perpendicular < PLAYER_RADIUS + 8) {
+      this.hurtPlayer(10, enemy.root.x, enemy.root.y, 'hazard');
+    }
+
+    if (this.coreLaserTime <= 0) {
+      g?.destroy();
+      this.coreLaserGfx = undefined;
+      this.coreLaserCd = phase >= 3 ? 3.5 : 5;
+    }
+  }
+
   private onCorePhase(phase: number): void {
+    if (phase >= 2) this.coreLaserCd = 1.2;
     this.cameras.main.shake(380, 0.005);
     this.cameras.main.flash(200, 90, 210, 255);
     audio.play('rule');
@@ -4194,6 +4324,46 @@ export class M0Scene extends Phaser.Scene {
     if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
       enemy.contactCd = 1.0;
       this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private updateWarden(enemy: EnemyUnit, dt: number): void {
+    this.strafeAtRange(enemy, dt, 280, 210, 420);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    enemy.trailCd -= dt;
+
+    if (enemy.trailCd <= 0) {
+      enemy.trailCd = 6;
+      enemy.shieldTime = 3;
+      enemy.castRing.setVisible(true);
+      const ring = this.add
+        .circle(enemy.root.x, enemy.root.y - 8, enemy.radius + 22, 0x000000, 0)
+        .setStrokeStyle(2, COLORS.cyan, 0.7)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.addFx(ring);
+      this.tweens.add({
+        targets: ring,
+        scale: 1.6,
+        alpha: 0,
+        duration: 380,
+        onComplete: () => ring.destroy()
+      });
+      audio.play('spawn');
+    }
+
+    if (enemy.attackCd <= 0 && this.distanceToPlayer(enemy) < 560) {
+      enemy.attackCd = 2.8;
+      this.fireEnemyBolt(enemy, {
+        speed: 200,
+        damage: 7,
+        tint: COLORS.cyan,
+        scale: 1.1
+      });
+    }
+
+    if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(6, enemy.root.x, enemy.root.y, 'melee');
     }
   }
 
@@ -4345,6 +4515,9 @@ export class M0Scene extends Phaser.Scene {
       hazard.root.destroy(true);
     }
     this.hazards = [];
+    this.coreLaserGfx?.destroy();
+    this.coreLaserGfx = undefined;
+    this.coreLaserTime = 0;
     this.bossRef = null;
     this.sealSlot = null;
     this.sealTime = 0;

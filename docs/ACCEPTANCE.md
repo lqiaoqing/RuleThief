@@ -9,7 +9,7 @@
 npm test                       147/147 通过（13 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  226/226 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 每日修正 + 起点世界 + 导出 + 物品说明）
+npm run smoke                  228/228 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
 npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
@@ -75,6 +75,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M9.5 | 三世界视觉语言 | 自动 + 截图 | W1 金红 / W2 青蓝 / W3 紫黑；地板 tint、环境洗色、框架、火盆、尘埃分层；冒烟断言 `worldTheme`，截图 `screenshots/m95-world-w*.png` |
 | M9.6 | 遗物/突变/高阶强化说明 | 自动 | HUD 悬停/点击/聚焦显示完整说明；冒烟「relic tooltip shows the full description」 |
 | M9.6 | 完整第三规则槽 | 自动 | 主槽满后可装备第三规则；双命中叠加、第三弹道额外开火；总等级 9；双满级后不再出替换卡；W2/W3 敌人与 BOSS 血量 +15% |
+| M9.6 | 第二世界机制差异 | 自动 | 装配门厅/传送带/总装线有传送带推挤；新增护盾机兵（周期 40% 减伤）；失序核心二阶段起旋转激光扫射；冒烟逐项断言 |
 | M9.5 | 战斗场景代码不再主要膨胀 | 进行中 | Arbiter 已拆到 `src/game/bosses/arbiter.ts`（135 行）+ `ArbiterHost`，4 项单测；`M0Scene.ts` 5,272 行，Core/Source 待后续 |
 
 ## D. 性能与长时运行

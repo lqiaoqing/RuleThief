@@ -24,7 +24,8 @@ export type EnemyKind =
   | 'phase'
   | 'core'
   | 'seer'
-  | 'source';
+  | 'source'
+  | 'warden';
 
 export interface EnemySpec {
   name: string;
@@ -203,6 +204,17 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     displaySize: 312,
     elite: true,
     boss: true
+  },
+  warden: {
+    name: '护盾机兵',
+    rule: 'chain',
+    ruleName: '护盾',
+    hint: '周期护盾 · 减伤 40%',
+    hp: 150,
+    radius: 38,
+    speed: 52,
+    sprite: 'sunder',
+    displaySize: 132
   }
 };
 
@@ -211,7 +223,7 @@ export const ENEMY_RULES: Record<EnemyKind, RuleKey> = Object.fromEntries(
 ) as Record<EnemyKind, RuleKey>;
 
 export type RoomHazard = 'shock-grid' | 'void-rift';
-export type RoomModifier = 'rule-null';
+export type RoomModifier = 'rule-null' | 'conveyor';
 
 export interface RoomDef {
   id: string;
@@ -228,6 +240,7 @@ export interface RoomDef {
   elite?: boolean;
   hazard?: RoomHazard;
   modifier?: RoomModifier;
+  conveyor?: { x: number; y: number };
 }
 
 export const ROOMS: readonly RoomDef[] = [
@@ -450,10 +463,13 @@ export const ROOMS: readonly RoomDef[] = [
     maxAlive: 6,
     spawnInterval: 2.8,
     mix: [
-      { kind: 'sentry', weight: 4 },
-      { kind: 'beetle', weight: 3 }
+      { kind: 'sentry', weight: 3 },
+      { kind: 'warden', weight: 3 },
+      { kind: 'beetle', weight: 2 }
     ],
-    hazard: 'shock-grid'
+    hazard: 'shock-grid',
+    modifier: 'conveyor',
+    conveyor: { x: 42, y: 0 }
   },
   {
     id: 'conveyor-hall',
@@ -464,10 +480,13 @@ export const ROOMS: readonly RoomDef[] = [
     maxAlive: 7,
     spawnInterval: 2.6,
     mix: [
-      { kind: 'phase', weight: 5 },
-      { kind: 'sentry', weight: 4 }
+      { kind: 'phase', weight: 4 },
+      { kind: 'sentry', weight: 3 },
+      { kind: 'warden', weight: 2 }
     ],
-    hazard: 'shock-grid'
+    hazard: 'shock-grid',
+    modifier: 'conveyor',
+    conveyor: { x: 48, y: 0 }
   },
   {
     id: 'furnace-line',
@@ -521,11 +540,14 @@ export const ROOMS: readonly RoomDef[] = [
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
-      { kind: 'phase', weight: 5 },
+      { kind: 'phase', weight: 4 },
       { kind: 'sentry', weight: 3 },
+      { kind: 'warden', weight: 2 },
       { kind: 'bomber', weight: 2 }
     ],
-    hazard: 'shock-grid'
+    hazard: 'shock-grid',
+    modifier: 'conveyor',
+    conveyor: { x: 0, y: 38 }
   },
   {
     id: 'scrap-yard',

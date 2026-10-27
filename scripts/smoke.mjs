@@ -1460,6 +1460,19 @@ try {
     5000
   );
   check('chapter two room enters combat', workshopFighting);
+  const conveyorBefore = await snapshot(workshop);
+  await sleep(500);
+  const conveyorAfter = await snapshot(workshop);
+  check(
+    'conveyor room pushes the player without input',
+    Number(conveyorBefore.conveyor?.x) === 42 &&
+      Number(conveyorAfter.playerX) > Number(conveyorBefore.playerX) + 8,
+    JSON.stringify({
+      before: conveyorBefore.playerX,
+      after: conveyorAfter.playerX,
+      conveyor: conveyorAfter.conveyor
+    })
+  );
   const shockSeen = await poll(
     workshop,
     () => Number(window.__RT_SNAPSHOT__?.().hazards ?? 0) >= 3,
@@ -1474,13 +1487,16 @@ try {
   await workshop.evaluate(() => {
     window.__RT_SPAWN__?.('sentry');
     window.__RT_SPAWN__?.('phase');
+    window.__RT_SPAWN__?.('warden');
   });
-  await sleep(850);
+  await sleep(2200);
   const workshopEnemies = await snapshot(workshop);
+  const warden = (workshopEnemies.enemyList ?? []).find((enemy) => enemy.kind === 'warden');
   check(
     'workshop enemies spawn with their own behaviours',
     (workshopEnemies.enemyCounts?.sentry ?? 0) >= 1 &&
-      (workshopEnemies.enemyCounts?.phase ?? 0) >= 1,
+      (workshopEnemies.enemyCounts?.phase ?? 0) >= 1 &&
+      Boolean(warden?.shielded),
     JSON.stringify(workshopEnemies.enemyCounts)
   );
 
@@ -1508,6 +1524,17 @@ try {
       Number(coreState.bossHp) <= 1600 &&
       (await workshop.$eval('#boss-bar-name', (el) => el.textContent)) === '失序核心',
     JSON.stringify({ hp: coreState.bossHp, phase: coreState.bossPhase })
+  );
+  await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(600));
+  const coreLaserSeen = await poll(
+    workshop,
+    () => Boolean(window.__RT_SNAPSHOT__?.().coreLaserActive),
+    5000
+  );
+  check(
+    'disorder core sweeps a rotating laser in phase two',
+    coreLaserSeen,
+    JSON.stringify(await snapshot(workshop))
   );
   await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(2000));
   await workshop.waitForFunction(
