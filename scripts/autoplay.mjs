@@ -75,6 +75,8 @@ async function readState(page) {
       reward: !document.getElementById('altar-screen')?.hidden,
       route: !document.getElementById('route-screen')?.hidden,
       event: !document.getElementById('event-screen')?.hidden,
+      chapter: !document.getElementById('chapter-screen')?.hidden,
+      rewardLabel: document.getElementById('reward-room')?.textContent ?? '',
       result: !document.getElementById('result-screen')?.hidden
     },
     result: {
@@ -99,7 +101,7 @@ async function readState(page) {
 }
 
 async function pickReward(page, cards) {
-  const priority = ['mutation', 'upgrade', 'equip', 'support'];
+  const priority = ['ascension', 'relic', 'mutation', 'upgrade', 'equip', 'support'];
   let index = 0;
   let best = -1;
   cards.forEach((card, i) => {
@@ -170,16 +172,25 @@ async function runOnce(browser, runIndex) {
     }
     if (state.overlay.reward) {
       await setKeys(page, { KeyW: false, KeyA: false, KeyS: false, KeyD: false });
-      rooms.push({
-        room: snapshot.roomIndex + 1,
-        seconds: Math.round((Date.now() - roomStart) / 1000),
-        hpAtStart: roomHp,
-        hpAtEnd: Number(snapshot.hp),
-        kills: Number(snapshot.kills)
-      });
+      const chapterReward = /章节奖励/.test(state.overlay.rewardLabel ?? '');
+      if (!chapterReward) {
+        rooms.push({
+          room: snapshot.roomIndex + 1,
+          seconds: Math.round((Date.now() - roomStart) / 1000),
+          hpAtStart: roomHp,
+          hpAtEnd: Number(snapshot.hp),
+          kills: Number(snapshot.kills)
+        });
+      }
       await pickReward(page, state.cards);
       picks += 1;
       await sleep(420);
+      continue;
+    }
+    if (state.overlay.chapter) {
+      await setKeys(page, { KeyW: false, KeyA: false, KeyS: false, KeyD: false });
+      await page.click('#chapter-continue-btn');
+      await sleep(450);
       continue;
     }
     if (state.overlay.route) {

@@ -1,5 +1,7 @@
 import { getRuleOffers, type PlayerBuild, type RuleKey, type RuleOffer } from './rules';
 import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
+import { getAscensionForRule, type AscensionDef } from './ascensions';
+import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
 
 export type EnemyKind =
   | 'beetle'
@@ -669,7 +671,9 @@ const SUPPORT_IDS: SupportId[] = ['max-hp', 'heal', 'dash', 'speed'];
 export type Reward =
   | { kind: 'rule'; offer: RuleOffer }
   | { kind: 'support'; support: SupportDef }
-  | { kind: 'mutation'; mutation: MutationDef };
+  | { kind: 'mutation'; mutation: MutationDef }
+  | { kind: 'relic'; relic: RelicDef }
+  | { kind: 'ascension'; ascension: AscensionDef };
 
 export interface RoomPreview {
   index: number;
@@ -689,6 +693,8 @@ export interface RoomCleared {
   kills: number;
   elapsed: number;
   rewards: Reward[];
+  rewardLabel?: string;
+  chapterReward?: boolean;
 }
 
 function shuffle<T>(items: readonly T[], random: () => number): T[] {
@@ -728,4 +734,43 @@ export function buildRoomRewards(
     cursor += 1;
   }
   return rewards;
+}
+
+export function buildChapterRewards(
+  build: PlayerBuild,
+  relics: readonly RelicId[],
+  random: () => number = Math.random
+): Reward[] {
+  const rewards: Reward[] = [];
+  const ascensions = [build.trajectory, build.impact]
+    .map((ref) =>
+      ref && ref.level === 3 && !ref.ascended ? getAscensionForRule(ref.key) : null
+    )
+    .filter((entry): entry is AscensionDef => Boolean(entry));
+  const ascensionPool = shuffle(ascensions, random);
+  if (ascensionPool[0]) {
+    rewards.push({ kind: 'ascension', ascension: ascensionPool[0] });
+  }
+
+  if (relics.length < MAX_RELICS) {
+    const relicPool = shuffle(
+      RELIC_IDS.filter((id) => !relics.includes(id)).map((id) => RELICS[id]),
+      random
+    );
+    for (const relic of relicPool.slice(0, 1 + (rewards.length === 0 ? 1 : 0))) {
+      rewards.push({ kind: 'relic', relic });
+    }
+  }
+
+  if (ascensionPool[1] && rewards.length < 3 && relics.length >= MAX_RELICS) {
+    rewards.push({ kind: 'ascension', ascension: ascensionPool[1] });
+  }
+
+  const supports = shuffle(SUPPORT_IDS, random).map((id) => SUPPORTS[id]);
+  let cursor = 0;
+  while (rewards.length < 3 && cursor < supports.length) {
+    rewards.push({ kind: 'support', support: supports[cursor] });
+    cursor += 1;
+  }
+  return rewards.slice(0, 3);
 }

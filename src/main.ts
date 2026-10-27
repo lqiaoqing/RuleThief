@@ -147,6 +147,7 @@ const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
 const resultRecord = byId<HTMLElement>('result-record');
 const resultMutation = byId<HTMLElement>('result-mutation');
+const resultRelics = byId<HTMLElement>('result-relics');
 const resultDamage = byId<HTMLElement>('result-damage');
 const chapterScreen = byId<HTMLElement>('chapter-screen');
 const chapterKicker = byId<HTMLElement>('chapter-kicker');
@@ -249,6 +250,9 @@ function showResult(payload: RunEndPayload): void {
   });
   resultRecord.textContent = formatRecordLine(summarize(runs));
   resultMutation.textContent = payload.mutation ? `突变 · ${payload.mutation}` : '突变 · 无';
+  resultRelics.textContent = `遗物 · ${payload.relics.length ? payload.relics.join(' / ') : '无'}${
+    payload.ascensions.length ? ` · 升阶 ${payload.ascensions.join(' / ')}` : ''
+  }`;
   const totalTaken = payload.damage.reduce((sum, entry) => sum + entry.amount, 0);
   const damageLine = totalTaken
     ? payload.damage
@@ -360,7 +364,7 @@ function showRewards(payload: RoomCleared): void {
   pendingRewards = payload.rewards;
   renderRewards(payload.rewards, (reward) => chooseReward(reward));
   setRoomVisible(false);
-  setRewardVisible(true, `ROOM ${payload.index + 1} / ${payload.total} 已清空`);
+  setRewardVisible(true, payload.rewardLabel ?? `ROOM ${payload.index + 1} / ${payload.total} 已清空`);
   pauseScreen.hidden = true;
 }
 
@@ -369,7 +373,14 @@ function chooseReward(reward: RoomCleared['rewards'][number]): void {
   setRewardVisible(false);
   pendingRewards = [];
   scene.applyReward(reward);
-  if (scene.isRoomPreviewOpen() || scene.isRouteOpen() || scene.isEventOpen()) return;
+  if (
+    scene.isRoomPreviewOpen() ||
+    scene.isRouteOpen() ||
+    scene.isEventOpen() ||
+    scene.getChapterState().transitionOpen
+  ) {
+    return;
+  }
   scene.resumeGame();
   void audio.resume();
 }

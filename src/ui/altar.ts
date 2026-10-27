@@ -158,6 +158,64 @@ function mutationCard(reward: Extract<Reward, { kind: 'mutation' }>, index: numb
   return card;
 }
 
+function relicCard(reward: Extract<Reward, { kind: 'relic' }>, index: number) {
+  const relic = reward.relic;
+  const card = el('button', 'rule-card action-relic');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', relic.color);
+  card.dataset.key = relic.id;
+  card.dataset.action = 'relic';
+  card.dataset.kind = 'relic';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(relic.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '遗物 · RELIC'),
+    el('span', 'rule-card-name', relic.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action support', '遗物'));
+
+  card.append(head, el('p', 'rule-card-desc', relic.description));
+  card.append(el('span', 'rule-card-now', relic.detail));
+  card.append(el('div', 'rule-card-combo support-note', '最多装备 2 件 · 不占用规则槽'));
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
+function ascensionCard(reward: Extract<Reward, { kind: 'ascension' }>, index: number) {
+  const ascension = reward.ascension;
+  const card = el('button', 'rule-card action-ascension');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', ascension.color);
+  card.dataset.key = ascension.id;
+  card.dataset.action = 'ascension';
+  card.dataset.kind = 'ascension';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(ascension.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '规则升阶 · ASCENSION'),
+    el('span', 'rule-card-name', ascension.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action upgrade', '升阶'));
+
+  card.append(head, el('p', 'rule-card-desc', ascension.description));
+  card.append(el('span', 'rule-card-now', ascension.detail));
+  card.append(
+    el(
+      'div',
+      'rule-card-combo',
+      `${getRuleName(ascension.rule)} Lv.3 升阶形态 · 不新增规则槽`
+    )
+  );
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
   offersWrap.dataset.count = String(rewards.length);
@@ -167,7 +225,11 @@ export function renderRewards(rewards: readonly Reward[], onPick: (reward: Rewar
         ? ruleCard(reward.offer, index)
         : reward.kind === 'mutation'
           ? mutationCard(reward, index)
-          : supportCard(reward, index);
+          : reward.kind === 'relic'
+            ? relicCard(reward, index)
+            : reward.kind === 'ascension'
+              ? ascensionCard(reward, index)
+              : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
     offersWrap.append(card);
   });

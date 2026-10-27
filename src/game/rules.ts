@@ -7,6 +7,7 @@ export type RuleLevel = 1 | 2 | 3;
 export interface RuleRef<K extends RuleKey = RuleKey> {
   key: K;
   level: RuleLevel;
+  ascended?: boolean;
 }
 
 export interface PlayerBuild {
@@ -322,6 +323,19 @@ export function cloneBuild(build: PlayerBuild): PlayerBuild {
     trajectory: build.trajectory ? { ...build.trajectory } : null,
     impact: build.impact ? { ...build.impact } : null
   };
+}
+
+export function canAscend(build: PlayerBuild, key: RuleKey): boolean {
+  const ref = isTrajectoryKey(key) ? build.trajectory : build.impact;
+  return Boolean(ref && ref.key === key && ref.level === 3 && !ref.ascended);
+}
+
+export function ascendRule(build: PlayerBuild, key: RuleKey): PlayerBuild {
+  const next = cloneBuild(build);
+  const ref = isTrajectoryKey(key) ? next.trajectory : next.impact;
+  if (!ref || ref.key !== key || ref.level !== 3) return next;
+  ref.ascended = true;
+  return next;
 }
 
 function buildOffer(build: PlayerBuild, key: RuleKey): RuleOffer | null {

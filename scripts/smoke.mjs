@@ -826,9 +826,49 @@ try {
   }
 
   await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(900));
+  await page.waitForFunction(
+    () =>
+      !document.getElementById('altar-screen')?.hidden ||
+      !document.getElementById('chapter-screen')?.hidden,
+    { timeout: 9000 }
+  );
+  const chapterReward = await page.evaluate(() => ({
+    visible: !document.getElementById('altar-screen')?.hidden,
+    label: document.getElementById('reward-room')?.textContent,
+    cards: [...document.querySelectorAll('#rule-offers .rule-card')].map((card) => ({
+      kind: card.getAttribute('data-kind'),
+      name: card.querySelector('.rule-card-name')?.textContent
+    }))
+  }));
+  check(
+    'chapter one clear offers a chapter reward',
+    chapterReward.visible && /章节奖励/.test(chapterReward.label ?? ''),
+    JSON.stringify(chapterReward)
+  );
+  check(
+    'chapter reward includes a relic or ascension',
+    chapterReward.cards.some((card) => card.kind === 'relic' || card.kind === 'ascension'),
+    JSON.stringify(chapterReward.cards)
+  );
+  await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('#rule-offers .rule-card')];
+    const pick =
+      cards.find(
+        (card) =>
+          card.getAttribute('data-kind') === 'relic' ||
+          card.getAttribute('data-kind') === 'ascension'
+      ) ?? cards[0];
+    pick?.click();
+  });
   await page.waitForFunction(() => !document.getElementById('chapter-screen')?.hidden, {
     timeout: 9000
   });
+  const chapterUpgrade = await snapshot(page);
+  check(
+    'picking a chapter reward keeps it for the next chapter',
+    (chapterUpgrade.relics?.length ?? 0) + (chapterUpgrade.ascensions?.length ?? 0) >= 1,
+    JSON.stringify({ relics: chapterUpgrade.relics, ascensions: chapterUpgrade.ascensions })
+  );
   const chapterClear = await page.evaluate(() => ({
     kicker: document.getElementById('chapter-kicker')?.textContent,
     title: document.getElementById('chapter-title')?.textContent,
@@ -1134,6 +1174,16 @@ try {
     JSON.stringify({ bolts: raceLocked.enemyBolts, hazards: raceLocked.hazards })
   );
   check('boss death locks out further damage', Number(raceLocked.hp) === 100, String(raceLocked.hp));
+  await bossPractice.waitForFunction(
+    () =>
+      !document.getElementById('altar-screen')?.hidden ||
+      !document.getElementById('chapter-screen')?.hidden,
+    { timeout: 9000 }
+  );
+  await bossPractice.evaluate(() => {
+    const cards = [...document.querySelectorAll('#rule-offers .rule-card')];
+    cards[0]?.click();
+  });
   await bossPractice.waitForFunction(
     () => !document.getElementById('chapter-screen')?.hidden,
     { timeout: 9000 }

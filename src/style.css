@@ -2138,3 +2138,20 @@ kbd {
     flex: 1 1 140px;
   }
 }
+
+.relic-line {
+  border-color: rgba(255, 210, 122, 0.28);
+}
+
+.relic-line .mutation-ico {
+  color: #ffd27a;
+}
+
+.rule-card.action-relic {
+  border-color: rgba(255, 210, 122, 0.32);
+}
+
+.rule-card.action-ascension {
+  border-color: rgba(101, 220, 240, 0.36);
+  box-shadow: 0 0 0 1px rgba(101, 220, 240, 0.12) inset;
+}

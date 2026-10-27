@@ -91,6 +91,9 @@ const bossPips = Array.from(document.querySelectorAll<HTMLElement>('#boss-pips i
 const mutationLine = byId<HTMLElement>('mutation-line');
 const mutationName = byId<HTMLElement>('mutation-name');
 const mutationIcon = byId<SVGUseElement>('mutation-icon');
+const relicLine = byId<HTMLElement>('relic-line');
+const relicCount = byId<HTMLElement>('relic-count');
+const relicNames = byId<HTMLElement>('relic-names');
 
 const PHASE_LABELS = ['秩序', '混乱', '规则剥夺'];
 const PHASE_NUMERALS = ['I', 'II', 'III'];
@@ -118,6 +121,12 @@ export function setMutation(def: MutationDef | null): void {
   mutationName.textContent = def.name;
   mutationLine.style.setProperty('--mutation-color', def.color);
   mutationIcon.setAttribute('href', def.icon);
+}
+
+export function setRelics(names: readonly string[]): void {
+  relicLine.hidden = names.length === 0;
+  relicCount.textContent = `${names.length} / 2`;
+  relicNames.textContent = names.length ? names.join(' · ') : '—';
 }
 
 export function setSealedRule(slot: 'trajectory' | 'impact' | null, visible: boolean): void {
@@ -234,7 +243,7 @@ function updateSlot(
   slot.classList.add('is-owned');
   icon.setAttribute('href', def.icon);
   nameEl.textContent = def.name;
-  statusEl.textContent = `Lv.${ref.level}`;
+  statusEl.textContent = ref.ascended ? 'Lv.3 · 升阶' : `Lv.${ref.level}`;
   descEl.textContent = getRuleLevelDescription(ref.key, ref.level);
   slot.style.setProperty('--rule-color', color);
   iconBox.style.color = color;
