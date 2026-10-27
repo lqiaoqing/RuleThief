@@ -1863,6 +1863,116 @@ try {
   );
   await domainPage.close();
 
+  const emberPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await emberPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(emberPage);
+  await emberPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(emberPage);
+  await sleep(500);
+  await emberPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_LATE__?.('ember-spread');
+    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
+    window.__RT_SPAWN_AT__?.('sunder', 350, 200);
+  });
+  await sleep(150);
+  await emberPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(500);
+  const emberBurning = await snapshot(emberPage);
+  await emberPage.evaluate(() => window.__RT_KILL_ONE__?.(0));
+  await sleep(250);
+  const emberAfter = await snapshot(emberPage);
+  const emberTarget = (emberAfter.enemyList ?? []).find((enemy) => enemy.kind === 'sunder');
+  check(
+    'ember spread transfers burn on death',
+    (emberBurning.enemyList ?? []).some(
+      (enemy) => enemy.kind === 'beetle' && enemy.burning
+    ) && Boolean(emberTarget?.burning),
+    JSON.stringify({ before: emberBurning.enemyList, after: emberAfter.enemyList })
+  );
+  await emberPage.close();
+
+  const echoPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await echoPage.goto(`${BASE}/?arena=1&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(echoPage);
+  await echoPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(echoPage);
+  await sleep(500);
+  await echoPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_LATE__?.('rift-echo');
+    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 450, 300);
+  });
+  await sleep(150);
+  await echoPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(700);
+  const echoState = await snapshot(echoPage);
+  check(
+    'rift echo fires a secondary impact after the chain',
+    Number(echoState.riftEchoCasts) >= 1,
+    String(echoState.riftEchoCasts)
+  );
+  await echoPage.close();
+
+  const ringPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await ringPage.goto(`${BASE}/?arena=1&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(ringPage);
+  await ringPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(ringPage);
+  await sleep(500);
+  await ringPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_LATE__?.('frost-ring');
+    window.__RT_SPAWN_AT__?.('sunder', 430, 300);
+  });
+  await sleep(150);
+  await ringPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(400);
+  const ringState = await snapshot(ringPage);
+  check(
+    'frost ring leaves a slowing field',
+    Number(ringState.slowFields) >= 1,
+    String(ringState.slowFields)
+  );
+  await ringPage.close();
+
+  const momentumPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await momentumPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(momentumPage);
+  await momentumPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(momentumPage);
+  await sleep(500);
+  await momentumPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_LATE__?.('pierce-momentum');
+    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 450, 200);
+    window.__RT_SPAWN_AT__?.('beetle', 500, 100);
+  });
+  await sleep(150);
+  await momentumPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(600);
+  const momentumState = await snapshot(momentumPage);
+  check(
+    'pierce momentum banks extra penetration for the next attack',
+    Number(momentumState.pierceMomentum) >= 1,
+    String(momentumState.pierceMomentum)
+  );
+  await momentumPage.close();
+
   const compact = await newPage(browser, {
     width: 360,
     height: 640,

@@ -122,8 +122,8 @@ async function readState(page) {
 async function pickReward(page, cards, hp) {
   const priority =
     hp < 55
-      ? ['support', 'mutation', 'upgrade', 'equip', 'ascension', 'relic']
-      : ['ascension', 'relic', 'mutation', 'upgrade', 'equip', 'support'];
+      ? ['support', 'late', 'mutation', 'upgrade', 'equip', 'ascension', 'relic']
+      : ['ascension', 'relic', 'late', 'mutation', 'upgrade', 'equip', 'support'];
   let index = 0;
   let best = -1;
   cards.forEach((card, i) => {

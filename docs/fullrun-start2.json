@@ -11,11 +11,15 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 21,
+  "seconds": 22,
   "relics": [
-    "thunder-emblem",
-    "bloodflame-heart"
+    "bloodflame-heart",
+    "thunder-emblem"
   ],
   "ascensions": [],
+  "lateUpgrades": [
+    "pierce-momentum",
+    "ember-spread"
+  ],
   "errors": []
 }

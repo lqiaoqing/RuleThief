@@ -94,6 +94,9 @@ const mutationIcon = byId<SVGUseElement>('mutation-icon');
 const relicLine = byId<HTMLElement>('relic-line');
 const relicCount = byId<HTMLElement>('relic-count');
 const relicNames = byId<HTMLElement>('relic-names');
+const lateLine = byId<HTMLElement>('late-line');
+const lateCount = byId<HTMLElement>('late-count');
+const lateNames = byId<HTMLElement>('late-names');
 
 const PHASE_LABELS = ['秩序', '混乱', '规则剥夺'];
 const PHASE_NUMERALS = ['I', 'II', 'III'];
@@ -127,6 +130,12 @@ export function setRelics(names: readonly string[]): void {
   relicLine.hidden = names.length === 0;
   relicCount.textContent = `${names.length} / 2`;
   relicNames.textContent = names.length ? names.join(' · ') : '—';
+}
+
+export function setLate(names: readonly string[]): void {
+  lateLine.hidden = names.length === 0;
+  lateCount.textContent = `${names.length} / 2`;
+  lateNames.textContent = names.length ? names.join(' · ') : '—';
 }
 
 export function setSealedRule(slot: 'trajectory' | 'impact' | null, visible: boolean): void {

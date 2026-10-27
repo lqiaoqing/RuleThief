@@ -8,6 +8,7 @@ import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import { ALL_RULE_KEYS, getRuleName } from './game/rules';
 import type { RelicId } from './game/relics';
+import type { LateUpgradeId } from './game/lateUpgrades';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
 import { CHAPTERS } from './game/run';
@@ -54,6 +55,7 @@ declare global {
     __RT_SPAWN__?: (kind?: EnemyKind) => void;
     __RT_SPAWN_AT__?: (kind: EnemyKind, x: number, y: number) => void;
     __RT_KILL_ALL__?: () => void;
+    __RT_KILL_ONE__?: (index?: number) => void;
     __RT_PURGE_ENEMIES__?: () => void;
     __RT_POSE__?: (build?: {
       trajectory?: TrajectoryKey | null;
@@ -91,6 +93,7 @@ declare global {
     __RT_DAILY__?: () => boolean;
     __RT_RELIC__?: (id: RelicId) => void;
     __RT_ASCEND__?: (key: RuleKey) => void;
+    __RT_LATE__?: (id: LateUpgradeId) => void;
     __RT_EXPORT__?: () => string;
     __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
@@ -168,6 +171,7 @@ const resultRecord = byId<HTMLElement>('result-record');
 const resultShards = byId<HTMLElement>('result-shards');
 const resultMutation = byId<HTMLElement>('result-mutation');
 const resultRelics = byId<HTMLElement>('result-relics');
+const resultLate = byId<HTMLElement>('result-late');
 const resultDamage = byId<HTMLElement>('result-damage');
 const chapterScreen = byId<HTMLElement>('chapter-screen');
 const chapterKicker = byId<HTMLElement>('chapter-kicker');
@@ -314,6 +318,7 @@ function showResult(payload: RunEndPayload): void {
     stageOnly,
     relics: payload.relics,
     ascensions: payload.ascensions,
+    lateUpgrades: payload.lateUpgrades,
     mutatorLevel: payload.mutatorLevel,
     mutatorName: payload.mutatorName,
     daily: dailyMode,
@@ -349,6 +354,9 @@ function showResult(payload: RunEndPayload): void {
   resultMutation.textContent = payload.mutation ? `突变 · ${payload.mutation}` : '突变 · 无';
   resultRelics.textContent = `遗物 · ${payload.relics.length ? payload.relics.join(' / ') : '无'}${
     payload.ascensions.length ? ` · 升阶 ${payload.ascensions.join(' / ')}` : ''
+  }`;
+  resultLate.textContent = `高阶强化 · ${
+    payload.lateUpgrades.length ? payload.lateUpgrades.join(' / ') : '无'
   }`;
   const totalTaken = payload.damage.reduce((sum, entry) => sum + entry.amount, 0);
   const damageLine = totalTaken
@@ -763,6 +771,7 @@ function handleReady(): void {
   window.__RT_SPAWN__ = (kind) => scene?.debugSpawn(kind);
   window.__RT_SPAWN_AT__ = (kind, x, y) => scene?.debugSpawnAt(kind, x, y);
   window.__RT_KILL_ALL__ = () => scene?.debugKillAll();
+  window.__RT_KILL_ONE__ = (index) => scene?.debugKillEnemy(index);
   window.__RT_PURGE_ENEMIES__ = () => scene?.debugPurgeEnemies();
   window.__RT_POSE__ = (build) => scene?.debugPoseCombat(build);
   window.__RT_TABLEAU__ = (kinds, build) => scene?.debugTableau(kinds, build);
@@ -783,6 +792,7 @@ function handleReady(): void {
   window.__RT_DAILY__ = () => dailyMode;
   window.__RT_RELIC__ = (id) => scene?.debugGrantRelic(id);
   window.__RT_ASCEND__ = (key) => scene?.debugAscendRule(key);
+  window.__RT_LATE__ = (id) => scene?.debugGrantLate(id);
   window.__RT_EXPORT__ = () => JSON.stringify(collectPlaytestData(), null, 2);
   window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();

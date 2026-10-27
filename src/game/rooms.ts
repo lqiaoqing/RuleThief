@@ -2,6 +2,13 @@ import { getRuleOffers, type PlayerBuild, type RuleKey, type RuleOffer } from '.
 import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionDef, type AscensionId } from './ascensions';
 import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
+import {
+  LATE_UPGRADE_IDS,
+  LATE_UPGRADES,
+  MAX_LATE_UPGRADES,
+  type LateUpgradeDef,
+  type LateUpgradeId
+} from './lateUpgrades';
 
 export type EnemyKind =
   | 'beetle'
@@ -901,7 +908,8 @@ export type Reward =
   | { kind: 'support'; support: SupportDef }
   | { kind: 'mutation'; mutation: MutationDef }
   | { kind: 'relic'; relic: RelicDef }
-  | { kind: 'ascension'; ascension: AscensionDef };
+  | { kind: 'ascension'; ascension: AscensionDef }
+  | { kind: 'late'; upgrade: LateUpgradeDef };
 
 export interface RoomPreview {
   index: number;
@@ -938,7 +946,12 @@ export function buildRoomRewards(
   build: PlayerBuild,
   room: RoomDef,
   random: () => number = Math.random,
-  options: { hasMutation?: boolean; bonusCards?: number } = {}
+  options: {
+    hasMutation?: boolean;
+    bonusCards?: number;
+    lateEligible?: boolean;
+    lateUpgrades?: readonly LateUpgradeId[];
+  } = {}
 ): Reward[] {
   const pool = getRoomRuleKeys(room);
   const count = (room.rewardCount ?? 3) + (options.bonusCards ?? 0);
@@ -953,6 +966,19 @@ export function buildRoomRewards(
   for (const offer of ruleOffers) {
     if (rewards.length >= count) break;
     rewards.push({ kind: 'rule', offer });
+  }
+
+  const ownedLate = options.lateUpgrades ?? [];
+  if (
+    options.lateEligible &&
+    ownedLate.length < MAX_LATE_UPGRADES &&
+    rewards.length < count
+  ) {
+    const latePool = shuffle(
+      LATE_UPGRADE_IDS.filter((id) => !ownedLate.includes(id)).map((id) => LATE_UPGRADES[id]),
+      random
+    );
+    if (latePool[0]) rewards.push({ kind: 'late', upgrade: latePool[0] });
   }
 
   const supports = shuffle(SUPPORT_IDS, random).map((id) => SUPPORTS[id]);
@@ -971,6 +997,8 @@ export function buildChapterRewards(
   options: {
     unlockedRelics?: readonly RelicId[];
     unlockedAscensions?: readonly AscensionId[];
+    lateEligible?: boolean;
+    lateUpgrades?: readonly LateUpgradeId[];
   } = {}
 ): Reward[] {
   const rewards: Reward[] = [];
@@ -1003,6 +1031,19 @@ export function buildChapterRewards(
 
   if (ascensionPool[1] && rewards.length < 3 && relics.length >= MAX_RELICS) {
     rewards.push({ kind: 'ascension', ascension: ascensionPool[1] });
+  }
+
+  const ownedLate = options.lateUpgrades ?? [];
+  if (
+    options.lateEligible &&
+    ownedLate.length < MAX_LATE_UPGRADES &&
+    rewards.length < 3
+  ) {
+    const latePool = shuffle(
+      LATE_UPGRADE_IDS.filter((id) => !ownedLate.includes(id)).map((id) => LATE_UPGRADES[id]),
+      random
+    );
+    if (latePool[0]) rewards.push({ kind: 'late', upgrade: latePool[0] });
   }
 
   const supports = shuffle(SUPPORT_IDS, random).map((id) => SUPPORTS[id]);

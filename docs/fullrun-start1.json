@@ -9,12 +9,12 @@
   "chapterRewards": [
     [
       {
-        "kind": "relic",
-        "name": "血焰之心"
+        "kind": "ascension",
+        "name": "雷霆领域"
       },
       {
-        "kind": "support",
-        "name": "瞬时折叠"
+        "kind": "relic",
+        "name": "雷鸣徽章"
       },
       {
         "kind": "support",
@@ -30,9 +30,9 @@
   "picks": 19,
   "seconds": 40,
   "relics": [
-    "thunder-emblem",
     "bloodflame-heart"
   ],
   "ascensions": [],
+  "lateUpgrades": [],
   "errors": []
 }

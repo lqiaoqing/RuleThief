@@ -2350,3 +2350,15 @@ kbd {
 .result-actions .ghost {
   flex: 1 1 126px;
 }
+
+.late-line {
+  border-color: rgba(182, 155, 255, 0.3);
+}
+
+.late-line .mutation-ico {
+  color: #b69bff;
+}
+
+.rule-card.action-late {
+  border-color: rgba(182, 155, 255, 0.4);
+}

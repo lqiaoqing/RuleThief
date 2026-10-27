@@ -95,6 +95,7 @@ describe('run telemetry', () => {
         stageOnly: true,
         relics: ['雷鸣徽章'],
         ascensions: ['雷霆领域'],
+        lateUpgrades: ['余烬蔓延'],
         mutatorLevel: 3,
         mutatorName: '异变 III · 审判升级',
         daily: true,
@@ -110,6 +111,7 @@ describe('run telemetry', () => {
     expect(saved.startChapter).toBe(1);
     expect(saved.relics).toEqual(['雷鸣徽章']);
     expect(saved.ascensions).toEqual(['雷霆领域']);
+    expect(saved.lateUpgrades).toEqual(['余烬蔓延']);
     expect(saved.mutatorLevel).toBe(3);
     expect(saved.daily).toBe(true);
     expect(saved.build?.trajectory?.ascended).toBe(true);

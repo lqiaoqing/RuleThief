@@ -16,6 +16,7 @@ export interface RunRecord {
   stageOnly?: boolean;
   relics?: string[];
   ascensions?: string[];
+  lateUpgrades?: string[];
   mutatorLevel?: number;
   mutatorName?: string;
   daily?: boolean;

@@ -6,10 +6,10 @@
 ## A. 当前自动化结果
 
 ```text
-npm test                       136/136 通过（11 个测试文件）
+npm test                       141/141 通过（12 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  217/217 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 起点世界 + 导出）
+npm run smoke                  221/221 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 起点世界 + 导出）
 npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
@@ -71,6 +71,8 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M9 | 每日种子挑战与最佳记录 | 自动 | `?daily=1` 冒烟；`meta.test.ts` `dailyBest`/成就 |
 | M9 | 9 项成就与图鉴难度选择 | 自动 | 冒烟图鉴 9 项成就、6 个异变按钮；单测 |
 | M9 | 更丰富事件与隐藏奖励 | 自动 | 规则喷泉 / 虚空交易（随机遗物）进入事件池；`run.test.ts` 6 事件 |
+| M9.5 | 后期强化池（规则满级 + 遗物满槽后） | 自动 | 4 项：余烬蔓延/裂隙回响/霜环驻留/穿透蓄势；每局最多 2 个；4 项均有战斗内断言；fullrun W3 起点实拿 2 项 |
+| M9.5 | 战斗场景代码不再主要膨胀 | 进行中 | M9.5.3 先拆 Arbiter；当前 `M0Scene.ts` 仍约 5.1k 行 |
 
 ## D. 性能与长时运行
 

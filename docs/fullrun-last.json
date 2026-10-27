@@ -15,17 +15,17 @@
       },
       {
         "kind": "support",
-        "name": "瞬时折叠"
+        "name": "碎片缝合"
       },
       {
         "kind": "support",
-        "name": "碎片缝合"
+        "name": "规则韧性"
       }
     ],
     [
       {
         "kind": "support",
-        "name": "规则韧性"
+        "name": "轻装疾行"
       },
       {
         "kind": "support",
@@ -33,7 +33,7 @@
       },
       {
         "kind": "support",
-        "name": "轻装疾行"
+        "name": "碎片缝合"
       }
     ]
   ],
@@ -49,5 +49,9 @@
     "bloodflame-heart"
   ],
   "ascensions": [],
+  "lateUpgrades": [
+    "rift-echo",
+    "ember-spread"
+  ],
   "errors": []
 }

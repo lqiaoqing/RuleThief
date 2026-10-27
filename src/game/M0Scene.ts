@@ -7,6 +7,7 @@ import {
   setDash,
   setHp,
   setMutation,
+  setLate,
   setRelics,
   setRoomEnemies,
   setRoomProgress,
@@ -41,6 +42,12 @@ import {
 } from './rules';
 import { RELICS, MAX_RELICS, RELIC_IDS, type RelicId } from './relics';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionId } from './ascensions';
+import {
+  LATE_UPGRADES,
+  MAX_LATE_UPGRADES,
+  lateUpgradeEligible,
+  type LateUpgradeId
+} from './lateUpgrades';
 import { getMutator, clampMutator } from './mutators';
 import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
@@ -161,6 +168,17 @@ interface Pickup {
   dead: boolean;
 }
 
+interface SlowField {
+  root: Phaser.GameObjects.Container;
+  x: number;
+  y: number;
+  radius: number;
+  life: number;
+  maxLife: number;
+  tick: number;
+  dead: boolean;
+}
+
 export interface RunEndPayload {
   victory: boolean;
   stageOnly: boolean;
@@ -180,6 +198,7 @@ export interface RunEndPayload {
   mutation: string | null;
   relics: string[];
   ascensions: string[];
+  lateUpgrades: string[];
   rulesSeen: RuleKey[];
   rulesAscended: RuleKey[];
   build: PlayerBuild;
@@ -278,6 +297,10 @@ export class M0Scene extends Phaser.Scene {
   private build: PlayerBuild = createEmptyBuild();
   private acquired = new Set<RuleKey>();
   private relics: RelicId[] = [];
+  private lateUpgrades: LateUpgradeId[] = [];
+  private pierceMomentum = 0;
+  private frostRingCd = 0;
+  private slowFields: SlowField[] = [];
   private mutatorLevel = 0;
   private unlockedRelics: RelicId[] = [...RELIC_IDS];
   private unlockedAscensions: AscensionId[] = [...ASCENSION_IDS];
@@ -295,6 +318,7 @@ export class M0Scene extends Phaser.Scene {
   private lastExplosionDistances: number[] = [];
   private prismTriggers = 0;
   private thunderDomainCasts = 0;
+  private riftEchoCasts = 0;
 
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
@@ -446,6 +470,10 @@ export class M0Scene extends Phaser.Scene {
     this.build = createEmptyBuild();
     this.acquired.clear();
     this.relics = [];
+    this.lateUpgrades = [];
+    this.pierceMomentum = 0;
+    this.frostRingCd = 0;
+    this.slowFields = [];
     this.chapterRewardOpen = false;
     this.thunderStacks = 0;
     this.prismTime = 0;
@@ -458,7 +486,9 @@ export class M0Scene extends Phaser.Scene {
     this.lastExplosionDistances = [];
     this.prismTriggers = 0;
     this.thunderDomainCasts = 0;
+    this.riftEchoCasts = 0;
     setRelics([]);
+    setLate([]);
     resetRandomStreams();
     this.chapterIndex = this.startChapter;
     this.stepsClearedBefore = 0;
@@ -834,6 +864,14 @@ export class M0Scene extends Phaser.Scene {
     setBuild(this.build, this.acquired);
   }
 
+  public debugGrantLate(id: LateUpgradeId): void {
+    if (this.lateUpgrades.includes(id) || this.lateUpgrades.length >= MAX_LATE_UPGRADES) {
+      return;
+    }
+    this.lateUpgrades.push(id);
+    setLate(this.lateUpgrades.map((lateId) => LATE_UPGRADES[lateId].name));
+  }
+
   private openChapterReward(): void {
     if (this.runState !== 'playing') return;
     this.chapterRewardOpen = true;
@@ -845,7 +883,9 @@ export class M0Scene extends Phaser.Scene {
     audio.play('rule');
     const rewards = buildChapterRewards(this.build, this.relics, random, {
       unlockedRelics: this.unlockedRelics,
-      unlockedAscensions: this.unlockedAscensions
+      unlockedAscensions: this.unlockedAscensions,
+      lateEligible: lateUpgradeEligible(this.build, this.relics.length),
+      lateUpgrades: this.lateUpgrades
     });
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
@@ -1034,7 +1074,9 @@ export class M0Scene extends Phaser.Scene {
     audio.play('rule');
     const rewards = buildRoomRewards(this.build, this.getRoom(), random, {
       hasMutation: Boolean(this.mutation.id),
-      bonusCards: this.roomBonusCards
+      bonusCards: this.roomBonusCards,
+      lateEligible: lateUpgradeEligible(this.build, this.relics.length),
+      lateUpgrades: this.lateUpgrades
     });
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
@@ -1081,6 +1123,16 @@ export class M0Scene extends Phaser.Scene {
         title: '规则升阶',
         sub: `${reward.ascension.name} · ${reward.ascension.en}`
       });
+    } else if (reward.kind === 'late') {
+      if (
+        !this.lateUpgrades.includes(reward.upgrade.id) &&
+        this.lateUpgrades.length < MAX_LATE_UPGRADES
+      ) {
+        this.lateUpgrades.push(reward.upgrade.id);
+        setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id].name));
+        audio.play('rule');
+        showRuleToast('chain', `高阶强化 · ${reward.upgrade.name}`, reward.upgrade.description);
+      }
     } else {
       this.applySupport(reward.support.id);
     }
@@ -1374,6 +1426,11 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  public debugKillEnemy(index = 0): void {
+    const enemy = this.enemies[index];
+    if (enemy) this.killEnemy(enemy);
+  }
+
   public debugPurgeEnemies(): void {
     for (const enemy of this.enemies) {
       this.destroyEnemy(enemy);
@@ -1560,6 +1617,10 @@ export class M0Scene extends Phaser.Scene {
       lastExplosionDistances: this.lastExplosionDistances,
       chainAscendJumps: this.chainAscendJumps,
       thunderDomainCasts: this.thunderDomainCasts,
+      riftEchoCasts: this.riftEchoCasts,
+      lateUpgrades: [...this.lateUpgrades],
+      pierceMomentum: this.pierceMomentum,
+      slowFields: this.slowFields.length,
       relicDamageMultiplier: this.relicDamageMultiplier(),
       featherTime: this.featherTime,
       enemies: this.enemies.length,
@@ -1637,7 +1698,7 @@ export class M0Scene extends Phaser.Scene {
     }
     this.enemies = [];
 
-    for (const list of [this.bolts, this.enemyBolts, this.pickups, this.hazards]) {
+    for (const list of [this.bolts, this.enemyBolts, this.pickups, this.hazards, this.slowFields]) {
       for (const item of list) {
         this.tweens.killTweensOf(item.root);
         item.root.destroy(true);
@@ -2178,6 +2239,8 @@ export class M0Scene extends Phaser.Scene {
   private fireAttack(target: EnemyUnit): void {
     this.attackHits.clear();
     this.attackThunderAwarded = false;
+    const pierceMomentum = this.pierceMomentum;
+    this.pierceMomentum = 0;
     const baseAngle = Math.atan2(
       target.root.y - (this.playerRoot.y - 14),
       target.root.x - this.playerRoot.x
@@ -2228,7 +2291,7 @@ export class M0Scene extends Phaser.Scene {
         damage: BASE_DAMAGE * power,
         speed: profile.speed,
         maxDistance: profile.range,
-        maxHits: profile.targets,
+        maxHits: profile.targets + pierceMomentum,
         budget,
         impact,
         power,
@@ -2440,6 +2503,9 @@ export class M0Scene extends Phaser.Scene {
   private handleBoltHit(bolt: PlayerBolt, enemy: EnemyUnit): void {
     this.attackHits.add(enemy);
     this.checkThunderEmblem();
+    if (bolt.mode === 'pierce' && bolt.pierceHits > 0 && this.hasLate('pierce-momentum')) {
+      this.pierceMomentum = Math.min(3, this.pierceMomentum + 1);
+    }
     const pierceBonus = bolt.mode === 'pierce' ? 1 + 0.2 * bolt.pierceHits : 1;
     bolt.pierceHits += 1;
     this.applyDamage(enemy, bolt.damage * pierceBonus, 'hit');
@@ -2501,6 +2567,10 @@ export class M0Scene extends Phaser.Scene {
       }
     }
 
+    if (this.hasLate('rift-echo') && chainTargets.length > 0) {
+      this.scheduleRiftEcho(chainTargets[chainTargets.length - 1]);
+    }
+
     let fromX = from.root.x;
     let fromY = from.root.y - 10;
     chainTargets.forEach((target, index) => {
@@ -2522,6 +2592,25 @@ export class M0Scene extends Phaser.Scene {
           this.applyImpact(target, damage, this.build.impact, 0.6);
         }
       });
+    });
+  }
+
+  private scheduleRiftEcho(target: EnemyUnit): void {
+    this.time.delayedCall(220, () => {
+      if (this.runState !== 'playing' || target.dead || !target.root.active) return;
+      const x = target.root.x;
+      const y = target.root.y - 10;
+      this.riftEchoCasts += 1;
+      this.spawnExplosion(x, y, 70);
+      audio.play('explosion');
+      const budget = new TriggerBudget(2);
+      for (const enemy of [...this.enemies]) {
+        if (enemy.dead || enemy === target) continue;
+        const dist = Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y - 10);
+        if (dist <= enemy.radius + 70 && budget.tryConsume()) {
+          this.applyDamage(enemy, 12, 'blast');
+        }
+      }
     });
   }
 
@@ -2582,6 +2671,10 @@ export class M0Scene extends Phaser.Scene {
     enemy.aura.setTint(COLORS.cyan);
     enemy.aura.setAlpha(0.24);
     this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.cyan);
+    if (this.hasLate('frost-ring') && this.frostRingCd <= 0) {
+      this.frostRingCd = 1.2;
+      this.spawnSlowField(enemy.root.x, enemy.root.y, 70, 1.8);
+    }
     if (this.build.impact?.key === 'frost' && this.build.impact.ascended) {
       this.frostAscendHits += 1;
       if (this.frostAscendHits >= 4) {
@@ -2604,6 +2697,10 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  private hasLate(id: LateUpgradeId): boolean {
+    return this.lateUpgrades.includes(id);
+  }
+
   private relicDamageMultiplier(): number {
     const thunder = this.relics.includes('thunder-emblem') ? this.thunderStacks * 0.12 : 0;
     const prism = this.relics.includes('prism') && this.prismTime > 0 ? 0.2 : 0;
@@ -2614,6 +2711,7 @@ export class M0Scene extends Phaser.Scene {
   private updateRelicTimers(dt: number): void {
     this.prismTime = Math.max(0, this.prismTime - dt);
     this.bloodflameCd = Math.max(0, this.bloodflameCd - dt);
+    this.frostRingCd = Math.max(0, this.frostRingCd - dt);
   }
 
   private castThunderDomain(): void {
@@ -2779,6 +2877,24 @@ export class M0Scene extends Phaser.Scene {
     this.kills += 1;
     if (enemy.countsTowardQuota) this.roomKills += 1;
     this.refreshRoomHud();
+
+    if (enemy.burnTime > 0 && this.hasLate('ember-spread')) {
+      const target = [...this.enemies]
+        .filter((item) => !item.dead)
+        .sort((a, b) => this.distanceToPlayer(a) - this.distanceToPlayer(b))
+        .find(
+          (item) =>
+            Phaser.Math.Distance.Between(x, y, item.root.x, item.root.y) < 240
+        );
+      if (target) {
+        target.burnTime = Math.max(target.burnTime, enemy.burnTime * 0.5);
+        target.burnDps = Math.max(target.burnDps, enemy.burnDps);
+        target.burnTick = Math.min(target.burnTick || 0.5, 0.5);
+        target.aura.setTint(COLORS.orange);
+        target.aura.setAlpha(0.24);
+        this.spawnStatusSpark(target.root.x, target.root.y - 10, COLORS.orange);
+      }
+    }
 
     if (enemy.burnTime > 0 && this.build.impact?.key === 'burn' && this.build.impact.ascended) {
       this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy, { radius: 90, damage: 24 });
@@ -4476,6 +4592,67 @@ export class M0Scene extends Phaser.Scene {
     showRuleToast('frost', '被冰霜减速', `移动速度 -${Math.round(this.slowFactor * 100)}%`);
   }
 
+  private spawnSlowField(x: number, y: number, radius: number, life: number): void {
+    const glow = this.add
+      .image(0, 0, 'glow')
+      .setDisplaySize(radius * 2.2, radius * 2.2)
+      .setTint(COLORS.cyan)
+      .setAlpha(0.12)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const disc = this.add.circle(0, 0, radius, COLORS.cyan, 0.06);
+    const ring = this.add
+      .circle(0, 0, radius, 0x000000, 0)
+      .setStrokeStyle(1.8, COLORS.cyan, 0.42);
+    const root = this.add.container(x, y, [glow, disc, ring]);
+    this.addFx(root);
+    this.slowFields.push({
+      root,
+      x,
+      y,
+      radius,
+      life,
+      maxLife: life,
+      tick: 0,
+      dead: false
+    });
+  }
+
+  private updateSlowFields(dt: number): void {
+    for (const field of this.slowFields) {
+      if (field.dead) continue;
+      field.life -= dt;
+      field.root.setAlpha(Math.max(0, field.life / field.maxLife));
+      if (field.life <= 0) {
+        field.dead = true;
+        field.root.destroy(true);
+        continue;
+      }
+      field.tick -= dt;
+      if (field.tick > 0) continue;
+      field.tick = 0.4;
+      for (const enemy of this.enemies) {
+        if (enemy.dead) continue;
+        const dist = Phaser.Math.Distance.Between(
+          field.x,
+          field.y,
+          enemy.root.x,
+          enemy.root.y
+        );
+        if (dist > field.radius + enemy.radius) continue;
+        const merged = mergeFrost(
+          { time: enemy.frostTime, slow: enemy.frostSlow },
+          0.5,
+          0.6
+        );
+        enemy.frostTime = merged.time;
+        enemy.frostSlow = merged.slow;
+        enemy.aura.setTint(COLORS.cyan);
+        enemy.aura.setAlpha(0.24);
+      }
+    }
+    this.slowFields = this.slowFields.filter((field) => !field.dead);
+  }
+
   private spawnFirePatch(x: number, y: number, radius: number, life: number): void {
     const glow = this.add
       .image(0, 0, 'glow')
@@ -4784,6 +4961,7 @@ export class M0Scene extends Phaser.Scene {
       ascensions: [this.build.trajectory, this.build.impact]
         .map((ref) => (ref?.ascended ? getAscensionForRule(ref.key)?.name ?? null : null))
         .filter((name): name is string => Boolean(name)),
+      lateUpgrades: this.lateUpgrades.map((id) => LATE_UPGRADES[id].name),
       rulesSeen: [
         ...new Set(
           [
@@ -5085,6 +5263,7 @@ export class M0Scene extends Phaser.Scene {
     this.updateBolts(dt);
     this.updateEnemyBolts(dt);
     this.updateHazards(dt);
+    this.updateSlowFields(dt);
     this.updatePickups(dt);
     this.updateSpawns(dt);
     this.updateRoomHazard(dt);

@@ -216,6 +216,34 @@ function ascensionCard(reward: Extract<Reward, { kind: 'ascension' }>, index: nu
   return card;
 }
 
+function lateCard(reward: Extract<Reward, { kind: 'late' }>, index: number) {
+  const upgrade = reward.upgrade;
+  const card = el('button', 'rule-card action-late');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', upgrade.color);
+  card.dataset.key = upgrade.id;
+  card.dataset.action = 'late';
+  card.dataset.kind = 'late';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(upgrade.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '高阶强化 · LATE'),
+    el('span', 'rule-card-name', upgrade.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action upgrade', '强化'));
+
+  card.append(head, el('p', 'rule-card-desc', upgrade.description));
+  card.append(el('span', 'rule-card-now', upgrade.detail));
+  card.append(
+    el('div', 'rule-card-combo', '每局最多 2 个 · 规则满级且遗物满槽后进入奖励池')
+  );
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
   offersWrap.dataset.count = String(rewards.length);
@@ -229,7 +257,9 @@ export function renderRewards(rewards: readonly Reward[], onPick: (reward: Rewar
             ? relicCard(reward, index)
             : reward.kind === 'ascension'
               ? ascensionCard(reward, index)
-              : supportCard(reward, index);
+              : reward.kind === 'late'
+                ? lateCard(reward, index)
+                : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
     offersWrap.append(card);
   });
