@@ -208,14 +208,26 @@ function safeStorage(): Storage | null {
   }
 }
 
+export interface RunDepthInput {
+  victory: boolean;
+  stageOnly: boolean;
+  chapterIndex: number;
+  chaptersTotal: number;
+  startChapter?: number;
+}
+
+export function reachedChapterCount(input: RunDepthInput): number {
+  if (input.stageOnly) return input.chapterIndex + 1;
+  return input.victory ? input.chaptersTotal : input.chapterIndex;
+}
+
+export function clearedChapterCount(input: RunDepthInput): number {
+  const start = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
+  return Math.max(0, reachedChapterCount(input) - start);
+}
+
 export function shardsForRun(input: MetaRunInput): number {
-  const startChapter = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
-  const reached = input.stageOnly
-    ? input.chapterIndex + 1
-    : input.victory
-      ? input.chaptersTotal
-      : input.chapterIndex;
-  const clearedChapters = Math.max(0, reached - startChapter);
+  const clearedChapters = clearedChapterCount(input);
   const depth = 15 * clearedChapters;
   const victoryBonus = input.victory && !input.stageOnly ? 20 : 0;
   const killBonus = Math.floor(Math.max(0, input.kills) / 10);
@@ -225,13 +237,9 @@ export function shardsForRun(input: MetaRunInput): number {
 
 export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaResult {
   const gained = shardsForRun(input);
+  const reached = reachedChapterCount(input);
+  const clearedThisRun = clearedChapterCount(input);
   const startChapter = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
-  const reached = input.stageOnly
-    ? input.chapterIndex + 1
-    : input.victory
-      ? input.chaptersTotal
-      : input.chapterIndex;
-  const clearedThisRun = Math.max(0, reached - startChapter);
   const muLevel = clampMutator(input.mutatorLevel ?? 0);
   const fullVictory = input.victory && !input.stageOnly;
   const next: MetaState = {

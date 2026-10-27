@@ -12,6 +12,7 @@ export interface RunRecord {
   mutation: string | null;
   topDamage?: string;
   chaptersCleared?: number;
+  startChapter?: number;
   stageOnly?: boolean;
   relics?: string[];
   ascensions?: string[];

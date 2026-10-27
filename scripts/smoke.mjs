@@ -1067,11 +1067,17 @@ try {
       exported.runs.length >= 1 &&
       Boolean(exported.meta) &&
       typeof exported.agent === 'string' &&
-      Boolean(exported.runs[0]?.build),
+      Boolean(exported.runs[0]?.build) &&
+      Number(exported.runs[0]?.chaptersCleared) === 1 &&
+      Number(exported.runs[0]?.startChapter) === 0 &&
+      exported.runs[0]?.stageOnly === true,
     JSON.stringify({
       runs: exported.runs?.length,
       meta: Boolean(exported.meta),
-      build: exported.runs?.[0]?.build
+      build: exported.runs?.[0]?.build,
+      cleared: exported.runs?.[0]?.chaptersCleared,
+      start: exported.runs?.[0]?.startChapter,
+      stageOnly: exported.runs?.[0]?.stageOnly
     })
   );
 

@@ -17,6 +17,7 @@ import {
   UNLOCKS,
   applyRunToMeta,
   canUnlock,
+  clearedChapterCount,
   loadMeta,
   saveMeta,
   unlockMeta
@@ -302,9 +303,14 @@ function showResult(payload: RunEndPayload): void {
       .slice(0, 2)
       .map((entry) => `${entry.label}:${entry.amount}`)
       .join('|'),
-    chaptersCleared: payload.victory
-      ? payload.chaptersTotal
-      : payload.chapterIndex + (stageOnly ? 1 : 0),
+    chaptersCleared: clearedChapterCount({
+      victory: payload.victory,
+      stageOnly,
+      chapterIndex: payload.chapterIndex,
+      chaptersTotal: payload.chaptersTotal,
+      startChapter: payload.startChapter
+    }),
+    startChapter: payload.startChapter,
     stageOnly,
     relics: payload.relics,
     ascensions: payload.ascensions,

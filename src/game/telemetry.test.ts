@@ -91,6 +91,7 @@ describe('run telemetry', () => {
     saveRun(
       record({
         chaptersCleared: 2,
+        startChapter: 1,
         stageOnly: true,
         relics: ['雷鸣徽章'],
         ascensions: ['雷霆领域'],
@@ -106,6 +107,7 @@ describe('run telemetry', () => {
     );
     const [saved] = loadRuns(storage);
     expect(saved.chaptersCleared).toBe(2);
+    expect(saved.startChapter).toBe(1);
     expect(saved.relics).toEqual(['雷鸣徽章']);
     expect(saved.ascensions).toEqual(['雷霆领域']);
     expect(saved.mutatorLevel).toBe(3);

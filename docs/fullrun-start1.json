@@ -9,16 +9,16 @@
   "chapterRewards": [
     [
       {
+        "kind": "relic",
+        "name": "血焰之心"
+      },
+      {
+        "kind": "support",
+        "name": "瞬时折叠"
+      },
+      {
         "kind": "support",
         "name": "碎片缝合"
-      },
-      {
-        "kind": "support",
-        "name": "轻装疾行"
-      },
-      {
-        "kind": "support",
-        "name": "规则韧性"
       }
     ]
   ],
@@ -28,7 +28,7 @@
   "expectedSteps": 24,
   "roomsCleared": 20,
   "picks": 19,
-  "seconds": 39,
+  "seconds": 40,
   "relics": [
     "thunder-emblem",
     "bloodflame-heart"

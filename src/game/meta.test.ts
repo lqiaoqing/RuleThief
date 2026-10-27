@@ -5,8 +5,10 @@ import {
   UNLOCKS,
   applyRunToMeta,
   canUnlock,
+  clearedChapterCount,
   defaultMeta,
   loadMeta,
+  reachedChapterCount,
   saveMeta,
   shardsForRun,
   unlockMeta,
@@ -37,6 +39,44 @@ const fullRun: MetaRunInput = {
 };
 
 describe('meta progression', () => {
+  it('normalizes reached and cleared chapters across run states', () => {
+    expect(
+      reachedChapterCount({ victory: true, stageOnly: false, chapterIndex: 2, chaptersTotal: 3 })
+    ).toBe(3);
+    expect(
+      clearedChapterCount({
+        victory: true,
+        stageOnly: false,
+        chapterIndex: 2,
+        chaptersTotal: 3,
+        startChapter: 1
+      })
+    ).toBe(2);
+    expect(
+      reachedChapterCount({ victory: true, stageOnly: true, chapterIndex: 0, chaptersTotal: 3 })
+    ).toBe(1);
+    expect(
+      clearedChapterCount({
+        victory: true,
+        stageOnly: true,
+        chapterIndex: 0,
+        chaptersTotal: 3
+      })
+    ).toBe(1);
+    expect(
+      reachedChapterCount({ victory: false, stageOnly: false, chapterIndex: 1, chaptersTotal: 3 })
+    ).toBe(1);
+    expect(
+      clearedChapterCount({
+        victory: false,
+        stageOnly: false,
+        chapterIndex: 1,
+        chaptersTotal: 3,
+        startChapter: 1
+      })
+    ).toBe(0);
+  });
+
   it('starts with two relics and one ascension unlocked', () => {
     const meta = defaultMeta();
     expect(meta.shards).toBe(0);
