@@ -163,6 +163,10 @@
                 <span class="mini-ico"><svg><use id="mini-impact-icon" href="#i-blast" /></svg></span>
                 <span><span id="mini-impact-name">命中</span> <b id="mini-impact-status">空槽</b></span>
               </div>
+              <div class="mini-slot is-locked" id="mini-secondary">
+                <span class="mini-ico"><svg><use id="mini-secondary-icon" href="#i-shard" /></svg></span>
+                <span><span id="mini-secondary-name">副规则</span> <b id="mini-secondary-status">空槽</b></span>
+              </div>
             </div>
 
             <div class="mobile-boss">
@@ -241,7 +245,7 @@
           <section class="panel build-panel">
             <div class="panel-head">
               <span>构筑 BUILD</span>
-              <span class="panel-sub" id="build-count">等级 0 / 6</span>
+              <span class="panel-sub" id="build-count">等级 0 / 9</span>
             </div>
             <div class="slot is-locked" id="slot-trajectory">
               <div class="slot-ico trajectory" id="slot-trajectory-ico">
@@ -261,6 +265,16 @@
                 <small>命中规则 · IMPACT</small>
                 <b><span id="slot-impact-name">未装备</span> <em id="slot-impact-status">空槽</em></b>
                 <p id="slot-impact-desc">通过规则祭坛装备一条命中规则</p>
+              </div>
+            </div>
+            <div class="slot is-locked" id="slot-secondary">
+              <div class="slot-ico secondary" id="slot-secondary-ico">
+                <svg><use id="slot-secondary-icon" href="#i-shard" /></svg>
+              </div>
+              <div class="slot-copy">
+                <small>副规则 · THIRD</small>
+                <b><span id="slot-secondary-name">未装备</span> <em id="slot-secondary-status">空槽</em></b>
+                <p id="slot-secondary-desc">主槽满后可装备第三条规则，按完整效果触发</p>
               </div>
             </div>
             <div class="combo-banner">
@@ -399,7 +413,7 @@
           <p class="altar-sub" id="chapter-sub">下一段路会更危险。当前构筑与生命会保留。</p>
           <div class="room-stats">
             <div><b id="chapter-hp">100 / 100</b><span>保留生命</span></div>
-            <div><b id="chapter-level">等级 0 / 6</b><span>当前构筑</span></div>
+            <div><b id="chapter-level">等级 0 / 9</b><span>当前构筑</span></div>
             <div><b id="chapter-time">00:00</b><span>累计用时</span></div>
           </div>
           <div class="altar-foot chapter-foot">
@@ -477,7 +491,7 @@
           <div class="result-combo" id="result-combo">
             <span class="combo-tag">最终组合</span>
             <b id="result-combo-name">基础魔弹</b>
-            <small id="result-combo-level">等级 0 / 6</small>
+            <small id="result-combo-level">等级 0 / 9</small>
           </div>
           <div class="result-actions">
             <button class="primary compact" id="restart-btn">

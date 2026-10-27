@@ -11,11 +11,11 @@
     [
       {
         "kind": "relic",
-        "name": "雷鸣徽章"
+        "name": "血焰之心"
       },
       {
-        "kind": "support",
-        "name": "瞬时折叠"
+        "kind": "relic",
+        "name": "雷鸣徽章"
       },
       {
         "kind": "support",
@@ -24,12 +24,12 @@
     ],
     [
       {
-        "kind": "support",
-        "name": "轻装疾行"
+        "kind": "relic",
+        "name": "雷鸣徽章"
       },
       {
         "kind": "support",
-        "name": "瞬时折叠"
+        "name": "碎片缝合"
       },
       {
         "kind": "support",
@@ -43,15 +43,15 @@
   "expectedSteps": 37,
   "roomsCleared": 31,
   "picks": 30,
-  "seconds": 83,
+  "seconds": 63,
   "relics": [
     "bloodflame-heart",
     "thunder-emblem"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "frost-ring",
-    "rift-echo"
+    "ember-spread",
+    "pierce-momentum"
   ],
   "errors": []
 }

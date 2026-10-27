@@ -1023,7 +1023,7 @@ try {
   );
   check(
     'chapter clear offers the workshop and keeps the build',
-    /失序工坊/.test(chapterClear.next ?? '') && /等级 \d+ \/ 6/.test(chapterClear.level ?? ''),
+    /失序工坊/.test(chapterClear.next ?? '') && /等级 \d+ \/ 9/.test(chapterClear.level ?? ''),
     JSON.stringify({ next: chapterClear.next, level: chapterClear.level })
   );
   const leftover = await snapshot(page);
@@ -1478,8 +1478,8 @@ try {
   check(
     'disorder core starts with its own boss bar and health',
     coreState.bossPhase === 1 &&
-      Number(coreState.bossHp) > 1200 &&
-      Number(coreState.bossHp) <= 1350 &&
+      Number(coreState.bossHp) > 1400 &&
+      Number(coreState.bossHp) <= 1600 &&
       (await workshop.$eval('#boss-bar-name', (el) => el.textContent)) === '失序核心',
     JSON.stringify({ hp: coreState.bossHp, phase: coreState.bossPhase })
   );
@@ -1582,8 +1582,8 @@ try {
   check(
     'source of rules starts with its own boss bar and health',
     sourceState.bossPhase === 1 &&
-      Number(sourceState.bossHp) > 2000 &&
-      Number(sourceState.bossHp) <= 2200 &&
+      Number(sourceState.bossHp) > 2300 &&
+      Number(sourceState.bossHp) <= 2600 &&
       (await workshop.$eval('#boss-bar-name', (el) => el.textContent)) === '规则之源',
     JSON.stringify({ hp: sourceState.bossHp, phase: sourceState.bossPhase })
   );
@@ -1995,6 +1995,52 @@ try {
     String(momentumState.pierceMomentum)
   );
   await momentumPage.close();
+
+  const thirdPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await thirdPage.goto(`${BASE}/?arena=1&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(thirdPage);
+  await thirdPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(thirdPage);
+  await sleep(500);
+  await thirdPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_SET_THIRD__?.('frost', 3);
+    window.__RT_SPAWN_AT__?.('spore', 400, 500);
+  });
+  await sleep(180);
+  await thirdPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(600);
+  const thirdImpact = await snapshot(thirdPage);
+  const thirdEnemy = (thirdImpact.enemyList ?? []).find((enemy) => enemy.kind === 'spore');
+  const thirdHud = await thirdPage.evaluate(() => ({
+    count: document.getElementById('build-count')?.textContent,
+    slot: document.getElementById('slot-secondary-name')?.textContent
+  }));
+  check(
+    'third impact rule applies alongside the main impact',
+    Boolean(thirdEnemy?.burning && thirdEnemy?.slowed) &&
+      thirdHud.count === '等级 9 / 9' &&
+      thirdHud.slot === '冰霜',
+    JSON.stringify({ thirdEnemy, thirdHud })
+  );
+
+  await thirdPage.evaluate(() => {
+    window.__RT_SET_THIRD__?.('spread', 3);
+    window.__RT_SPAWN_AT__?.('spore', 450, 300);
+  });
+  await sleep(150);
+  await thirdPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(600);
+  const thirdTrajectory = await snapshot(thirdPage);
+  check(
+    'third trajectory rule fires an additional volley',
+    Number(thirdTrajectory.thirdVolleys) >= 1,
+    JSON.stringify({ thirdVolleys: thirdTrajectory.thirdVolleys, secondary: thirdTrajectory.build?.secondary })
+  );
+  await thirdPage.close();
 
   const compact = await newPage(browser, {
     width: 360,

@@ -205,9 +205,8 @@ export const EVENT_IDS: EventId[] = [
 ];
 
 export function hasUpgradeableRule(build: PlayerBuild): boolean {
-  return Boolean(
-    (build.trajectory && build.trajectory.level < 3) ||
-      (build.impact && build.impact.level < 3)
+  return [build.trajectory, build.impact, build.secondary].some(
+    (ref) => Boolean(ref && ref.level < 3)
   );
 }
 

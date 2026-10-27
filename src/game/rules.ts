@@ -1,7 +1,7 @@
 export type TrajectoryKey = 'pierce' | 'chain' | 'spread';
 export type ImpactKey = 'burn' | 'frost' | 'blast';
 export type RuleKey = TrajectoryKey | ImpactKey;
-export type RuleSlot = 'trajectory' | 'impact';
+export type RuleSlot = 'trajectory' | 'impact' | 'secondary';
 export type RuleLevel = 1 | 2 | 3;
 
 export interface RuleRef<K extends RuleKey = RuleKey> {
@@ -13,6 +13,7 @@ export interface RuleRef<K extends RuleKey = RuleKey> {
 export interface PlayerBuild {
   trajectory: RuleRef<TrajectoryKey> | null;
   impact: RuleRef<ImpactKey> | null;
+  secondary?: RuleRef | null;
 }
 
 export interface RuleDefinition {
@@ -208,7 +209,9 @@ export function getRuleName(key: RuleKey): string {
 }
 
 export function getRuleSlotLabel(slot: RuleSlot): string {
-  return slot === 'trajectory' ? '弹道规则 · TRAJECTORY' : '命中规则 · IMPACT';
+  if (slot === 'trajectory') return '弹道规则 · TRAJECTORY';
+  if (slot === 'impact') return '命中规则 · IMPACT';
+  return '副规则 · THIRD';
 }
 
 export function getRuleLevelDescription(key: RuleKey, level: RuleLevel): string {
@@ -311,7 +314,11 @@ export function getBuildCombo(build: PlayerBuild): ComboView {
 }
 
 export function buildLevelSum(build: PlayerBuild): number {
-  return (build.trajectory?.level ?? 0) + (build.impact?.level ?? 0);
+  return (
+    (build.trajectory?.level ?? 0) +
+    (build.impact?.level ?? 0) +
+    (build.secondary?.level ?? 0)
+  );
 }
 
 export function createEmptyBuild(): PlayerBuild {
@@ -319,48 +326,78 @@ export function createEmptyBuild(): PlayerBuild {
 }
 
 export function cloneBuild(build: PlayerBuild): PlayerBuild {
-  return {
+  const next: PlayerBuild = {
     trajectory: build.trajectory ? { ...build.trajectory } : null,
     impact: build.impact ? { ...build.impact } : null
   };
+  if (build.secondary) next.secondary = { ...build.secondary };
+  return next;
+}
+
+function buildRefs(build: PlayerBuild): RuleRef[] {
+  return [build.trajectory, build.impact, build.secondary].filter(
+    (ref): ref is RuleRef => Boolean(ref)
+  );
 }
 
 export function canAscend(build: PlayerBuild, key: RuleKey): boolean {
-  const ref = isTrajectoryKey(key) ? build.trajectory : build.impact;
-  return Boolean(ref && ref.key === key && ref.level === 3 && !ref.ascended);
+  const ref = buildRefs(build).find((item) => item.key === key);
+  return Boolean(ref && ref.level === 3 && !ref.ascended);
 }
 
 export function ascendRule(build: PlayerBuild, key: RuleKey): PlayerBuild {
   const next = cloneBuild(build);
-  const ref = isTrajectoryKey(key) ? next.trajectory : next.impact;
-  if (!ref || ref.key !== key || ref.level !== 3) return next;
+  const ref = buildRefs(next).find((item) => item.key === key);
+  if (!ref || ref.level !== 3) return next;
   ref.ascended = true;
   return next;
 }
 
 function buildOffer(build: PlayerBuild, key: RuleKey): RuleOffer | null {
   const def = RULE_DEFS[key];
-  const current = def.slot === 'trajectory' ? build.trajectory : build.impact;
+  const main = def.slot === 'trajectory' ? build.trajectory : build.impact;
+  const secondary = build.secondary ?? null;
+  const existing = buildRefs(build).find((ref) => ref.key === key);
+
+  let slot: RuleSlot;
   let action: RuleAction;
   let nextLevel: RuleLevel;
   let currentLevel = 0;
+  let description: string;
 
-  if (!current) {
+  if (existing) {
+    if (existing.level >= 3) return null;
+    slot = existing === secondary ? 'secondary' : def.slot;
+    action = 'upgrade';
+    nextLevel = (existing.level + 1) as RuleLevel;
+    currentLevel = existing.level;
+    description = getRuleLevelDescription(key, existing.level);
+  } else if (!main) {
+    slot = def.slot;
     action = 'equip';
     nextLevel = 1;
-  } else if (current.key === key) {
-    if (current.level >= 3) return null;
-    action = 'upgrade';
-    nextLevel = (current.level + 1) as RuleLevel;
-    currentLevel = current.level;
-  } else {
-    action = 'replace';
+    description = '当前槽位为空';
+  } else if (!secondary) {
+    slot = 'secondary';
+    action = 'equip';
     nextLevel = 1;
-    currentLevel = current.level;
+    description = '副规则槽为空 · 主组合保持不变';
+  } else {
+    return null;
   }
 
-  const offerTrajectory = isTrajectoryKey(key) ? key : build.trajectory?.key ?? null;
-  const offerImpact = isImpactKey(key) ? key : build.impact?.key ?? null;
+  const offerTrajectory =
+    slot === 'secondary'
+      ? build.trajectory?.key ?? null
+      : isTrajectoryKey(key)
+        ? key
+        : build.trajectory?.key ?? null;
+  const offerImpact =
+    slot === 'secondary'
+      ? build.impact?.key ?? null
+      : isImpactKey(key)
+        ? key
+        : build.impact?.key ?? null;
   const comboName = getComboName(offerTrajectory, offerImpact);
   const comboDescription =
     offerTrajectory && offerImpact
@@ -369,22 +406,17 @@ function buildOffer(build: PlayerBuild, key: RuleKey): RuleOffer | null {
 
   return {
     key,
-    slot: def.slot,
+    slot,
     name: def.name,
     icon: def.icon,
     action,
     currentLevel,
     nextLevel,
-    description:
-      current && current.key === key
-        ? getRuleLevelDescription(key, current.level)
-        : current
-          ? `当前槽位：${RULE_DEFS[current.key].name} Lv.${current.level}`
-          : '当前槽位为空',
+    description,
     nextDescription: getRuleLevelDescription(key, nextLevel),
     comboName,
     comboDescription,
-    replacesRule: action === 'replace' && current ? RULE_DEFS[current.key].name : null
+    replacesRule: null
   };
 }
 
@@ -424,6 +456,7 @@ export function getRuleOffers(
   const emptySlots: RuleSlot[] = [];
   if (!build.trajectory) emptySlots.push('trajectory');
   if (!build.impact) emptySlots.push('impact');
+  if (!build.secondary) emptySlots.push('secondary');
   for (const slot of emptySlots) {
     if (picked.length >= 3) break;
     const pool = shuffle(
@@ -457,6 +490,8 @@ export function applyRuleOffer(build: PlayerBuild, offer: RuleOffer): PlayerBuil
     next.trajectory = { key: offer.key, level: offer.nextLevel };
   } else if (offer.slot === 'impact' && isImpactKey(offer.key)) {
     next.impact = { key: offer.key, level: offer.nextLevel };
+  } else if (offer.slot === 'secondary') {
+    next.secondary = { key: offer.key, level: offer.nextLevel };
   }
   return next;
 }

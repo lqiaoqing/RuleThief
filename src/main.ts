@@ -79,6 +79,7 @@ declare global {
       trajectoryLevel?: 1 | 2 | 3,
       impactLevel?: 1 | 2 | 3
     ) => void;
+    __RT_SET_THIRD__?: (key: RuleKey, level?: 1 | 2 | 3) => void;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
     __RT_VOLLEY__?: () => number;
@@ -293,7 +294,7 @@ function showResult(payload: RunEndPayload): void {
   resultKills.textContent = String(payload.kills);
   resultRooms.textContent = `${payload.roomsCleared} / ${payload.roomsTotal}`;
   resultComboName.textContent = payload.combo;
-  resultComboLevel.textContent = `等级 ${payload.levelSum} / 6`;
+  resultComboLevel.textContent = `等级 ${payload.levelSum} / 9`;
   resultCombo.classList.toggle('is-complete', payload.rules === 2);
   const runs = saveRun({
     at: Date.now(),
@@ -557,7 +558,7 @@ function showChapterClear(payload: ChapterClearPayload): void {
   chapterEn.textContent = payload.chapterEn;
   chapterSub.textContent = `下一段路：${payload.nextName}。当前构筑与生命会保留。`;
   chapterHp.textContent = `${Math.ceil(payload.hp)} / ${payload.maxHp}`;
-  chapterLevel.textContent = `等级 ${payload.levelSum} / 6 · ${payload.combo}`;
+  chapterLevel.textContent = `等级 ${payload.levelSum} / 9 · ${payload.combo}`;
   chapterTime.textContent = formatTime(Math.floor(payload.elapsed));
   chapterHint.textContent = `继续深入 ${payload.nextName}，或在此收工结算。`;
   if (chapterContinueCopy) chapterContinueCopy.textContent = `继续深入 · ${payload.nextName}`;
@@ -780,6 +781,7 @@ function handleReady(): void {
   window.__RT_SET_STATS__ = (elapsed, kills) => scene?.debugSetStats(elapsed, kills);
   window.__RT_SET_BUILD__ = (trajectory, impact, trajectoryLevel = 1, impactLevel = 1) =>
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
+  window.__RT_SET_THIRD__ = (key, level = 3) => scene?.debugSetThird(key, level);
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
   window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;

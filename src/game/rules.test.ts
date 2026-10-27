@@ -3,7 +3,9 @@ import {
   COMBO_NAMES,
   TriggerBudget,
   applyRuleOffer,
+  ascendRule,
   buildLevelSum,
+  canAscend,
   createEmptyBuild,
   getBuildCombo,
   getComboName,
@@ -106,31 +108,41 @@ describe('rule offers and build mutation', () => {
     expect(next.impact).toEqual({ key: 'blast', level: 2 });
   });
 
-  it('replaces an occupied slot at level one and preserves the other slot', () => {
+  it('fills the secondary slot instead of replacing a maxed main slot', () => {
     const build: PlayerBuild = {
       trajectory: { key: 'chain', level: 3 },
       impact: { key: 'frost', level: 3 }
     };
     const offers = getRuleOffers(build, random);
-    const replace = offers.find((offer) => offer.slot === 'trajectory');
-    expect(replace).toBeDefined();
-    expect(replace?.action).toBe('replace');
-    expect(replace?.replacesRule).toBe('弹射');
-    const next = applyRuleOffer(build, replace!);
-    expect(next.trajectory).toEqual({ key: replace!.key, level: 1 });
+    const secondary = offers.find((offer) => offer.slot === 'secondary');
+    expect(secondary).toBeDefined();
+    expect(secondary?.action).toBe('equip');
+    const next = applyRuleOffer(build, secondary!);
+    expect(next.secondary).toEqual({ key: secondary!.key, level: 1 });
+    expect(next.trajectory).toEqual({ key: 'chain', level: 3 });
     expect(next.impact).toEqual({ key: 'frost', level: 3 });
   });
 
-  it('does not offer an upgrade for maxed rules', () => {
+  it('only offers secondary equips when both main slots are maxed', () => {
     const build: PlayerBuild = {
       trajectory: { key: 'spread', level: 3 },
       impact: { key: 'burn', level: 3 }
     };
     const offers = getRuleOffers(build, random);
     expect(offers).toHaveLength(3);
-    expect(offers.every((offer) => offer.action === 'replace')).toBe(true);
+    expect(offers.every((offer) => offer.action === 'equip')).toBe(true);
+    expect(offers.every((offer) => offer.slot === 'secondary')).toBe(true);
     expect(offers.some((offer) => offer.key === 'spread')).toBe(false);
     expect(offers.some((offer) => offer.key === 'burn')).toBe(false);
+  });
+
+  it('stops offering new rules once all three slots are filled', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'spread', level: 3 },
+      impact: { key: 'burn', level: 3 },
+      secondary: { key: 'frost', level: 3 }
+    };
+    expect(getRuleOffers(build, random)).toEqual([]);
   });
 
   it('computes future combo previews for offers', () => {
@@ -152,6 +164,26 @@ describe('rule offers and build mutation', () => {
         impact: { key: 'burn', level: 3 }
       })
     ).toBe(5);
+    expect(
+      buildLevelSum({
+        trajectory: { key: 'pierce', level: 2 },
+        impact: { key: 'burn', level: 3 },
+        secondary: { key: 'frost', level: 3 }
+      })
+    ).toBe(8);
+  });
+
+  it('can ascend and clone a rule stored in the third slot', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'chain', level: 3 },
+      impact: { key: 'burn', level: 3 },
+      secondary: { key: 'frost', level: 3 }
+    };
+    expect(canAscend(build, 'frost')).toBe(true);
+    const next = ascendRule(build, 'frost');
+    expect(next.secondary?.ascended).toBe(true);
+    expect(next.trajectory).toEqual({ key: 'chain', level: 3 });
+    expect(next.impact).toEqual({ key: 'burn', level: 3 });
   });
 });
 

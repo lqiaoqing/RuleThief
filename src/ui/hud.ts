@@ -5,7 +5,8 @@ import {
   getRuleDef,
   getRuleLevelDescription,
   type PlayerBuild,
-  type RuleKey
+  type RuleKey,
+  type RuleRef
 } from '../game/rules';
 import { ENEMY_SPECS, type EnemyKind } from '../game/rooms';
 import type { MutationDef } from '../game/mutations';
@@ -56,25 +57,35 @@ const buildCount = byId<HTMLElement>('build-count');
 
 const slotTrajectory = byId<HTMLElement>('slot-trajectory');
 const slotImpact = byId<HTMLElement>('slot-impact');
+const slotSecondary = byId<HTMLElement>('slot-secondary');
 const slotTrajectoryIcon = byId<SVGUseElement>('slot-trajectory-icon');
 const slotImpactIcon = byId<SVGUseElement>('slot-impact-icon');
+const slotSecondaryIcon = byId<SVGUseElement>('slot-secondary-icon');
 const slotTrajectoryName = byId<HTMLElement>('slot-trajectory-name');
 const slotImpactName = byId<HTMLElement>('slot-impact-name');
+const slotSecondaryName = byId<HTMLElement>('slot-secondary-name');
 const slotTrajectoryStatus = byId<HTMLElement>('slot-trajectory-status');
 const slotImpactStatus = byId<HTMLElement>('slot-impact-status');
+const slotSecondaryStatus = byId<HTMLElement>('slot-secondary-status');
 const slotTrajectoryDesc = byId<HTMLElement>('slot-trajectory-desc');
 const slotImpactDesc = byId<HTMLElement>('slot-impact-desc');
+const slotSecondaryDesc = byId<HTMLElement>('slot-secondary-desc');
 const slotTrajectoryIco = byId<HTMLElement>('slot-trajectory-ico');
 const slotImpactIco = byId<HTMLElement>('slot-impact-ico');
+const slotSecondaryIco = byId<HTMLElement>('slot-secondary-ico');
 
 const miniTrajectory = byId<HTMLElement>('mini-trajectory');
 const miniImpact = byId<HTMLElement>('mini-impact');
+const miniSecondary = byId<HTMLElement>('mini-secondary');
 const miniTrajectoryIcon = byId<SVGUseElement>('mini-trajectory-icon');
 const miniImpactIcon = byId<SVGUseElement>('mini-impact-icon');
+const miniSecondaryIcon = byId<SVGUseElement>('mini-secondary-icon');
 const miniTrajectoryName = byId<HTMLElement>('mini-trajectory-name');
 const miniImpactName = byId<HTMLElement>('mini-impact-name');
+const miniSecondaryName = byId<HTMLElement>('mini-secondary-name');
 const miniTrajectoryStatus = byId<HTMLElement>('mini-trajectory-status');
 const miniImpactStatus = byId<HTMLElement>('mini-impact-status');
+const miniSecondaryStatus = byId<HTMLElement>('mini-secondary-status');
 
 const comboKicker = byId<HTMLElement>('combo-kicker');
 const comboName = byId<HTMLElement>('combo-name');
@@ -314,7 +325,7 @@ function updateSlot(
   nameEl: HTMLElement,
   statusEl: HTMLElement,
   descEl: HTMLElement,
-  ref: PlayerBuild['trajectory'] | PlayerBuild['impact'],
+  ref: RuleRef | null,
   emptyIcon: string,
   emptyName: string,
   emptyDesc: string,
@@ -371,6 +382,19 @@ export function setBuild(build: PlayerBuild, acquired: ReadonlySet<RuleKey> = ne
     '通过规则祭坛装备一条命中规则',
     '命中规则'
   );
+  updateSlot(
+    slotSecondary,
+    slotSecondaryIcon,
+    slotSecondaryIco,
+    slotSecondaryName,
+    slotSecondaryStatus,
+    slotSecondaryDesc,
+    build.secondary ?? null,
+    '#i-shard',
+    '未装备',
+    '主槽满后可装备第三条规则，按完整效果触发',
+    '副规则'
+  );
 
   const trajectoryRef = build.trajectory;
   const impactRef = build.impact;
@@ -406,14 +430,32 @@ export function setBuild(build: PlayerBuild, acquired: ReadonlySet<RuleKey> = ne
     miniImpactName.textContent = '命中';
     miniImpactStatus.textContent = '空槽';
   }
+  const secondaryRef = build.secondary ?? null;
+  if (secondaryRef) {
+    const color = RULE_COLORS[secondaryRef.key];
+    miniSecondary.classList.remove('is-locked');
+    miniSecondary.classList.add('is-owned');
+    miniSecondary.style.setProperty('--rule-color', color);
+    miniSecondaryIcon.setAttribute('href', getRuleDef(secondaryRef.key).icon);
+    miniSecondaryName.textContent = getRuleDef(secondaryRef.key).name;
+    miniSecondaryStatus.textContent = `Lv.${secondaryRef.level}`;
+  } else {
+    miniSecondary.classList.add('is-locked');
+    miniSecondary.classList.remove('is-owned');
+    miniSecondary.style.setProperty('--rule-color', '#60748c');
+    miniSecondaryIcon.setAttribute('href', '#i-shard');
+    miniSecondaryName.textContent = '副规则';
+    miniSecondaryStatus.textContent = '空槽';
+  }
 
-  buildCount.textContent = `等级 ${buildLevelSum(build)} / 6`;
+  buildCount.textContent = `等级 ${buildLevelSum(build)} / 9`;
   const combo = getBuildCombo(build);
   comboKicker.textContent = combo.complete ? 'CURRENT RULE COMBO' : 'CURRENT RULE';
   comboName.textContent = combo.name;
-  comboSub.textContent = combo.description;
+  const thirdLabel = secondaryRef ? ` · 副规则 ${getRuleDef(secondaryRef.key).name}` : '';
+  comboSub.textContent = `${combo.description}${thirdLabel}`;
   mobileComboName.textContent = combo.name;
-  mobileComboSub.textContent = combo.description;
+  mobileComboSub.textContent = `${combo.description}${thirdLabel}`;
   comboBanner.classList.toggle('is-empowered', combo.complete);
 
   renderCodex(acquired);

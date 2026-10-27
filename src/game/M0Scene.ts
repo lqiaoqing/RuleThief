@@ -26,6 +26,8 @@ import {
   getRuleDef,
   getSpreadAngles,
   getTrajectoryProfile,
+  isImpactKey,
+  isTrajectoryKey,
   mergeBurn,
   mergeFrost,
   selectChainTargets,
@@ -130,6 +132,8 @@ interface PlayerBolt {
   hitEnemies: Set<EnemyUnit>;
   budget: TriggerBudget;
   impact: PlayerBuild['impact'];
+  extraImpact: PlayerBuild['impact'];
+  extraBudget: TriggerBudget | null;
   power: number;
   pierceHits: number;
   chainJumps: number;
@@ -330,6 +334,7 @@ export class M0Scene extends Phaser.Scene {
   private prismTriggers = 0;
   private thunderDomainCasts = 0;
   private riftEchoCasts = 0;
+  private thirdVolleys = 0;
 
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
@@ -540,6 +545,7 @@ export class M0Scene extends Phaser.Scene {
     this.prismTriggers = 0;
     this.thunderDomainCasts = 0;
     this.riftEchoCasts = 0;
+    this.thirdVolleys = 0;
     setRelics([]);
     setLate([]);
     resetRandomStreams();
@@ -830,22 +836,31 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private upgradeRandomRule(): boolean {
-    const slots: ('trajectory' | 'impact')[] = [];
+    const slots: ('trajectory' | 'impact' | 'secondary')[] = [];
     if (this.build.trajectory && this.build.trajectory.level < 3) slots.push('trajectory');
     if (this.build.impact && this.build.impact.level < 3) slots.push('impact');
+    if (this.build.secondary && this.build.secondary.level < 3) slots.push('secondary');
     if (!slots.length) return false;
     const slot = slots[combatInt(0, slots.length - 1)];
-    const ref = slot === 'trajectory' ? this.build.trajectory : this.build.impact;
+    const ref =
+      slot === 'trajectory'
+        ? this.build.trajectory
+        : slot === 'impact'
+          ? this.build.impact
+          : this.build.secondary;
     if (!ref) return false;
     const next: PlayerBuild = {
       trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-      impact: this.build.impact ? { ...this.build.impact } : null
+      impact: this.build.impact ? { ...this.build.impact } : null,
+      secondary: this.build.secondary ? { ...this.build.secondary } : undefined
     };
     const level = (ref.level + 1) as RuleLevel;
     if (slot === 'trajectory') {
       next.trajectory = { key: ref.key as TrajectoryKey, level };
-    } else {
+    } else if (slot === 'impact') {
       next.impact = { key: ref.key as ImpactKey, level };
+    } else {
+      next.secondary = { key: ref.key, level };
     }
     this.applyBuildState(next, {
       key: ref.key,
@@ -924,6 +939,12 @@ export class M0Scene extends Phaser.Scene {
     }
     this.lateUpgrades.push(id);
     setLate(this.lateUpgrades.map((lateId) => LATE_UPGRADES[lateId]));
+  }
+
+  public debugSetThird(key: RuleKey, level: RuleLevel = 3): void {
+    this.build = { ...this.build, secondary: { key, level } };
+    this.acquired.add(key);
+    setBuild(this.build, this.acquired);
   }
 
   private openChapterReward(): void {
@@ -1338,7 +1359,7 @@ export class M0Scene extends Phaser.Scene {
     const combo = getBuildCombo(this.build);
     const mutation = this.mutation.id ? MUTATIONS[this.mutation.id].name : '无';
     const lines = [
-      `${this.chapter.name} · ${combo.name} · 等级 ${buildLevelSum(this.build)} / 6 · 突变 ${mutation}`,
+      `${this.chapter.name} · ${combo.name} · 等级 ${buildLevelSum(this.build)} / 9 · 突变 ${mutation}`,
       `异变 ${getMutator(this.mutatorLevel).name} · 第 ${this.stepIndex + 1} / ${this.stepTotal} 步 · ${formatTime(this.elapsed)} · 击杀 ${this.kills} · 生命 ${Math.ceil(this.hp)} / ${this.maxHp}`
     ];
     return lines.join(String.fromCharCode(10));
@@ -1677,6 +1698,7 @@ export class M0Scene extends Phaser.Scene {
       chainAscendJumps: this.chainAscendJumps,
       thunderDomainCasts: this.thunderDomainCasts,
       riftEchoCasts: this.riftEchoCasts,
+      thirdVolleys: this.thirdVolleys,
       lateUpgrades: [...this.lateUpgrades],
       pierceMomentum: this.pierceMomentum,
       slowFields: this.slowFields.length,
@@ -2340,17 +2362,75 @@ export class M0Scene extends Phaser.Scene {
       this.relicDamageMultiplier();
     this.thunderStacks = 0;
     const impact = sealedImpact ? null : this.build.impact;
-    const color =
-      profile?.kind === 'pierce'
-        ? PIERCE_COLOR
-        : profile?.kind === 'spread'
-          ? SPREAD_COLOR
-          : COLORS.cyan;
+    const third = this.build.secondary ?? null;
+    const thirdTrajectory =
+      third && isTrajectoryKey(third.key)
+        ? getTrajectoryProfile(third.key, third.level)
+        : null;
+    const thirdImpact =
+      third && isImpactKey(third.key) ? (third as PlayerBuild['impact']) : null;
+    const thirdBudget = thirdImpact
+      ? new TriggerBudget(IMPACT_TRIGGER_BUDGET)
+      : null;
+    const color = this.trajectoryColor(profile);
 
     if (overcharged) {
       this.spawnOverloadBurst();
     }
 
+    this.spawnTrajectoryVolley(
+      profile,
+      target,
+      baseAngle,
+      power,
+      budget,
+      impact,
+      thirdImpact,
+      thirdBudget,
+      color,
+      pierceMomentum
+    );
+    if (thirdTrajectory) {
+      this.thirdVolleys += 1;
+      const thirdColor = this.trajectoryColor(thirdTrajectory);
+      this.spawnTrajectoryVolley(
+        thirdTrajectory,
+        target,
+        baseAngle,
+        power,
+        new TriggerBudget(IMPACT_TRIGGER_BUDGET),
+        impact,
+        null,
+        null,
+        thirdColor,
+        0
+      );
+      this.spawnMuzzle(thirdColor);
+    }
+    this.spawnMuzzle(color);
+    audio.play('shoot');
+  }
+
+  private trajectoryColor(profile: TrajectoryProfile | null): number {
+    return profile?.kind === 'pierce'
+      ? PIERCE_COLOR
+      : profile?.kind === 'spread'
+        ? SPREAD_COLOR
+        : COLORS.cyan;
+  }
+
+  private spawnTrajectoryVolley(
+    profile: TrajectoryProfile | null,
+    target: EnemyUnit,
+    baseAngle: number,
+    power: number,
+    budget: TriggerBudget,
+    impact: PlayerBuild['impact'],
+    extraImpact: PlayerBuild['impact'],
+    extraBudget: TriggerBudget | null,
+    color: number,
+    pierceBonus = 0
+  ): void {
     if (profile?.kind === 'spread') {
       const angles = getSpreadAngles(baseAngle, profile.bolts, profile.spreadDeg);
       for (const angle of angles) {
@@ -2362,6 +2442,8 @@ export class M0Scene extends Phaser.Scene {
           maxDistance: profile.range,
           budget,
           impact,
+          extraImpact,
+          extraBudget,
           power,
           color
         });
@@ -2373,9 +2455,11 @@ export class M0Scene extends Phaser.Scene {
         damage: BASE_DAMAGE * power,
         speed: profile.speed,
         maxDistance: profile.range,
-        maxHits: profile.targets + pierceMomentum,
+        maxHits: profile.targets + pierceBonus,
         budget,
         impact,
+        extraImpact,
+        extraBudget,
         power,
         color
       });
@@ -2389,6 +2473,8 @@ export class M0Scene extends Phaser.Scene {
         maxDistance: ARENA * 1.6,
         budget,
         impact,
+        extraImpact,
+        extraBudget,
         power,
         chainJumps: profile?.kind === 'chain' ? profile.jumps : 0,
         chainRange: profile?.kind === 'chain' ? profile.range : 0,
@@ -2396,8 +2482,6 @@ export class M0Scene extends Phaser.Scene {
         color
       });
     }
-    this.spawnMuzzle(color);
-    audio.play('shoot');
   }
 
   private spawnBolt(options: {
@@ -2410,6 +2494,8 @@ export class M0Scene extends Phaser.Scene {
     maxHits?: number;
     budget: TriggerBudget;
     impact?: PlayerBuild['impact'];
+    extraImpact?: PlayerBuild['impact'];
+    extraBudget?: TriggerBudget | null;
     power?: number;
     chainJumps?: number;
     chainRange?: number;
@@ -2446,6 +2532,8 @@ export class M0Scene extends Phaser.Scene {
       hitEnemies: new Set(),
       budget: options.budget,
       impact: options.impact ?? null,
+      extraImpact: options.extraImpact ?? null,
+      extraBudget: options.extraBudget ?? null,
       power: options.power ?? 1,
       pierceHits: 0,
       chainJumps: options.chainJumps ?? 0,
@@ -2596,6 +2684,9 @@ export class M0Scene extends Phaser.Scene {
     }
     if (bolt.impact && bolt.budget.tryConsume()) {
       this.applyImpact(enemy, bolt.damage, bolt.impact, bolt.power);
+    }
+    if (bolt.extraImpact && bolt.extraBudget?.tryConsume()) {
+      this.applyImpact(enemy, bolt.damage, bolt.extraImpact, bolt.power);
     }
     if (bolt.chainJumps > 0) {
       this.resolveChain(
@@ -3158,7 +3249,13 @@ export class M0Scene extends Phaser.Scene {
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
     const mutator = getMutator(this.mutatorLevel);
-    const baseHp = spec.hp * (spec.boss ? mutator.bossHp : mutator.enemyHp);
+    const chapterHpScale = this.chapterIndex >= 1 ? 1.15 : 1;
+    const thirdHpScale = this.build.secondary ? 1.05 : 1;
+    const baseHp =
+      spec.hp *
+      (spec.boss ? mutator.bossHp : mutator.enemyHp) *
+      chapterHpScale *
+      thirdHpScale;
     const baseSpeed = spec.speed * mutator.enemySpeed;
     const hover =
       kind === 'bat' ||
@@ -4957,7 +5054,7 @@ export class M0Scene extends Phaser.Scene {
       mutatorName: getMutator(this.mutatorLevel).name,
       mutation: this.mutation.id ? MUTATIONS[this.mutation.id].name : null,
       relics: this.relics.map((id) => RELICS[id].name),
-      ascensions: [this.build.trajectory, this.build.impact]
+      ascensions: [this.build.trajectory, this.build.impact, this.build.secondary]
         .map((ref) => (ref?.ascended ? getAscensionForRule(ref.key)?.name ?? null : null))
         .filter((name): name is string => Boolean(name)),
       lateUpgrades: this.lateUpgrades.map((id) => LATE_UPGRADES[id].name),
@@ -4966,11 +5063,12 @@ export class M0Scene extends Phaser.Scene {
           [
             ...this.acquired,
             this.build.trajectory?.key,
-            this.build.impact?.key
+            this.build.impact?.key,
+            this.build.secondary?.key
           ].filter((key): key is RuleKey => Boolean(key))
         )
       ],
-      rulesAscended: [this.build.trajectory, this.build.impact]
+      rulesAscended: [this.build.trajectory, this.build.impact, this.build.secondary]
         .map((ref) => (ref?.ascended ? ref.key : null))
         .filter((key): key is RuleKey => Boolean(key)),
       build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild,

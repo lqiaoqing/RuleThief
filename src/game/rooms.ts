@@ -1004,7 +1004,7 @@ export function buildChapterRewards(
   const rewards: Reward[] = [];
   const unlockedRelics = options.unlockedRelics ?? RELIC_IDS;
   const unlockedAscensions = new Set(options.unlockedAscensions ?? ASCENSION_IDS);
-  const ascensions = [build.trajectory, build.impact]
+  const ascensions = [build.trajectory, build.impact, build.secondary ?? null]
     .map((ref) =>
       ref && ref.level === 3 && !ref.ascended ? getAscensionForRule(ref.key) : null
     )
