@@ -38,7 +38,7 @@ import {
   type TrajectoryProfile
 } from './rules';
 import { ROOMS, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
-import { EVENTS, buildRunPlan, eventOptionsFor, hasUpgradeableRule, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
+import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
   MUTATIONS,
@@ -55,7 +55,7 @@ import {
   type MutationState
 } from './mutations';
 
-type RunState = 'idle' | 'playing' | 'ended';
+type RunState = 'idle' | 'playing' | 'chapter' | 'ended';
 type RoomState = 'preview' | 'fighting' | 'reward' | 'route' | 'event';
 type DamageSource = 'melee' | 'charge' | 'bolt' | 'hazard' | 'explosion' | 'other';
 const DAMAGE_SOURCES: DamageSource[] = ['melee', 'charge', 'bolt', 'hazard', 'explosion', 'other'];
@@ -154,6 +154,7 @@ interface Pickup {
 
 export interface RunEndPayload {
   victory: boolean;
+  stageOnly: boolean;
   time: number;
   kills: number;
   rules: number;
@@ -161,9 +162,27 @@ export interface RunEndPayload {
   levelSum: number;
   roomsCleared: number;
   roomsTotal: number;
+  chapterIndex: number;
+  chaptersTotal: number;
+  chapterName: string;
   mutation: string | null;
   maxHp: number;
   damage: { source: string; label: string; amount: number }[];
+}
+
+export interface ChapterClearPayload {
+  chapterIndex: number;
+  chaptersTotal: number;
+  chapterName: string;
+  chapterEn: string;
+  nextName: string;
+  nextEn: string;
+  hp: number;
+  maxHp: number;
+  kills: number;
+  elapsed: number;
+  levelSum: number;
+  combo: string;
 }
 
 const PLAYER_MAX_HP = 100;
@@ -229,6 +248,9 @@ export class M0Scene extends Phaser.Scene {
   private roomState: RoomState = 'preview';
   private plan: RunStep[] = [];
   private stepIndex = 0;
+  private chapterIndex = 0;
+  private stepsClearedBefore = 0;
+  private chapterTransitionOpen = false;
   private encounter: Encounter | null = null;
   private roomKills = 0;
   private roomSpawned = 0;
@@ -386,7 +408,10 @@ export class M0Scene extends Phaser.Scene {
     this.build = createEmptyBuild();
     this.acquired.clear();
     resetRandomStreams();
-    this.plan = buildRunPlan(random);
+    this.chapterIndex = 0;
+    this.stepsClearedBefore = 0;
+    this.chapterTransitionOpen = false;
+    this.plan = buildChapterPlan(0, random);
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
@@ -440,12 +465,34 @@ export class M0Scene extends Phaser.Scene {
     return this.plan.length;
   }
 
+  private get chapter(): ChapterDef {
+    return CHAPTERS[this.chapterIndex] ?? CHAPTERS[0];
+  }
+
+  public getChapterState(): {
+    index: number;
+    total: number;
+    name: string;
+    nextName: string | null;
+    transitionOpen: boolean;
+  } {
+    return {
+      index: this.chapterIndex,
+      total: CHAPTERS.length,
+      name: this.chapter.name,
+      nextName: CHAPTERS[this.chapterIndex + 1]?.name ?? null,
+      transitionOpen: this.chapterTransitionOpen
+    };
+  }
+
   private refreshRoomHud(): void {
     const total = this.stepTotal;
     if (this.encounter?.kind === 'event') {
       setRoomProgress({
         index: this.stepIndex + 1,
         total,
+        chapterIndex: this.chapterIndex,
+        chapterTotal: CHAPTERS.length,
         name: this.encounter.event.name,
         en: this.encounter.event.en,
         cleared: 0,
@@ -460,6 +507,8 @@ export class M0Scene extends Phaser.Scene {
     setRoomProgress({
       index: this.stepIndex + 1,
       total,
+      chapterIndex: this.chapterIndex,
+      chapterTotal: CHAPTERS.length,
       name: room.name,
       en: room.en,
       cleared: this.roomKills,
@@ -473,7 +522,7 @@ export class M0Scene extends Phaser.Scene {
   private loadStep(index: number): void {
     const step = this.plan[index];
     if (!step) {
-      this.endRun(true);
+      this.finishChapter();
       return;
     }
     this.stepIndex = index;
@@ -657,10 +706,78 @@ export class M0Scene extends Phaser.Scene {
     if (this.runState !== 'playing') return;
     const next = this.stepIndex + 1;
     if (next >= this.plan.length) {
-      this.endRun(true);
+      this.finishChapter();
       return;
     }
     this.loadStep(next);
+  }
+
+  private finishChapter(): void {
+    if (this.runState !== 'playing') return;
+    const next = CHAPTERS[this.chapterIndex + 1];
+    if (!next) {
+      this.endRun(true);
+      return;
+    }
+    this.runState = 'chapter';
+    this.chapterTransitionOpen = true;
+    this.playEnabled = false;
+    this.joystick.set(0, 0);
+    this.dashQueued = false;
+    for (const bolt of this.bolts) {
+      bolt.dead = true;
+      bolt.root.destroy(true);
+    }
+    this.bolts = [];
+    this.pauseScene();
+    audio.play('victory');
+    this.game.events.emit('m6-chapter-cleared', {
+      chapterIndex: this.chapterIndex,
+      chaptersTotal: CHAPTERS.length,
+      chapterName: this.chapter.name,
+      chapterEn: this.chapter.en,
+      nextName: next.name,
+      nextEn: next.en,
+      hp: this.hp,
+      maxHp: this.maxHp,
+      kills: this.kills,
+      elapsed: this.elapsed,
+      levelSum: buildLevelSum(this.build),
+      combo: getBuildCombo(this.build).name
+    } satisfies ChapterClearPayload);
+  }
+
+  public continueToNextChapter(): void {
+    if (!this.chapterTransitionOpen) return;
+    const nextIndex = this.chapterIndex + 1;
+    if (!CHAPTERS[nextIndex]) return;
+    this.chapterTransitionOpen = false;
+    this.stepsClearedBefore += this.plan.length;
+    this.chapterIndex = nextIndex;
+    this.plan = buildChapterPlan(nextIndex, random);
+    this.stepIndex = 0;
+    this.encounter = null;
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.rewardOpen = false;
+    this.roomSpeedMult = 1;
+    this.roomBonusCards = 0;
+    this.pendingSpeedMult = 1;
+    this.pendingBonusCards = 0;
+    this.pendingBonusElite = false;
+    this.victoryLocked = false;
+    this.runState = 'playing';
+    this.roomState = 'preview';
+    setBossBar(null);
+    this.refreshRoomHud();
+    this.loadStep(0);
+  }
+
+  public stopAfterChapter(): void {
+    if (!this.chapterTransitionOpen) return;
+    this.chapterTransitionOpen = false;
+    this.endRun(true, true);
   }
 
   public beginRoom(): void {
@@ -932,7 +1049,7 @@ export class M0Scene extends Phaser.Scene {
     const combo = getBuildCombo(this.build);
     const mutation = this.mutation.id ? MUTATIONS[this.mutation.id].name : '无';
     const lines = [
-      `${combo.name} · 等级 ${buildLevelSum(this.build)} / 6 · 突变 ${mutation}`,
+      `${this.chapter.name} · ${combo.name} · 等级 ${buildLevelSum(this.build)} / 6 · 突变 ${mutation}`,
       `第 ${this.stepIndex + 1} / ${this.stepTotal} 步 · ${formatTime(this.elapsed)} · 击杀 ${this.kills} · 生命 ${Math.ceil(this.hp)} / ${this.maxHp}`
     ];
     return lines.join(String.fromCharCode(10));
@@ -1182,6 +1299,10 @@ export class M0Scene extends Phaser.Scene {
       roomState: this.roomState,
       roomIndex: this.stepIndex,
       stepTotal: this.stepTotal,
+      chapterIndex: this.chapterIndex,
+      chaptersTotal: CHAPTERS.length,
+      chapterName: this.chapter.name,
+      chapterTransitionOpen: this.chapterTransitionOpen,
       encounterKind: this.encounter?.kind ?? null,
       roomKills: this.roomKills,
       roomQuota: this.getRoom().quota,
@@ -3154,7 +3275,7 @@ export class M0Scene extends Phaser.Scene {
     this.cameras.main.flash(420, 255, 235, 190);
     audio.play('victory');
     this.time.delayedCall(900, () => {
-      if (this.runState === 'playing' && this.victoryLocked) this.endRun(true);
+      if (this.runState === 'playing' && this.victoryLocked) this.finishChapter();
     });
   }
 
@@ -3665,7 +3786,7 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
-  private endRun(victory: boolean): void {
+  private endRun(victory: boolean, stageOnly = false): void {
     if (this.runState === 'ended') return;
     this.runState = 'ended';
     this.roomState = 'fighting';
@@ -3681,13 +3802,17 @@ export class M0Scene extends Phaser.Scene {
     }
     this.game.events.emit('m0-run-ended', {
       victory,
+      stageOnly,
       time: this.elapsed,
       kills: this.kills,
       rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
       combo: getBuildCombo(this.build).name,
       levelSum: buildLevelSum(this.build),
-      roomsCleared: victory ? this.stepTotal : this.stepIndex,
-      roomsTotal: this.stepTotal,
+      roomsCleared: this.stepsClearedBefore + (victory ? this.stepTotal : this.stepIndex),
+      roomsTotal: this.stepsClearedBefore + this.stepTotal,
+      chapterIndex: this.chapterIndex,
+      chaptersTotal: CHAPTERS.length,
+      chapterName: this.chapter.name,
       mutation: this.mutation.id ? MUTATIONS[this.mutation.id].name : null,
       maxHp: this.maxHp,
       damage: DAMAGE_SOURCES.map((source) => ({

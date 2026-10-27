@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import './m0.css';
 import { M0Scene } from './game/M0Scene';
-import type { RunEndPayload } from './game/M0Scene';
+import type { RunEndPayload, ChapterClearPayload } from './game/M0Scene';
 import { audio } from './game/audio';
 import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
@@ -146,6 +146,18 @@ const resultComboLevel = byId<HTMLElement>('result-combo-level');
 const resultRecord = byId<HTMLElement>('result-record');
 const resultMutation = byId<HTMLElement>('result-mutation');
 const resultDamage = byId<HTMLElement>('result-damage');
+const chapterScreen = byId<HTMLElement>('chapter-screen');
+const chapterKicker = byId<HTMLElement>('chapter-kicker');
+const chapterTitle = byId<HTMLElement>('chapter-title');
+const chapterEn = byId<HTMLElement>('chapter-en');
+const chapterSub = byId<HTMLElement>('chapter-sub');
+const chapterHp = byId<HTMLElement>('chapter-hp');
+const chapterLevel = byId<HTMLElement>('chapter-level');
+const chapterTime = byId<HTMLElement>('chapter-time');
+const chapterHint = byId<HTMLElement>('chapter-hint');
+const chapterContinueButton = byId<HTMLButtonElement>('chapter-continue-btn');
+const chapterStopButton = byId<HTMLButtonElement>('chapter-stop-btn');
+const chapterContinueCopy = chapterContinueButton.querySelector<HTMLElement>('.btn-copy b');
 
 let scene: M0Scene | null = null;
 let entered = false;
@@ -190,14 +202,28 @@ function updateSoundIcon(): void {
 }
 
 function showResult(payload: RunEndPayload): void {
+  const stageOnly = payload.stageOnly;
   resultScreen.classList.toggle('is-victory', payload.victory);
   resultScreen.classList.toggle('is-defeat', !payload.victory);
-  resultEmblemUse?.setAttribute('href', payload.victory ? '#i-crown' : '#i-skull');
-  resultKicker.textContent = payload.victory ? 'RUN COMPLETE' : 'RUN ENDED';
-  resultTitle.textContent = payload.victory ? '审判完成' : '规则耗尽';
-  resultSub.textContent = payload.victory
-    ? '你走完了整条路线，击穿精英，并把规则审判者送回了审判席。'
-    : '生命归零。先看懂预警，再决定什么时候闪避。';
+  resultEmblemUse?.setAttribute(
+    'href',
+    stageOnly ? '#i-shard' : payload.victory ? '#i-crown' : '#i-skull'
+  );
+  resultKicker.textContent = stageOnly
+    ? 'CHAPTER COMPLETE'
+    : payload.victory
+      ? 'RUN COMPLETE'
+      : 'RUN ENDED';
+  resultTitle.textContent = stageOnly
+    ? `${payload.chapterName} · 阶段完成`
+    : payload.victory
+      ? '审判完成'
+      : '规则耗尽';
+  resultSub.textContent = stageOnly
+    ? `你选择在第 ${payload.chapterIndex + 1} / ${payload.chaptersTotal} 章结束时收工。构筑与结算已记录，下一局可以继续深入。`
+    : payload.victory
+      ? '你走完了整条路线，击穿精英，并把规则审判者送回了审判席。'
+      : '生命归零。先看懂预警，再决定什么时候闪避。';
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);
   resultRooms.textContent = `${payload.roomsCleared} / ${payload.roomsTotal}`;
@@ -260,7 +286,43 @@ function hideOverlays(): void {
   setRoomVisible(false);
   setRouteVisible(false);
   setEventVisible(false);
+  chapterScreen.hidden = true;
   pendingRewards = [];
+}
+
+function showChapterClear(payload: ChapterClearPayload): void {
+  setRewardVisible(false);
+  setRoomVisible(false);
+  setRouteVisible(false);
+  setEventVisible(false);
+  chapterKicker.textContent = `CHAPTER ${payload.chapterIndex + 1} / ${payload.chaptersTotal} CLEAR`;
+  chapterTitle.textContent = `${payload.chapterName} · 已完成`;
+  chapterEn.textContent = payload.chapterEn;
+  chapterSub.textContent = `下一段路：${payload.nextName}。当前构筑与生命会保留。`;
+  chapterHp.textContent = `${Math.ceil(payload.hp)} / ${payload.maxHp}`;
+  chapterLevel.textContent = `等级 ${payload.levelSum} / 6 · ${payload.combo}`;
+  chapterTime.textContent = formatTime(Math.floor(payload.elapsed));
+  chapterHint.textContent = `继续深入 ${payload.nextName}，或在此收工结算。`;
+  if (chapterContinueCopy) chapterContinueCopy.textContent = `继续深入 · ${payload.nextName}`;
+  chapterScreen.hidden = false;
+  pauseScreen.hidden = true;
+}
+
+function isChapterVisible(): boolean {
+  return !chapterScreen.hidden;
+}
+
+function continueChapter(): void {
+  if (!scene) return;
+  chapterScreen.hidden = true;
+  scene.continueToNextChapter();
+  void audio.resume();
+}
+
+function stopChapter(): void {
+  if (!scene) return;
+  chapterScreen.hidden = true;
+  scene.stopAfterChapter();
 }
 
 function showRoute(payload: RouteChoicePayload): void {
@@ -372,7 +434,8 @@ function pauseGame(): void {
     isRewardVisible() ||
     isRoomVisible() ||
     isRouteVisible() ||
-    isEventVisible()
+    isEventVisible() ||
+    isChapterVisible()
   ) {
     return;
   }
@@ -494,6 +557,10 @@ game.events.on('m3-event', (payload: EventPayload) => {
   if (!entered) return;
   showEvent(payload);
 });
+game.events.on('m6-chapter-cleared', (payload: ChapterClearPayload) => {
+  if (!entered) return;
+  showChapterClear(payload);
+});
 
 window.setTimeout(() => {
   if (window.__RT_READY__) return;
@@ -518,6 +585,8 @@ document.getElementById('back-menu-btn')?.addEventListener('click', backToMenu);
 document.getElementById('restart-btn')?.addEventListener('click', restartRun);
 document.getElementById('pause-restart-btn')?.addEventListener('click', restartRun);
 document.getElementById('result-menu-btn')?.addEventListener('click', backToMenu);
+chapterContinueButton.addEventListener('click', continueChapter);
+chapterStopButton.addEventListener('click', stopChapter);
 roomEnterButton.addEventListener('click', enterRoom);
 introStartButton.addEventListener('click', dismissIntro);
 

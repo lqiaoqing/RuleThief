@@ -2111,3 +2111,30 @@ kbd {
     display: none;
   }
 }
+
+.chapter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chapter-foot {
+  align-items: center;
+}
+
+.chapter-card {
+  border-color: rgba(124, 232, 255, 0.28);
+}
+
+@media (max-width: 640px) {
+  .chapter-actions {
+    width: 100%;
+  }
+
+  .chapter-actions .primary,
+  .chapter-actions .ghost {
+    flex: 1 1 140px;
+  }
+}

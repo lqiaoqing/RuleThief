@@ -208,23 +208,63 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
   return copy;
 }
 
+export type ChapterId = 'judgement' | 'workshop' | 'abyss';
+
+export interface ChapterDef {
+  id: ChapterId;
+  index: number;
+  name: string;
+  en: string;
+  subtitle: string;
+  bossName: string;
+  bossEn: string;
+  buildPlan: (random: () => number) => RunStep[];
+}
+
+export const CHAPTERS: readonly ChapterDef[] = [
+  {
+    id: 'judgement',
+    index: 0,
+    name: '审判废墟',
+    en: 'JUDGEMENT RUINS',
+    subtitle: '掠夺规则，建立第一套基础构筑。',
+    bossName: '规则审判者',
+    bossEn: 'RULE ARBITER',
+    buildPlan: (random) => {
+      const events = shuffle(EVENT_IDS, random).slice(0, 2) as EventId[];
+      return [
+        { kind: 'encounter', encounter: room('antechamber') },
+        { kind: 'choice', options: [room('ember-nursery'), room('spore-vault')] },
+        { kind: 'choice', options: [room('echo-gallery'), room('bone-gallery')] },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[0]] } },
+        { kind: 'encounter', encounter: room('mycelium-hall') },
+        { kind: 'encounter', encounter: room('ember-rift') },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[1]] } },
+        { kind: 'encounter', encounter: room('cinder-court') },
+        { kind: 'choice', options: [room('sunder-pit'), room('frostbone-gallery')] },
+        { kind: 'choice', options: [room('slag-yard'), room('frost-court')] },
+        { kind: 'encounter', encounter: room('echo-vault') },
+        { kind: 'choice', options: [room('thunder-altar'), room('ash-gallery')] },
+        { kind: 'encounter', encounter: room('judgement-hall') }
+      ];
+    }
+  }
+];
+
 export function buildRunPlan(random: () => number = Math.random): RunStep[] {
-  const events = shuffle(EVENT_IDS, random).slice(0, 2) as EventId[];
-  return [
-    { kind: 'encounter', encounter: room('antechamber') },
-    { kind: 'choice', options: [room('ember-nursery'), room('spore-vault')] },
-    { kind: 'choice', options: [room('echo-gallery'), room('bone-gallery')] },
-    { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[0]] } },
-    { kind: 'encounter', encounter: room('mycelium-hall') },
-    { kind: 'encounter', encounter: room('ember-rift') },
-    { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[1]] } },
-    { kind: 'encounter', encounter: room('cinder-court') },
-    { kind: 'choice', options: [room('sunder-pit'), room('frostbone-gallery')] },
-    { kind: 'choice', options: [room('slag-yard'), room('frost-court')] },
-    { kind: 'encounter', encounter: room('echo-vault') },
-    { kind: 'choice', options: [room('thunder-altar'), room('ash-gallery')] },
-    { kind: 'encounter', encounter: room('judgement-hall') }
-  ];
+  return CHAPTERS[0].buildPlan(random);
+}
+
+export function buildChapterPlan(
+  chapterIndex: number,
+  random: () => number = Math.random
+): RunStep[] {
+  const chapter = CHAPTERS[chapterIndex];
+  return chapter ? chapter.buildPlan(random) : [];
+}
+
+export function getChapter(chapterIndex: number): ChapterDef | undefined {
+  return CHAPTERS[chapterIndex];
 }
 
 export function planNodeCount(plan: readonly RunStep[]): number {

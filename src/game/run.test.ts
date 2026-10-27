@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   EVENTS,
   EVENT_IDS,
+  CHAPTERS,
   buildRunPlan,
+  buildChapterPlan,
+  getChapter,
   eventOptionsFor,
   hasUpgradeableRule,
   planNodeCount,
@@ -86,6 +89,26 @@ describe('event definitions', () => {
 });
 
 describe('run plan', () => {
+  it('exposes the first chapter as the judgement ruins', () => {
+    expect(CHAPTERS.length).toBeGreaterThanOrEqual(1);
+    const first = CHAPTERS[0];
+    expect(first.id).toBe('judgement');
+    expect(first.name).toBe('审判废墟');
+    expect(first.bossName.length).toBeGreaterThan(0);
+  });
+
+  it('builds the same plan through the chapter API', () => {
+    expect(JSON.stringify(buildChapterPlan(0, random))).toBe(
+      JSON.stringify(buildRunPlan(random))
+    );
+    expect(getChapter(0)).toBe(CHAPTERS[0]);
+  });
+
+  it('returns an empty plan for an unknown chapter', () => {
+    expect(buildChapterPlan(CHAPTERS.length, random)).toEqual([]);
+    expect(getChapter(CHAPTERS.length)).toBeUndefined();
+  });
+
   it('builds a thirteen-step path through eighteen nodes', () => {
     const plan = buildRunPlan(random);
     expect(planStepCount(plan)).toBe(13);

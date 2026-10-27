@@ -165,6 +165,8 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 export interface RoomProgress {
   index: number;
   total: number;
+  chapterIndex?: number;
+  chapterTotal?: number;
   name: string;
   en: string;
   cleared: number;
@@ -181,7 +183,11 @@ export function setRoomProgress(progress: RoomProgress): void {
   roomName.textContent = progress.name;
   mobileRoomName.textContent = progress.name;
   objectiveLabel.textContent = progress.en;
-  objectiveRoom.textContent = `ROOM ${progress.index} / ${progress.total}`;
+  const chapterPrefix =
+    progress.chapterTotal && progress.chapterTotal > 1
+      ? `W${(progress.chapterIndex ?? 0) + 1} · `
+      : '';
+  objectiveRoom.textContent = `${chapterPrefix}ROOM ${progress.index} / ${progress.total}`;
   objectiveTime.textContent = `${progress.cleared} / ${progress.quota}`;
   survivalFill.style.width = `${Math.min(100, (progress.cleared / progress.quota) * 100)}%`;
   threatLevel.textContent = ROMAN[progress.index - 1] ?? String(progress.index);
