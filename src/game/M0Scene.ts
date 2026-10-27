@@ -49,6 +49,7 @@ import {
   type LateUpgradeId
 } from './lateUpgrades';
 import { getMutator, clampMutator } from './mutators';
+import { getWorldTheme } from './worldTheme';
 import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
@@ -193,6 +194,8 @@ export interface RunEndPayload {
   chaptersTotal: number;
   startChapter: number;
   chapterName: string;
+  worldTheme: string;
+  worldThemeName: string;
   mutatorLevel: number;
   mutatorName: string;
   mutation: string | null;
@@ -251,6 +254,12 @@ export class M0Scene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Container;
   private enemyLayer!: Phaser.GameObjects.Container;
   private fxLayer!: Phaser.GameObjects.Container;
+  private frameLayer!: Phaser.GameObjects.Container;
+  private floorImage?: Phaser.GameObjects.Image;
+  private themeWash?: Phaser.GameObjects.Rectangle;
+  private arenaFrame?: Phaser.GameObjects.Graphics;
+  private brazierGlows: Phaser.GameObjects.Image[] = [];
+  private dustEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
   private playerRoot!: Phaser.GameObjects.Container;
   private playerSprite!: Phaser.GameObjects.Image;
   private playerAura!: Phaser.GameObjects.Image;
@@ -392,6 +401,8 @@ export class M0Scene extends Phaser.Scene {
     this.world = this.add.container(0, 0);
     this.addFloor();
     this.addBossHologram();
+    this.frameLayer = this.add.container(0, 0);
+    this.world.add(this.frameLayer);
     this.addArenaFrame();
     this.addBrazier(92, 120);
     this.addBrazier(708, 120);
@@ -494,6 +505,7 @@ export class M0Scene extends Phaser.Scene {
     this.stepsClearedBefore = 0;
     this.chapterTransitionOpen = false;
     this.plan = buildChapterPlan(this.chapterIndex, random);
+    this.applyWorldTheme();
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
@@ -941,6 +953,7 @@ export class M0Scene extends Phaser.Scene {
     this.stepsClearedBefore += this.plan.length;
     this.chapterIndex = nextIndex;
     this.plan = buildChapterPlan(nextIndex, random);
+    this.applyWorldTheme();
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
@@ -1336,6 +1349,7 @@ export class M0Scene extends Phaser.Scene {
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.victoryLocked = false;
+    this.applyWorldTheme();
     this.openRoomPreview();
   }
 
@@ -1352,6 +1366,7 @@ export class M0Scene extends Phaser.Scene {
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.victoryLocked = false;
+    this.applyWorldTheme();
     this.loadStep(0);
   }
 
@@ -1582,6 +1597,8 @@ export class M0Scene extends Phaser.Scene {
       chapterIndex: this.chapterIndex,
       chaptersTotal: CHAPTERS.length,
       startChapter: this.startChapter,
+      worldTheme: getWorldTheme(this.chapterIndex).id,
+      worldThemeName: getWorldTheme(this.chapterIndex).name,
       chapterName: this.chapter.name,
       chapterTransitionOpen: this.chapterTransitionOpen,
       mutatorLevel: this.mutatorLevel,
@@ -1793,10 +1810,16 @@ export class M0Scene extends Phaser.Scene {
       .image(ARENA / 2, ARENA / 2, 'floor')
       .setDisplaySize(ARENA, ARENA);
     this.world.add(floor);
+    this.floorImage = floor;
     const shade = this.add
       .rectangle(ARENA / 2, ARENA / 2, ARENA, ARENA, 0x050a12, 0.14)
       .setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.world.add(shade);
+    const wash = this.add
+      .rectangle(ARENA / 2, ARENA / 2, ARENA, ARENA, 0xffb066, 0.045)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.world.add(wash);
+    this.themeWash = wash;
   }
 
   private addBossHologram(): void {
@@ -1854,14 +1877,15 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private addArenaFrame(): void {
+    const theme = getWorldTheme(this.chapterIndex);
     const frame = this.add.graphics();
-    frame.lineStyle(22, COLORS.cyan, 0.022);
+    frame.lineStyle(22, theme.framePrimary, 0.022);
     frame.strokeRoundedRect(2, 2, ARENA - 4, ARENA - 4, 20);
-    frame.lineStyle(7, COLORS.purple, 0.045);
+    frame.lineStyle(7, theme.frameSecondary, 0.045);
     frame.strokeRoundedRect(8, 8, ARENA - 16, ARENA - 16, 17);
-    frame.lineStyle(1.4, 0xa6d8e6, 0.32);
+    frame.lineStyle(1.4, theme.frameAccent, 0.32);
     frame.strokeRoundedRect(6, 6, ARENA - 12, ARENA - 12, 17);
-    frame.lineStyle(1, COLORS.cyan, 0.085);
+    frame.lineStyle(1, theme.framePrimary, 0.085);
     frame.strokeRoundedRect(22, 22, ARENA - 44, ARENA - 44, 10);
 
     const bracket = 34;
@@ -1872,13 +1896,13 @@ export class M0Scene extends Phaser.Scene {
       [pad, ARENA - pad, 1, -1],
       [ARENA - pad, ARENA - pad, -1, -1]
     ]) {
-      frame.lineStyle(2, COLORS.cyan, 0.46);
+      frame.lineStyle(2, theme.framePrimary, 0.46);
       frame.beginPath();
       frame.moveTo(x, y + sy * bracket);
       frame.lineTo(x, y);
       frame.lineTo(x + sx * bracket, y);
       frame.strokePath();
-      frame.lineStyle(1, COLORS.purple, 0.2);
+      frame.lineStyle(1, theme.frameSecondary, 0.2);
       frame.beginPath();
       frame.moveTo(x + sx * 6, y + sy * (bracket + 7));
       frame.lineTo(x + sx * 6, y + sy * 6);
@@ -1888,7 +1912,7 @@ export class M0Scene extends Phaser.Scene {
 
     for (let i = 100; i < ARENA; i += 100) {
       if (i === 400) continue;
-      frame.lineStyle(1, 0x8fb2c4, 0.09);
+      frame.lineStyle(1, theme.frameAccent, 0.09);
       frame.beginPath();
       frame.moveTo(i, 6);
       frame.lineTo(i, 14);
@@ -1901,7 +1925,8 @@ export class M0Scene extends Phaser.Scene {
       frame.strokePath();
     }
 
-    this.world.add(frame);
+    this.frameLayer.add(frame);
+    this.arenaFrame = frame;
   }
 
   private addBrazier(x: number, y: number): void {
@@ -1925,6 +1950,7 @@ export class M0Scene extends Phaser.Scene {
       .setAlpha(0.28)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.world.add(glow);
+    this.brazierGlows.push(glow);
 
     const ember = this.add.particles(x, y - 5, 'spark', {
       speedX: { min: -8, max: 8 },
@@ -1965,6 +1991,20 @@ export class M0Scene extends Phaser.Scene {
       blendMode: Phaser.BlendModes.ADD
     });
     this.world.add(dust);
+    this.dustEmitter = dust;
+  }
+
+  private applyWorldTheme(): void {
+    const theme = getWorldTheme(this.chapterIndex);
+    this.floorImage?.setTint(theme.floorTint);
+    this.themeWash?.setFillStyle(theme.washColor, theme.washAlpha);
+    for (const glow of this.brazierGlows) glow.setTint(theme.brazier);
+    this.dustEmitter?.setParticleTint(theme.dust);
+    if (this.arenaFrame) {
+      this.frameLayer.removeAll(true);
+      this.arenaFrame = undefined;
+      this.addArenaFrame();
+    }
   }
 
   private createPlayer(): void {
@@ -4953,6 +4993,8 @@ export class M0Scene extends Phaser.Scene {
       chapterIndex: this.chapterIndex,
       chaptersTotal: CHAPTERS.length,
       startChapter: this.startChapter,
+      worldTheme: getWorldTheme(this.chapterIndex).id,
+      worldThemeName: getWorldTheme(this.chapterIndex).name,
       chapterName: this.chapter.name,
       mutatorLevel: this.mutatorLevel,
       mutatorName: getMutator(this.mutatorLevel).name,

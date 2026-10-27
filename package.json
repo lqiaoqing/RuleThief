@@ -17,7 +17,8 @@
     "soak": "node scripts/soak.mjs",
     "fullrun": "node scripts/fullrun.mjs",
     "fullrun-start1": "node scripts/fullrun.mjs 1",
-    "fullrun-start2": "node scripts/fullrun.mjs 2"
+    "fullrun-start2": "node scripts/fullrun.mjs 2",
+    "world-shots": "node scripts/world-shots.mjs"
   },
   "dependencies": {
     "phaser": "3.90.0"

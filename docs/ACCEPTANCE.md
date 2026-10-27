@@ -72,6 +72,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M9 | 9 项成就与图鉴难度选择 | 自动 | 冒烟图鉴 9 项成就、6 个异变按钮；单测 |
 | M9 | 更丰富事件与隐藏奖励 | 自动 | 规则喷泉 / 虚空交易（随机遗物）进入事件池；`run.test.ts` 6 事件 |
 | M9.5 | 后期强化池（规则满级 + 遗物满槽后） | 自动 | 4 项：余烬蔓延/裂隙回响/霜环驻留/穿透蓄势；每局最多 2 个；4 项均有战斗内断言；fullrun W3 起点实拿 2 项 |
+| M9.5 | 三世界视觉语言 | 自动 + 截图 | W1 金红 / W2 青蓝 / W3 紫黑；地板 tint、环境洗色、框架、火盆、尘埃分层；冒烟断言 `worldTheme`，截图 `screenshots/m95-world-w*.png` |
 | M9.5 | 战斗场景代码不再主要膨胀 | 进行中 | M9.5.3 先拆 Arbiter；当前 `M0Scene.ts` 仍约 5.1k 行 |
 
 ## D. 性能与长时运行
@@ -112,6 +113,7 @@ BASE_URL=http://127.0.0.1:4177 npm run verify
 BASE_URL=http://127.0.0.1:4177 npm run fullrun
 BASE_URL=http://127.0.0.1:4177 npm run fullrun-start1
 BASE_URL=http://127.0.0.1:4177 npm run fullrun-start2
+BASE_URL=http://127.0.0.1:4177 npm run world-shots
 BASE_URL=http://127.0.0.1:4177 node scripts/stress.mjs
 BASE_URL=http://127.0.0.1:4177 npm run lowend
 BASE_URL=http://127.0.0.1:4177 npm run soak

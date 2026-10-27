@@ -283,6 +283,7 @@ try {
     'third-world start inherits a maxed build and two relics',
     startState.snapshot?.startChapter === 2 &&
       startState.snapshot?.chapterIndex === 2 &&
+      startState.snapshot?.worldTheme === 'abyss' &&
       startState.snapshot?.build?.trajectory?.level === 3 &&
       startState.snapshot?.build?.impact?.level === 3 &&
       (startState.snapshot?.relics?.length ?? 0) === 2 &&
@@ -1415,6 +1416,7 @@ try {
     'chapter two starts in the disorder workshop',
     workshopPreview.state?.chapterIndex === 1 &&
       workshopPreview.state?.chapterName === '失序工坊' &&
+      workshopPreview.state?.worldTheme === 'workshop' &&
       workshopPreview.title === '装配门厅' &&
       /W2/.test(workshopPreview.objective ?? ''),
     JSON.stringify({
@@ -1529,6 +1531,7 @@ try {
     'chapter three starts in the inverse-law abyss',
     abyssPreview.state?.chapterIndex === 2 &&
       abyssPreview.state?.chapterName === '逆律深渊' &&
+      abyssPreview.state?.worldTheme === 'abyss' &&
       abyssPreview.title === '深渊入口' &&
       /W3/.test(abyssPreview.objective ?? ''),
     JSON.stringify({
@@ -1933,11 +1936,11 @@ try {
     window.__RT_FREEZE_ATTACK__?.();
     window.__RT_PURGE_ENEMIES__?.();
     window.__RT_LATE__?.('frost-ring');
-    window.__RT_SPAWN_AT__?.('sunder', 430, 300);
+    window.__RT_SPAWN_AT__?.('spore', 400, 500);
   });
   await sleep(150);
   await ringPage.evaluate(() => window.__RT_VOLLEY__?.());
-  await sleep(400);
+  await sleep(600);
   const ringState = await snapshot(ringPage);
   check(
     'frost ring leaves a slowing field',
@@ -1958,13 +1961,13 @@ try {
     window.__RT_FREEZE_ATTACK__?.();
     window.__RT_PURGE_ENEMIES__?.();
     window.__RT_LATE__?.('pierce-momentum');
-    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
-    window.__RT_SPAWN_AT__?.('beetle', 450, 200);
-    window.__RT_SPAWN_AT__?.('beetle', 500, 100);
+    window.__RT_SPAWN_AT__?.('spore', 400, 300);
+    window.__RT_SPAWN_AT__?.('spore', 450, 200);
+    window.__RT_SPAWN_AT__?.('spore', 500, 100);
   });
   await sleep(150);
   await momentumPage.evaluate(() => window.__RT_VOLLEY__?.());
-  await sleep(600);
+  await sleep(800);
   const momentumState = await snapshot(momentumPage);
   check(
     'pierce momentum banks extra penetration for the next attack',
