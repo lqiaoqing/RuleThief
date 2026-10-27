@@ -1,28 +1,57 @@
 [
   {
     "run": 1,
+    "label": "w3-m3",
+    "startChapter": 2,
+    "mutator": 3,
+    "daily": false,
+    "build": "spread,burn,3,3",
     "result": "规则耗尽",
-    "rooms": "2 / 13",
-    "time": "02:34",
-    "seconds": 157,
+    "rooms": "7 / 12",
+    "time": "05:57",
+    "seconds": 362,
     "roomLog": [
       {
         "room": 1,
-        "seconds": 41,
+        "seconds": 64,
         "hpAtStart": 100,
-        "hpAtEnd": 100,
-        "kills": 13
+        "hpAtEnd": 60,
+        "kills": 20
       },
       {
         "room": 2,
-        "seconds": 58,
+        "seconds": 61,
         "hpAtStart": 100,
         "hpAtEnd": 100,
-        "kills": 33
+        "kills": 43
+      },
+      {
+        "room": 4,
+        "seconds": 61,
+        "hpAtStart": 120,
+        "hpAtEnd": 84,
+        "kills": 67
+      },
+      {
+        "room": 5,
+        "seconds": 42,
+        "hpAtStart": 84,
+        "hpAtEnd": 32,
+        "kills": 83
+      },
+      {
+        "room": 6,
+        "seconds": 59,
+        "hpAtStart": 77,
+        "hpAtEnd": 71,
+        "kills": 107
       }
     ],
-    "picks": 2,
-    "eventsSeen": [],
+    "picks": 5,
+    "eventsSeen": [
+      "BLOOD ALTAR:A",
+      "CURSED CHEST:B"
+    ],
     "errors": []
   }
 ]

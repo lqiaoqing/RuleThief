@@ -1,0 +1,18 @@
+[
+  {
+    "run": 1,
+    "label": "w2-piercefrost",
+    "startChapter": 1,
+    "mutator": 0,
+    "daily": false,
+    "build": "pierce,frost,3,3",
+    "result": "规则耗尽",
+    "rooms": "0 / 12",
+    "time": "00:56",
+    "seconds": 56,
+    "roomLog": [],
+    "picks": 0,
+    "eventsSeen": [],
+    "errors": []
+  }
+]

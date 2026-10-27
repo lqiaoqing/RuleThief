@@ -1,0 +1,92 @@
+[
+  {
+    "run": 1,
+    "label": "w1-chainblast",
+    "startChapter": 0,
+    "mutator": 0,
+    "daily": false,
+    "build": "chain,blast,3,3",
+    "result": "规则耗尽",
+    "rooms": "12 / 13",
+    "time": "09:12",
+    "seconds": 560,
+    "roomLog": [
+      {
+        "room": 1,
+        "seconds": 41,
+        "hpAtStart": 100,
+        "hpAtEnd": 98,
+        "kills": 13
+      },
+      {
+        "room": 2,
+        "seconds": 60,
+        "hpAtStart": 98,
+        "hpAtEnd": 100,
+        "kills": 33
+      },
+      {
+        "room": 3,
+        "seconds": 59,
+        "hpAtStart": 120,
+        "hpAtEnd": 104,
+        "kills": 57
+      },
+      {
+        "room": 5,
+        "seconds": 57,
+        "hpAtStart": 89,
+        "hpAtEnd": 91,
+        "kills": 79
+      },
+      {
+        "room": 6,
+        "seconds": 58,
+        "hpAtStart": 91,
+        "hpAtEnd": 120,
+        "kills": 101
+      },
+      {
+        "room": 8,
+        "seconds": 54,
+        "hpAtStart": 140,
+        "hpAtEnd": 140,
+        "kills": 123
+      },
+      {
+        "room": 9,
+        "seconds": 44,
+        "hpAtStart": 140,
+        "hpAtEnd": 122,
+        "kills": 139
+      },
+      {
+        "room": 10,
+        "seconds": 54,
+        "hpAtStart": 140,
+        "hpAtEnd": 140,
+        "kills": 161
+      },
+      {
+        "room": 11,
+        "seconds": 56,
+        "hpAtStart": 140,
+        "hpAtEnd": 122,
+        "kills": 183
+      },
+      {
+        "room": 12,
+        "seconds": 36,
+        "hpAtStart": 122,
+        "hpAtEnd": 113,
+        "kills": 199
+      }
+    ],
+    "picks": 10,
+    "eventsSeen": [
+      "VOID BARGAIN:A",
+      "CURSED CHEST:B"
+    ],
+    "errors": []
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "run": 1,
+    "label": "w3-chainblast",
+    "startChapter": 2,
+    "mutator": 0,
+    "daily": false,
+    "build": "chain,blast,3,3",
+    "result": "规则耗尽",
+    "rooms": "7 / 12",
+    "time": "05:34",
+    "seconds": 339,
+    "roomLog": [
+      {
+        "room": 1,
+        "seconds": 58,
+        "hpAtStart": 100,
+        "hpAtEnd": 55,
+        "kills": 20
+      },
+      {
+        "room": 2,
+        "seconds": 61,
+        "hpAtStart": 55,
+        "hpAtEnd": 39,
+        "kills": 43
+      },
+      {
+        "room": 4,
+        "seconds": 63,
+        "hpAtStart": 100,
+        "hpAtEnd": 100,
+        "kills": 67
+      },
+      {
+        "room": 5,
+        "seconds": 41,
+        "hpAtStart": 100,
+        "hpAtEnd": 42,
+        "kills": 83
+      },
+      {
+        "room": 6,
+        "seconds": 61,
+        "hpAtStart": 87,
+        "hpAtEnd": 87,
+        "kills": 107
+      }
+    ],
+    "picks": 5,
+    "eventsSeen": [
+      "RULE FOUNTAIN:B",
+      "BLOOD ALTAR:B"
+    ],
+    "errors": []
+  }
+]

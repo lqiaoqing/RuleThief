@@ -9,6 +9,10 @@ const executablePath = CHROME_CANDIDATES.find((candidate) => fs.existsSync(candi
 if (!executablePath) throw new Error('No Chrome or Edge executable found.');
 
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:4176';
+const START = Math.max(0, Math.min(2, Number(process.env.START ?? 0)));
+const MUTATOR = Math.max(0, Math.min(5, Number(process.env.MUTATOR ?? 0)));
+const DAILY = process.env.DAILY === '1';
+const LABEL = process.env.LABEL ?? 'auto';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const PRESSED = { KeyW: false, KeyA: false, KeyS: false, KeyD: false };
 
@@ -30,11 +34,13 @@ function decideMove(snapshot) {
   let fx = 0;
   let fy = 0;
   let nearest = Infinity;
+  let danger = false;
   for (const enemy of snapshot.enemyList ?? []) {
     const dx = px - enemy.x;
     const dy = py - enemy.y;
     const dist = Math.hypot(dx, dy) || 1;
     nearest = Math.min(nearest, dist - enemy.radius);
+    if (enemy.charging && dist < 210) danger = true;
     const weight = dist < 220 ? (220 - dist) / 220 : 0;
     if (weight > 0) {
       fx += (dx / dist) * weight * 2.2;
@@ -50,6 +56,19 @@ function decideMove(snapshot) {
       fx += (dx / dist) * weight * 3;
       fy += (dy / dist) * weight * 3;
     }
+    if (dist < hazard.radius + 25) danger = true;
+  }
+  const seal = snapshot.sealZone;
+  if (seal) {
+    const dx = px - Number(seal.x);
+    const dy = py - Number(seal.y);
+    const dist = Math.hypot(dx, dy) || 1;
+    if (dist < Number(seal.radius) + 60) {
+      const weight = (Number(seal.radius) + 60 - dist) / (Number(seal.radius) + 60);
+      fx += (dx / dist) * weight * 4.5;
+      fy += (dy / dist) * weight * 4.5;
+    }
+    if (dist < Number(seal.radius) + 20) danger = true;
   }
   // mild pull to the arena centre so the bot does not hug walls
   fx += (400 - px) * 0.0016;
@@ -65,7 +84,7 @@ function decideMove(snapshot) {
     KeyA: fx < -0.25,
     KeyD: fx > 0.25
   };
-  return { want, nearest };
+  return { want, nearest, danger };
 }
 
 async function readState(page) {
@@ -100,8 +119,11 @@ async function readState(page) {
   }));
 }
 
-async function pickReward(page, cards) {
-  const priority = ['ascension', 'relic', 'mutation', 'upgrade', 'equip', 'support'];
+async function pickReward(page, cards, hp) {
+  const priority =
+    hp < 55
+      ? ['support', 'mutation', 'upgrade', 'equip', 'ascension', 'relic']
+      : ['ascension', 'relic', 'mutation', 'upgrade', 'equip', 'support'];
   let index = 0;
   let best = -1;
   cards.forEach((card, i) => {
@@ -111,6 +133,13 @@ async function pickReward(page, cards) {
       index = i;
     }
   });
+  if (hp < 55) {
+    const healIndex = cards.findIndex(
+      (card) =>
+        card.kind === 'support' && (card.key === 'heal' || card.key === 'max-hp')
+    );
+    if (healIndex >= 0) index = healIndex;
+  }
   await page.evaluate((slot) => document.querySelectorAll('#rule-offers .rule-card')[slot]?.click(), index);
   return cards[index]?.action ?? 'none';
 }
@@ -126,7 +155,8 @@ async function pickRoute(page, routes, hp) {
 }
 
 async function pickEvent(page, eventEn, hp) {
-  const risky = hp > 65;
+  const risky =
+    eventEn === 'CURSED CHEST' || eventEn === 'FORGOTTEN IDOL' ? false : hp > 90;
   const index = risky ? 0 : 1;
   await page.evaluate((slot) => document.querySelectorAll('#event-options .event-option')[slot]?.click(), index);
   return `${eventEn}:${risky ? 'A' : 'B'}`;
@@ -141,8 +171,38 @@ async function runOnce(browser, runIndex) {
     if (message.type() === 'error') errors.push(message.text());
   });
 
-  const build = process.env.BUILD ? `&build=${process.env.BUILD}` : '';
-  await page.goto(`${BASE}/?arena=1${build}`, { waitUntil: 'networkidle0' });
+  if (START > 0 || MUTATOR > 0 || DAILY) {
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'rulethief.meta.v1',
+        JSON.stringify({
+          version: 1,
+          shards: 0,
+          runs: 0,
+          chaptersCleared: 2,
+          victories: 1,
+          maxMutator: 5,
+          selectedMutator: 0,
+          maxStartChapter: 2,
+          selectedStartChapter: 0,
+          dailyBest: null,
+          unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
+          unlockedAscensions: ['thunder-domain'],
+          seenRules: [],
+          ascendedRules: [],
+          achievements: []
+        })
+      );
+    });
+  }
+  const extras = [
+    process.env.BUILD ? `&build=${process.env.BUILD}` : '',
+    START > 0 ? `&start=${START}` : '',
+    MUTATOR > 0 ? `&mutator=${MUTATOR}` : '',
+    DAILY ? '&daily=1' : ''
+  ].join('');
+  await page.goto(`${BASE}/?arena=1${extras}`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
   await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);
@@ -184,7 +244,7 @@ async function runOnce(browser, runIndex) {
           kills: Number(snapshot.kills)
         });
       }
-      await pickReward(page, state.cards);
+      await pickReward(page, state.cards, Number(snapshot.hp));
       picks += 1;
       await sleep(420);
       continue;
@@ -216,7 +276,10 @@ async function runOnce(browser, runIndex) {
 
     const decision = decideMove(snapshot);
     await setKeys(page, decision.want);
-    if (decision.nearest < 95 && Number(snapshot.dashCooldown) <= 0.05) {
+    if (
+      (decision.nearest < 95 || decision.danger) &&
+      Number(snapshot.dashCooldown) <= 0.05
+    ) {
       await page.keyboard.down('Space');
       await page.keyboard.up('Space');
     } else if (tick % 3 === 0 && Number(snapshot.hp) > 0 && Number(snapshot.dashCooldown) <= 0.05) {
@@ -231,6 +294,11 @@ async function runOnce(browser, runIndex) {
   await page.close();
   return {
     run: runIndex + 1,
+    label: LABEL,
+    startChapter: START,
+    mutator: MUTATOR,
+    daily: DAILY,
+    build: process.env.BUILD ?? null,
     result: result?.title ?? 'timeout',
     rooms: result?.rooms ?? '',
     time: result?.time ?? '',
@@ -255,6 +323,7 @@ try {
     runs.push(record);
     console.log(JSON.stringify(record, null, 2));
   }
+  fs.writeFileSync(`docs/autoplay-${LABEL}.json`, JSON.stringify(runs, null, 2));
   fs.writeFileSync('docs/autoplay-last.json', JSON.stringify(runs, null, 2));
 } finally {
   await browser.close();

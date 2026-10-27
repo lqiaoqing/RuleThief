@@ -1,0 +1,42 @@
+[
+  {
+    "run": 1,
+    "label": "w1-spreadburn",
+    "startChapter": 0,
+    "mutator": 0,
+    "daily": false,
+    "build": "spread,burn,3,3",
+    "result": "规则耗尽",
+    "rooms": "4 / 13",
+    "time": "03:45",
+    "seconds": 228,
+    "roomLog": [
+      {
+        "room": 1,
+        "seconds": 41,
+        "hpAtStart": 100,
+        "hpAtEnd": 100,
+        "kills": 13
+      },
+      {
+        "room": 2,
+        "seconds": 57,
+        "hpAtStart": 100,
+        "hpAtEnd": 100,
+        "kills": 33
+      },
+      {
+        "room": 3,
+        "seconds": 61,
+        "hpAtStart": 100,
+        "hpAtEnd": 32,
+        "kills": 57
+      }
+    ],
+    "picks": 3,
+    "eventsSeen": [
+      "UNSTABLE LAB:B"
+    ],
+    "errors": []
+  }
+]
