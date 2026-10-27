@@ -28,7 +28,14 @@ const record = (overrides: Partial<RunRecord> = {}): RunRecord => ({
 describe('run telemetry', () => {
   it('starts empty', () => {
     expect(loadRuns(store())).toEqual([]);
-    expect(summarize([])).toEqual({ total: 0, victories: 0, bestSeconds: null, bestCombo: null });
+    expect(summarize([])).toEqual({
+      total: 0,
+      victories: 0,
+      bestSeconds: null,
+      bestCombo: null,
+      bestChapters: 0,
+      bestMutator: 0
+    });
     expect(formatRecordLine(summarize([]))).toBe('本局已记录');
   });
 
@@ -61,6 +68,49 @@ describe('run telemetry', () => {
     expect(summary.victories).toBe(2);
     expect(summary.bestSeconds).toBe(520);
     expect(summary.bestCombo).toBe('雷暴连锁');
+    expect(summary.bestChapters).toBe(0);
+    expect(summary.bestMutator).toBe(0);
+  });
+
+  it('tracks the deepest chapter and highest mutator', () => {
+    const runs = [
+      record({ chaptersCleared: 1, mutatorLevel: 2 }),
+      record({ chaptersCleared: 3, mutatorLevel: 5 }),
+      record({ chaptersCleared: 2, mutatorLevel: 1 })
+    ];
+    const summary = summarize(runs);
+    expect(summary.bestChapters).toBe(3);
+    expect(summary.bestMutator).toBe(5);
+    const line = formatRecordLine(summary);
+    expect(line).toContain('最深 W3');
+    expect(line).toContain('异变 5');
+  });
+
+  it('persists the extended run fields for playtest analysis', () => {
+    const storage = store();
+    saveRun(
+      record({
+        chaptersCleared: 2,
+        stageOnly: true,
+        relics: ['雷鸣徽章'],
+        ascensions: ['雷霆领域'],
+        mutatorLevel: 3,
+        mutatorName: '异变 III · 审判升级',
+        daily: true,
+        build: {
+          trajectory: { key: 'chain', level: 3, ascended: true },
+          impact: { key: 'burn', level: 3 }
+        }
+      }),
+      storage
+    );
+    const [saved] = loadRuns(storage);
+    expect(saved.chaptersCleared).toBe(2);
+    expect(saved.relics).toEqual(['雷鸣徽章']);
+    expect(saved.ascensions).toEqual(['雷霆领域']);
+    expect(saved.mutatorLevel).toBe(3);
+    expect(saved.daily).toBe(true);
+    expect(saved.build?.trajectory?.ascended).toBe(true);
   });
 
   it('picks the most frequent combo, not the highest level', () => {
@@ -94,10 +144,19 @@ describe('run telemetry', () => {
   });
 
   it('formats a readable record line', () => {
-    const line = formatRecordLine({ total: 7, victories: 2, bestSeconds: 512, bestCombo: '霜雷网络' });
+    const line = formatRecordLine({
+      total: 7,
+      victories: 2,
+      bestSeconds: 512,
+      bestCombo: '霜雷网络',
+      bestChapters: 2,
+      bestMutator: 3
+    });
     expect(line).toContain('累计 7 局');
     expect(line).toContain('通关 2');
     expect(line).toContain('最快 08:32');
+    expect(line).toContain('最深 W2');
+    expect(line).toContain('异变 3');
     expect(line).toContain('霜雷网络');
   });
 

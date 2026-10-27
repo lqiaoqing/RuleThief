@@ -181,6 +181,7 @@ export interface RunEndPayload {
   ascensions: string[];
   rulesSeen: RuleKey[];
   rulesAscended: RuleKey[];
+  build: PlayerBuild;
   maxHp: number;
   damage: { source: string; label: string; amount: number }[];
 }
@@ -4751,6 +4752,7 @@ export class M0Scene extends Phaser.Scene {
       rulesAscended: [this.build.trajectory, this.build.impact]
         .map((ref) => (ref?.ascended ? ref.key : null))
         .filter((key): key is RuleKey => Boolean(key)),
+      build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild,
       maxHp: this.maxHp,
       damage: DAMAGE_SOURCES.map((source) => ({
         source,

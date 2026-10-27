@@ -1,3 +1,5 @@
+import type { PlayerBuild } from './rules';
+
 export interface RunRecord {
   at: number;
   victory: boolean;
@@ -9,6 +11,14 @@ export interface RunRecord {
   levelSum: number;
   mutation: string | null;
   topDamage?: string;
+  chaptersCleared?: number;
+  stageOnly?: boolean;
+  relics?: string[];
+  ascensions?: string[];
+  mutatorLevel?: number;
+  mutatorName?: string;
+  daily?: boolean;
+  build?: PlayerBuild;
 }
 
 const STORAGE_KEY = 'rulethief.runs.v1';
@@ -62,15 +72,26 @@ export interface RunSummary {
   victories: number;
   bestSeconds: number | null;
   bestCombo: string | null;
+  bestChapters: number;
+  bestMutator: number;
 }
 
 export function summarize(runs: readonly RunRecord[]): RunSummary {
   if (!runs.length) {
-    return { total: 0, victories: 0, bestSeconds: null, bestCombo: null };
+    return {
+      total: 0,
+      victories: 0,
+      bestSeconds: null,
+      bestCombo: null,
+      bestChapters: 0,
+      bestMutator: 0
+    };
   }
   const victories = runs.filter((run) => run.victory).length;
   const victoryTimes = runs.filter((run) => run.victory).map((run) => run.seconds);
   const bestSeconds = victoryTimes.length ? Math.min(...victoryTimes) : null;
+  const bestChapters = Math.max(...runs.map((run) => run.chaptersCleared ?? 0));
+  const bestMutator = Math.max(...runs.map((run) => run.mutatorLevel ?? 0));
   const eligible = runs.filter((run) => run.levelSum >= 4);
   const counts = new Map<string, number>();
   for (const run of eligible) counts.set(run.combo, (counts.get(run.combo) ?? 0) + 1);
@@ -85,7 +106,7 @@ export function summarize(runs: readonly RunRecord[]): RunSummary {
       bestLevel = run.levelSum;
     }
   }
-  return { total: runs.length, victories, bestSeconds, bestCombo };
+  return { total: runs.length, victories, bestSeconds, bestCombo, bestChapters, bestMutator };
 }
 
 export function formatRecordLine(summary: RunSummary): string {
@@ -97,6 +118,8 @@ export function formatRecordLine(summary: RunSummary): string {
       : ` · 最快 ${String(Math.floor(summary.bestSeconds / 60)).padStart(2, '0')}:${String(
           summary.bestSeconds % 60
         ).padStart(2, '0')}`;
+  const depth = summary.bestChapters > 0 ? ` · 最深 W${summary.bestChapters}` : '';
+  const mutator = summary.bestMutator > 0 ? ` · 异变 ${summary.bestMutator}` : '';
   const combo = summary.bestCombo ? ` · 最常构筑 ${summary.bestCombo}` : '';
-  return `累计 ${summary.total} 局 · ${wins}${best}${combo}`;
+  return `累计 ${summary.total} 局 · ${wins}${best}${depth}${mutator}${combo}`;
 }

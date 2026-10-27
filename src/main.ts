@@ -291,7 +291,17 @@ function showResult(payload: RunEndPayload): void {
     topDamage: payload.damage
       .slice(0, 2)
       .map((entry) => `${entry.label}:${entry.amount}`)
-      .join('|')
+      .join('|'),
+    chaptersCleared: payload.victory
+      ? payload.chaptersTotal
+      : payload.chapterIndex + (stageOnly ? 1 : 0),
+    stageOnly,
+    relics: payload.relics,
+    ascensions: payload.ascensions,
+    mutatorLevel: payload.mutatorLevel,
+    mutatorName: payload.mutatorName,
+    daily: dailyMode,
+    build: payload.build
   });
   resultRecord.textContent = formatRecordLine(summarize(runs));
   const runMeta = applyRunToMeta(meta, {
