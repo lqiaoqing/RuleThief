@@ -9,6 +9,15 @@ import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
 import { formatRecordLine, saveRun, summarize } from './game/telemetry';
+import {
+  ACHIEVEMENTS,
+  UNLOCKS,
+  applyRunToMeta,
+  canUnlock,
+  loadMeta,
+  saveMeta,
+  unlockMeta
+} from './game/meta';
 import { setRandomSeed } from './game/rng';
 import {
   isEventVisible,
@@ -146,6 +155,7 @@ const resultCombo = byId<HTMLElement>('result-combo');
 const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
 const resultRecord = byId<HTMLElement>('result-record');
+const resultShards = byId<HTMLElement>('result-shards');
 const resultMutation = byId<HTMLElement>('result-mutation');
 const resultRelics = byId<HTMLElement>('result-relics');
 const resultDamage = byId<HTMLElement>('result-damage');
@@ -161,6 +171,14 @@ const chapterHint = byId<HTMLElement>('chapter-hint');
 const chapterContinueButton = byId<HTMLButtonElement>('chapter-continue-btn');
 const chapterStopButton = byId<HTMLButtonElement>('chapter-stop-btn');
 const chapterContinueCopy = chapterContinueButton.querySelector<HTMLElement>('.btn-copy b');
+const metaScreen = byId<HTMLElement>('meta-screen');
+const metaShards = byId<HTMLElement>('meta-shards');
+const metaRuns = byId<HTMLElement>('meta-runs');
+const metaVictories = byId<HTMLElement>('meta-victories');
+const metaUnlocks = byId<HTMLElement>('meta-unlocks');
+const metaAchievements = byId<HTMLElement>('meta-achievements');
+
+let meta = loadMeta();
 
 let scene: M0Scene | null = null;
 let entered = false;
@@ -249,6 +267,23 @@ function showResult(payload: RunEndPayload): void {
       .join('|')
   });
   resultRecord.textContent = formatRecordLine(summarize(runs));
+  const runMeta = applyRunToMeta(meta, {
+    victory: payload.victory,
+    stageOnly,
+    chapterIndex: payload.chapterIndex,
+    chaptersTotal: payload.chaptersTotal,
+    kills: payload.kills,
+    seconds: payload.time,
+    relics: payload.relics,
+    ascensions: payload.ascensions
+  });
+  meta = runMeta.state;
+  saveMeta(meta);
+  resultShards.textContent = `法则碎片 +${runMeta.gained} · 累计 ${meta.shards}${
+    runMeta.unlocked.length
+      ? ` · 新成就 ${runMeta.unlocked.map((id) => ACHIEVEMENTS[id]?.name ?? id).join(' / ')}`
+      : ''
+  }`;
   resultMutation.textContent = payload.mutation ? `突变 · ${payload.mutation}` : '突变 · 无';
   resultRelics.textContent = `遗物 · ${payload.relics.length ? payload.relics.join(' / ') : '无'}${
     payload.ascensions.length ? ` · 升阶 ${payload.ascensions.join(' / ')}` : ''
@@ -294,6 +329,63 @@ function hideOverlays(): void {
   setEventVisible(false);
   chapterScreen.hidden = true;
   pendingRewards = [];
+}
+
+function renderMeta(): void {
+  metaShards.textContent = String(meta.shards);
+  metaRuns.textContent = String(meta.runs);
+  metaVictories.textContent = String(meta.victories);
+
+  metaUnlocks.textContent = '';
+  for (const unlock of UNLOCKS) {
+    const owned =
+      unlock.kind === 'relic'
+        ? (meta.unlockedRelics as readonly string[]).includes(unlock.id)
+        : (meta.unlockedAscensions as readonly string[]).includes(unlock.id);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = `meta-unlock${owned ? ' is-owned' : ''}`;
+    card.disabled = owned || !canUnlock(meta, unlock);
+    const title = document.createElement('b');
+    title.textContent = unlock.name;
+    const copy = document.createElement('span');
+    copy.textContent = unlock.description;
+    const cost = document.createElement('em');
+    cost.textContent = owned ? '已解锁' : `${unlock.cost} 碎片`;
+    card.append(title, copy, cost);
+    card.addEventListener('click', () => {
+      meta = unlockMeta(meta, unlock.id);
+      saveMeta(meta);
+      applyMetaToScene();
+      renderMeta();
+    });
+    metaUnlocks.append(card);
+  }
+
+  metaAchievements.textContent = '';
+  for (const [id, def] of Object.entries(ACHIEVEMENTS)) {
+    const row = document.createElement('div');
+    row.className = `meta-achievement${meta.achievements.includes(id) ? ' is-done' : ''}`;
+    const title = document.createElement('b');
+    title.textContent = def.name;
+    const copy = document.createElement('span');
+    copy.textContent = def.description;
+    row.append(title, copy);
+    metaAchievements.append(row);
+  }
+}
+
+function applyMetaToScene(): void {
+  scene?.setMetaUnlocks(meta.unlockedRelics, meta.unlockedAscensions);
+}
+
+function openMeta(): void {
+  renderMeta();
+  metaScreen.hidden = false;
+}
+
+function closeMeta(): void {
+  metaScreen.hidden = true;
 }
 
 function showChapterClear(payload: ChapterClearPayload): void {
@@ -402,11 +494,13 @@ function enterArena(instant = false): void {
   noteModal.hidden = true;
   pauseScreen.hidden = true;
   resultScreen.hidden = true;
+  metaScreen.hidden = true;
   hideOverlays();
   hud.hidden = false;
   sidebar.hidden = false;
   void audio.unlock().then(() => audio.resume());
   scene.setPlayEnabled(true);
+  applyMetaToScene();
   scene.startNewRun();
   applyBuildParam();
   if (bossPractice) {
@@ -430,11 +524,13 @@ function restartRun(): void {
   if (!scene) return;
   resultScreen.hidden = true;
   pauseScreen.hidden = true;
+  metaScreen.hidden = true;
   hideOverlays();
   hud.hidden = false;
   sidebar.hidden = false;
   entered = true;
   scene.setPlayEnabled(true);
+  applyMetaToScene();
   scene.startNewRun();
   void audio.unlock().then(() => audio.resume());
 }
@@ -492,6 +588,7 @@ function handleReady(): void {
   scene = game.scene.getScene('M0') as M0Scene;
   scene.setPlayEnabled(false);
   scene.pauseGame();
+  applyMetaToScene();
   window.__RT_READY__ = true;
   window.__RT_SCENE__ = scene;
   window.__RT_SNAPSHOT__ = () => scene?.debugSnapshot() ?? {};
@@ -589,6 +686,9 @@ document.getElementById('note-enter-btn')?.addEventListener('click', () => {
   enterArena();
 });
 document.getElementById('menu-note-btn')?.addEventListener('click', openNote);
+document.getElementById('menu-meta-btn')?.addEventListener('click', openMeta);
+document.getElementById('result-meta-btn')?.addEventListener('click', openMeta);
+document.getElementById('meta-close-btn')?.addEventListener('click', closeMeta);
 document.getElementById('note-close')?.addEventListener('click', closeNote);
 noteModal.addEventListener('click', (event) => {
   if (event.target === noteModal) closeNote();

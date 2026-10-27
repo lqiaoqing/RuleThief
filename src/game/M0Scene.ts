@@ -39,8 +39,8 @@ import {
   type TrajectoryKey,
   type TrajectoryProfile
 } from './rules';
-import { RELICS, MAX_RELICS, type RelicId } from './relics';
-import { getAscensionForRule } from './ascensions';
+import { RELICS, MAX_RELICS, RELIC_IDS, type RelicId } from './relics';
+import { ASCENSION_IDS, getAscensionForRule, type AscensionId } from './ascensions';
 import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
@@ -270,6 +270,8 @@ export class M0Scene extends Phaser.Scene {
   private build: PlayerBuild = createEmptyBuild();
   private acquired = new Set<RuleKey>();
   private relics: RelicId[] = [];
+  private unlockedRelics: RelicId[] = [...RELIC_IDS];
+  private unlockedAscensions: AscensionId[] = [...ASCENSION_IDS];
   private chapterRewardOpen = false;
   private thunderStacks = 0;
   private prismTime = 0;
@@ -739,6 +741,11 @@ export class M0Scene extends Phaser.Scene {
     this.loadStep(next);
   }
 
+  public setMetaUnlocks(relics: readonly RelicId[], ascensions: readonly AscensionId[]): void {
+    this.unlockedRelics = [...relics];
+    this.unlockedAscensions = [...ascensions];
+  }
+
   private openChapterReward(): void {
     if (this.runState !== 'playing') return;
     this.chapterRewardOpen = true;
@@ -748,7 +755,10 @@ export class M0Scene extends Phaser.Scene {
     this.joystick.set(0, 0);
     this.pauseScene();
     audio.play('rule');
-    const rewards = buildChapterRewards(this.build, this.relics, random);
+    const rewards = buildChapterRewards(this.build, this.relics, random, {
+      unlockedRelics: this.unlockedRelics,
+      unlockedAscensions: this.unlockedAscensions
+    });
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
       total: this.stepTotal,

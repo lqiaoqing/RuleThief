@@ -166,6 +166,24 @@ try {
   );
 
   check('menu visible on load', await page.$eval('#menu', (el) => !el.hidden));
+  await page.click('#menu-meta-btn');
+  await sleep(180);
+  const metaPanel = await page.evaluate(() => ({
+    visible: !document.getElementById('meta-screen')?.hidden,
+    shards: document.getElementById('meta-shards')?.textContent,
+    unlocks: document.querySelectorAll('#meta-unlocks .meta-unlock').length,
+    achievements: document.querySelectorAll('#meta-achievements .meta-achievement').length
+  }));
+  check(
+    'meta screen lists shards, unlocks and achievements',
+    metaPanel.visible && metaPanel.shards === '0' && metaPanel.unlocks === 4 && metaPanel.achievements === 6,
+    JSON.stringify(metaPanel)
+  );
+  await page.click('#meta-close-btn');
+  check(
+    'meta screen closes back to the menu',
+    await page.evaluate(() => document.getElementById('meta-screen')?.hidden === true)
+  );
   check('hud hidden on load', await page.$eval('#hud', (el) => el.hidden));
   check(
     'overlays hidden on load',
@@ -904,7 +922,9 @@ try {
   const bossVictory = await page.evaluate(() => ({
     title: document.getElementById('result-title')?.textContent,
     kicker: document.getElementById('result-kicker')?.textContent,
-    rooms: document.getElementById('result-rooms')?.textContent
+    rooms: document.getElementById('result-rooms')?.textContent,
+    shards: document.getElementById('result-shards')?.textContent,
+    meta: JSON.parse(localStorage.getItem('rulethief.meta.v1') ?? 'null')
   }));
   check(
     'stopping after chapter one settles as a stage clear',
@@ -912,6 +932,13 @@ try {
       /阶段完成/.test(bossVictory.title ?? '') &&
       bossVictory.rooms === '13 / 13',
     JSON.stringify(bossVictory)
+  );
+  check(
+    'stage clear awards shards and persists meta progression',
+    /法则碎片 \+\d+/.test(bossVictory.shards ?? '') &&
+      Number(bossVictory.meta?.shards) > 0 &&
+      Number(bossVictory.meta?.runs) === 1,
+    JSON.stringify({ shards: bossVictory.shards, meta: bossVictory.meta })
   );
 
   const finalStats = await page.evaluate(() => ({

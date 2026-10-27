@@ -73,4 +73,29 @@ describe('relics', () => {
     expect(rewards.every((reward) => reward.kind === 'support')).toBe(true);
     expect(rewards).toHaveLength(3);
   });
+
+  it('respects meta unlock pools', () => {
+    const rewards = buildChapterRewards(maxed, [], random, {
+      unlockedRelics: ['thunder-emblem'],
+      unlockedAscensions: ['thunder-domain']
+    });
+    expect(
+      rewards.some((reward) => reward.kind === 'relic' && reward.relic.id === 'thunder-emblem')
+    ).toBe(true);
+    expect(
+      rewards.some((reward) => reward.kind === 'relic' && reward.relic.id === 'frost-crown')
+    ).toBe(false);
+    expect(
+      rewards.some(
+        (reward) =>
+          reward.kind === 'ascension' && reward.ascension.id === 'thunder-domain'
+      )
+    ).toBe(true);
+    expect(
+      rewards.some(
+        (reward) =>
+          reward.kind === 'ascension' && reward.ascension.id === 'flame-detonation'
+      )
+    ).toBe(false);
+  });
 });

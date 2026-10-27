@@ -411,6 +411,25 @@
         </div>
       </div>
 
+      <div class="altar-screen meta-screen" id="meta-screen" hidden>
+        <div class="altar-card meta-card">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> META PROGRESSION / 法则碎片</div>
+          <h2>法则图鉴</h2>
+          <p class="altar-sub">即使失败也能带回碎片。解锁的遗物与升阶会进入下一局奖励池。</p>
+          <div class="room-stats meta-summary">
+            <div><b id="meta-shards">0</b><span>法则碎片</span></div>
+            <div><b id="meta-runs">0</b><span>完成局数</span></div>
+            <div><b id="meta-victories">0</b><span>通关次数</span></div>
+          </div>
+          <div class="meta-unlocks" id="meta-unlocks"></div>
+          <div class="meta-achievements" id="meta-achievements"></div>
+          <div class="altar-foot">
+            <span>先闭环再扩充：碎片 → 解锁 → 下一局奖励池变化。</span>
+            <button class="ghost compact" id="meta-close-btn">返回</button>
+          </div>
+        </div>
+      </div>
+
       <div class="altar-screen" id="altar-screen" hidden>
         <div class="altar-card">
           <div class="eyebrow"><span class="eyebrow-dot"></span> ROOM CLEAR / REWARD</div>
@@ -438,6 +457,7 @@
             <div><b id="result-rooms">0 / 3</b><span>推进步数</span></div>
           </div>
           <div class="result-record" id="result-record">本局已记录</div>
+          <div class="result-shards" id="result-shards">法则碎片 · 0</div>
           <div class="result-mutation" id="result-mutation">突变 · 无</div>
           <div class="result-mutation" id="result-relics">遗物 · 无</div>
           <div class="result-damage" id="result-damage">承伤构成：—</div>
@@ -452,6 +472,7 @@
               <span class="btn-copy"><b>再来一局</b><small>RESTART RUN</small></span>
             </button>
             <button class="ghost compact" id="result-menu-btn">返回菜单</button>
+            <button class="ghost compact" id="result-meta-btn">法则图鉴</button>
           </div>
         </div>
       </div>
@@ -489,6 +510,7 @@
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
             <button class="ghost" id="menu-note-btn">这是什么？</button>
+            <button class="ghost" id="menu-meta-btn">法则图鉴</button>
           </div>
 
           <div class="menu-foot">

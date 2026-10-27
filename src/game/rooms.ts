@@ -1,6 +1,6 @@
 import { getRuleOffers, type PlayerBuild, type RuleKey, type RuleOffer } from './rules';
 import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
-import { getAscensionForRule, type AscensionDef } from './ascensions';
+import { ASCENSION_IDS, getAscensionForRule, type AscensionDef, type AscensionId } from './ascensions';
 import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
 
 export type EnemyKind =
@@ -739,14 +739,23 @@ export function buildRoomRewards(
 export function buildChapterRewards(
   build: PlayerBuild,
   relics: readonly RelicId[],
-  random: () => number = Math.random
+  random: () => number = Math.random,
+  options: {
+    unlockedRelics?: readonly RelicId[];
+    unlockedAscensions?: readonly AscensionId[];
+  } = {}
 ): Reward[] {
   const rewards: Reward[] = [];
+  const unlockedRelics = options.unlockedRelics ?? RELIC_IDS;
+  const unlockedAscensions = new Set(options.unlockedAscensions ?? ASCENSION_IDS);
   const ascensions = [build.trajectory, build.impact]
     .map((ref) =>
       ref && ref.level === 3 && !ref.ascended ? getAscensionForRule(ref.key) : null
     )
-    .filter((entry): entry is AscensionDef => Boolean(entry));
+    .filter(
+      (entry): entry is AscensionDef =>
+        entry !== null && unlockedAscensions.has(entry.id)
+    );
   const ascensionPool = shuffle(ascensions, random);
   if (ascensionPool[0]) {
     rewards.push({ kind: 'ascension', ascension: ascensionPool[0] });
@@ -754,7 +763,9 @@ export function buildChapterRewards(
 
   if (relics.length < MAX_RELICS) {
     const relicPool = shuffle(
-      RELIC_IDS.filter((id) => !relics.includes(id)).map((id) => RELICS[id]),
+      RELIC_IDS.filter((id) => !relics.includes(id) && unlockedRelics.includes(id)).map(
+        (id) => RELICS[id]
+      ),
       random
     );
     for (const relic of relicPool.slice(0, 1 + (rewards.length === 0 ? 1 : 0))) {
