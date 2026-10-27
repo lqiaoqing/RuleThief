@@ -45,20 +45,21 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships sixteen rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(16);
+  it('ships thirty rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(30);
     expect(ROOMS.map((room) => room.quota)).toEqual([
-      13, 20, 22, 24, 22, 22, 22, 22, 22, 22, 22, 22, 22, 16, 16, 1
+      13, 20, 22, 24, 22, 22, 22, 22, 22, 22, 22, 22, 22, 16, 16, 1, 18, 22, 24, 16, 22, 24, 24,
+      26, 22, 23, 23, 24, 24, 1
     ]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
   });
 
-  it('ends with the arbiter boss room', () => {
+  it('ends with the disorder core boss room', () => {
     const bossRoom = ROOMS[ROOMS.length - 1];
-    expect(bossRoom.boss).toBe('arbiter');
+    expect(bossRoom.boss).toBe('core');
     expect(bossRoom.quota).toBe(1);
     expect(bossRoom.mix).toHaveLength(0);
-    expect(getRoomEnemyKinds(bossRoom)).toEqual(['arbiter']);
+    expect(getRoomEnemyKinds(bossRoom)).toEqual(['core']);
     expect(buildRoomRewards(createEmptyBuild(), bossRoom, random)).toHaveLength(0);
   });
 
@@ -89,11 +90,28 @@ describe('room definitions', () => {
 
   it('elite rooms declare a leader and four reward choices', () => {
     const eliteRooms = ROOMS.filter((room) => room.elite);
-    expect(eliteRooms).toHaveLength(2);
+    expect(eliteRooms).toHaveLength(3);
     for (const room of eliteRooms) {
       expect(room.leader).toBeDefined();
       expect(room.rewardCount).toBe(4);
       expect(getRoomEnemyKinds(room)).toContain(room.leader);
+    }
+  });
+
+  it('gives the workshop its own shock-grid hazard rooms', () => {
+    const hazardRooms = ROOMS.filter((room) => room.hazard === 'shock-grid');
+    expect(hazardRooms.map((room) => room.id)).toEqual([
+      'workshop-gate',
+      'conveyor-hall',
+      'furnace-line',
+      'assembly-line',
+      'core-approach',
+      'coolant-vault',
+      'boiler-room'
+    ]);
+    for (const room of hazardRooms) {
+      expect(room.boss).toBeUndefined();
+      expect(room.mix.length).toBeGreaterThan(0);
     }
   });
 

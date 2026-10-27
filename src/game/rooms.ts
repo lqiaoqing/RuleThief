@@ -10,7 +10,10 @@ export type EnemyKind =
   | 'bomber'
   | 'sunder'
   | 'thunder'
-  | 'arbiter';
+  | 'arbiter'
+  | 'sentry'
+  | 'phase'
+  | 'core';
 
 export interface EnemySpec {
   name: string;
@@ -129,12 +132,49 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     displaySize: 300,
     elite: true,
     boss: true
+  },
+  sentry: {
+    name: '激光炮台',
+    rule: 'chain',
+    ruleName: '雷射',
+    hint: '固定炮台 · 蓄力射线',
+    hp: 58,
+    radius: 28,
+    speed: 0,
+    sprite: 'spore',
+    displaySize: 110
+  },
+  phase: {
+    name: '相位机兵',
+    rule: 'pierce',
+    ruleName: '贯穿',
+    hint: '瞬移贴近 · 预警冲锋',
+    hp: 66,
+    radius: 28,
+    speed: 66,
+    sprite: 'wisp',
+    displaySize: 118
+  },
+  core: {
+    name: '失序核心',
+    rule: 'blast',
+    ruleName: '失序',
+    hint: '第二世界 BOSS · 改变安全地面',
+    hp: 1350,
+    radius: 64,
+    speed: 0,
+    sprite: 'boss',
+    displaySize: 288,
+    elite: true,
+    boss: true
   }
 };
 
 export const ENEMY_RULES: Record<EnemyKind, RuleKey> = Object.fromEntries(
   (Object.keys(ENEMY_SPECS) as EnemyKind[]).map((kind) => [kind, ENEMY_SPECS[kind].rule])
 ) as Record<EnemyKind, RuleKey>;
+
+export type RoomHazard = 'shock-grid';
 
 export interface RoomDef {
   id: string;
@@ -149,6 +189,7 @@ export interface RoomDef {
   boss?: EnemyKind;
   rewardCount?: number;
   elite?: boolean;
+  hazard?: RoomHazard;
 }
 
 export const ROOMS: readonly RoomDef[] = [
@@ -360,6 +401,198 @@ export const ROOMS: readonly RoomDef[] = [
     spawnInterval: 99,
     mix: [],
     boss: 'arbiter',
+    rewardCount: 0
+  },
+  {
+    id: 'workshop-gate',
+    name: '装配门厅',
+    en: 'ASSEMBLY GATE',
+    subtitle: '炮台已经校准完毕，它们不会追你，但会封死直线。',
+    quota: 18,
+    maxAlive: 6,
+    spawnInterval: 2.8,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'beetle', weight: 3 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'conveyor-hall',
+    name: '传送带大厅',
+    en: 'CONVEYOR HALL',
+    subtitle: '地面会周期性放电，安全站位每隔几秒就会消失一次。',
+    quota: 22,
+    maxAlive: 7,
+    spawnInterval: 2.6,
+    mix: [
+      { kind: 'phase', weight: 5 },
+      { kind: 'sentry', weight: 4 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'furnace-line',
+    name: '熔炉流水线',
+    en: 'FURNACE LINE',
+    subtitle: '相位机兵会绕过你的射程，熔炉地面却不允许你停下。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.5,
+    mix: [
+      { kind: 'phase', weight: 4 },
+      { kind: 'slime', weight: 5 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'shield-bay',
+    name: '护盾舱',
+    en: 'SHIELD BAY',
+    subtitle: '世律守卫守着旧工坊的最后一层护盾，炮台会替它争取时间。',
+    quota: 16,
+    maxAlive: 6,
+    spawnInterval: 2.6,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 3 }
+    ],
+    leader: 'sunder',
+    rewardCount: 4,
+    elite: true
+  },
+  {
+    id: 'archive',
+    name: '废弃档案库',
+    en: 'ABANDONED ARCHIVE',
+    subtitle: '孢子与炮台共享同一条供能线路，先拆哪一个都会改变弹幕密度。',
+    quota: 22,
+    maxAlive: 8,
+    spawnInterval: 2.5,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'spore', weight: 4 }
+    ]
+  },
+  {
+    id: 'assembly-line',
+    name: '总装线',
+    en: 'ASSEMBLY LINE',
+    subtitle: '传送带、炮台与自爆机械同时运转，安全区只会越来越窄。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'phase', weight: 5 },
+      { kind: 'sentry', weight: 3 },
+      { kind: 'bomber', weight: 2 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'scrap-yard',
+    name: '废料场',
+    en: 'SCRAP YARD',
+    subtitle: '自爆机械从废料堆里爬出来，相位机兵负责把你赶回它们中间。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'bomber', weight: 5 },
+      { kind: 'phase', weight: 4 }
+    ]
+  },
+  {
+    id: 'core-approach',
+    name: '核心回廊',
+    en: 'CORE APPROACH',
+    subtitle: '失序核心的供能脉冲已经开始泄漏，地面没有一块是真正安全的。',
+    quota: 26,
+    maxAlive: 8,
+    spawnInterval: 2.3,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 4 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'relay-tower',
+    name: '中继塔',
+    en: 'RELAY TOWER',
+    subtitle: '炮台通过中继塔共享射界，先拆塔还是先躲线由你决定。',
+    quota: 22,
+    maxAlive: 7,
+    spawnInterval: 2.5,
+    mix: [
+      { kind: 'sentry', weight: 5 },
+      { kind: 'bat', weight: 4 }
+    ]
+  },
+  {
+    id: 'piston-yard',
+    name: '活塞场',
+    en: 'PISTON YARD',
+    subtitle: '相位机兵在活塞之间穿梭，冲锋预警只给你半秒。',
+    quota: 23,
+    maxAlive: 8,
+    spawnInterval: 2.45,
+    mix: [
+      { kind: 'phase', weight: 5 },
+      { kind: 'beetle', weight: 3 }
+    ]
+  },
+  {
+    id: 'coolant-vault',
+    name: '冷却库',
+    en: 'COOLANT VAULT',
+    subtitle: '冷却液导电，霜灵会让你的撤离路线变得更慢。',
+    quota: 23,
+    maxAlive: 8,
+    spawnInterval: 2.45,
+    mix: [
+      { kind: 'wisp', weight: 5 },
+      { kind: 'sentry', weight: 4 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'boiler-room',
+    name: '锅炉房',
+    en: 'BOILER ROOM',
+    subtitle: '熔炉与相位机兵轮流逼近，地面放电从不停工。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.4,
+    mix: [
+      { kind: 'slime', weight: 5 },
+      { kind: 'phase', weight: 4 }
+    ],
+    hazard: 'shock-grid'
+  },
+  {
+    id: 'control-deck',
+    name: '控制甲板',
+    en: 'CONTROL DECK',
+    subtitle: '炮台与相位机兵共用一套指挥链，清场顺序决定火力密度。',
+    quota: 24,
+    maxAlive: 8,
+    spawnInterval: 2.35,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 4 }
+    ]
+  },
+  {
+    id: 'core-chamber',
+    name: '失序核心',
+    en: 'DISORDER CORE',
+    subtitle: '失序核心不追击，它只会重写地面：安全区会按它的节奏消失。',
+    quota: 1,
+    maxAlive: 3,
+    spawnInterval: 99,
+    mix: [],
+    boss: 'core',
     rewardCount: 0
   }
 ] as const;

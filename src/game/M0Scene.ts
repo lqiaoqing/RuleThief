@@ -138,11 +138,15 @@ interface EnemyBolt {
 
 interface Hazard {
   root: Phaser.GameObjects.Container;
+  kind: 'fire' | 'shock';
   x: number;
   y: number;
   radius: number;
   life: number;
   maxLife: number;
+  armTime: number;
+  damage: number;
+  triggered: boolean;
   dead: boolean;
 }
 
@@ -289,6 +293,7 @@ export class M0Scene extends Phaser.Scene {
   private bossRef: EnemyUnit | null = null;
   private roomSpeedMult = 1;
   private roomBonusCards = 0;
+  private roomHazardCd = 0;
   private pendingSpeedMult = 1;
   private pendingBonusCards = 0;
   private pendingBonusElite = false;
@@ -431,6 +436,7 @@ export class M0Scene extends Phaser.Scene {
     this.bossSealCd = 0;
     this.roomSpeedMult = 1;
     this.roomBonusCards = 0;
+    this.roomHazardCd = 0;
     this.pendingSpeedMult = 1;
     this.pendingBonusCards = 0;
     this.pendingBonusElite = false;
@@ -763,6 +769,7 @@ export class M0Scene extends Phaser.Scene {
     this.rewardOpen = false;
     this.roomSpeedMult = 1;
     this.roomBonusCards = 0;
+    this.roomHazardCd = 0;
     this.pendingSpeedMult = 1;
     this.pendingBonusCards = 0;
     this.pendingBonusElite = false;
@@ -801,6 +808,7 @@ export class M0Scene extends Phaser.Scene {
     this.playerRoot.setPosition(300, 500);
     this.playerSprite.setAlpha(1).clearTint();
     const room = this.getRoom();
+    this.roomHazardCd = room.hazard === 'shock-grid' ? 1.8 : 0;
     setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
     this.resumeScene();
@@ -1075,8 +1083,10 @@ export class M0Scene extends Phaser.Scene {
 
   public debugJumpToBoss(withStarterBuild = true): void {
     if (this.runState !== 'playing') return;
+    const last = this.plan[this.plan.length - 1];
+    if (!last || last.kind !== 'encounter' || last.encounter.kind !== 'room') return;
     this.stepIndex = Math.max(0, this.plan.length - 1);
-    this.encounter = { kind: 'room', room: ROOMS[ROOMS.length - 1] };
+    this.encounter = last.encounter;
     this.roomKills = 0;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
@@ -1084,6 +1094,39 @@ export class M0Scene extends Phaser.Scene {
       this.debugSetBuild('chain', 'blast', 2, 1);
     }
     this.openRoomPreview();
+  }
+
+  public debugJumpToChapterBoss(chapterIndex = CHAPTERS.length - 1): void {
+    if (this.runState !== 'playing') return;
+    const plan = buildChapterPlan(chapterIndex, random);
+    const last = plan[plan.length - 1];
+    if (!last || last.kind !== 'encounter' || last.encounter.kind !== 'room') return;
+    this.chapterIndex = chapterIndex;
+    this.plan = plan;
+    this.stepsClearedBefore = 0;
+    this.stepIndex = plan.length - 1;
+    this.encounter = last.encounter;
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.victoryLocked = false;
+    this.openRoomPreview();
+  }
+
+  public debugStartChapter(chapterIndex: number): void {
+    if (this.runState !== 'playing') return;
+    const plan = buildChapterPlan(chapterIndex, random);
+    if (!plan.length) return;
+    this.chapterIndex = chapterIndex;
+    this.plan = plan;
+    this.stepsClearedBefore = 0;
+    this.stepIndex = 0;
+    this.encounter = null;
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.victoryLocked = false;
+    this.loadStep(0);
   }
 
   public debugFreezeAttack(): void {
@@ -2419,7 +2462,7 @@ export class M0Scene extends Phaser.Scene {
       this.detonate(enemy);
     } else if (enemy.kind === 'slime') {
       this.spawnFirePatch(x, y + 8, 40, 2.2);
-    } else if (enemy.kind === 'arbiter') {
+    } else if (ENEMY_SPECS[enemy.kind].boss) {
       this.onBossDefeated(enemy);
       return;
     }
@@ -2582,7 +2625,8 @@ export class M0Scene extends Phaser.Scene {
     this.spawnedTotal += 1;
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
-    const hover = kind === 'bat' || kind === 'wisp' || kind === 'thunder';
+    const hover =
+      kind === 'bat' || kind === 'wisp' || kind === 'thunder' || kind === 'phase' || kind === 'core';
     const color = RULE_TINTS[spec.rule];
     const spriteY = hover ? -20 : -8;
 
@@ -2761,6 +2805,15 @@ export class M0Scene extends Phaser.Scene {
           break;
         case 'arbiter':
           this.updateArbiter(enemy, dt);
+          break;
+        case 'sentry':
+          this.updateSentry(enemy, dt);
+          break;
+        case 'phase':
+          this.updatePhase(enemy, dt);
+          break;
+        case 'core':
+          this.updateCore(enemy, dt);
           break;
       }
       enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, ARENA - 58);
@@ -3200,6 +3253,259 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  private updateSentry(enemy: EnemyUnit, dt: number): void {
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    const dist = this.distanceToPlayer(enemy);
+    if (enemy.state === 'cast') {
+      enemy.stateTimer -= dt;
+      enemy.castRing.setVisible(true);
+      enemy.castRing.setScale(1 + Math.sin(this.time.now * 0.03) * 0.12);
+      const angle = Math.atan2(
+        this.playerRoot.y - enemy.root.y,
+        this.playerRoot.x - enemy.root.x
+      );
+      enemy.chargeDir.set(Math.cos(angle), Math.sin(angle));
+      this.drawSentryWarning(enemy);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'idle';
+        enemy.castRing.setVisible(false);
+        enemy.warning.setVisible(false);
+        enemy.sprite.clearTint();
+        this.fireEnemyBolt(enemy, {
+          angle,
+          speed: 340,
+          damage: 11,
+          tint: COLORS.orange,
+          scale: 1.2
+        });
+        enemy.attackCd = 2.4 + combatRandom() * 0.5;
+      }
+    } else if (enemy.attackCd <= 0 && dist < 560) {
+      enemy.state = 'cast';
+      enemy.stateTimer = 0.55;
+      enemy.sprite.setTint(0xffc98a);
+      enemy.castRing.setVisible(true);
+      enemy.warning.setVisible(true);
+      audio.play('spawn');
+    }
+
+    if (enemy.state !== 'cast' && enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(5, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private drawSentryWarning(enemy: EnemyUnit): void {
+    const g = enemy.warning;
+    g.clear();
+    const angle = Math.atan2(enemy.chargeDir.y, enemy.chargeDir.x);
+    const reach = 700;
+    g.lineStyle(2, COLORS.orange, 0.3);
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.lineTo(Math.cos(angle) * reach, Math.sin(angle) * reach);
+    g.strokePath();
+    for (let d = 30; d < 420; d += 26) {
+      const t = d / 420;
+      const x = Math.cos(angle) * d;
+      const y = Math.sin(angle) * d;
+      g.lineStyle(1, COLORS.orange, 0.24 * (1 - t));
+      g.beginPath();
+      g.moveTo(x - Math.sin(angle) * 4, y + Math.cos(angle) * 4);
+      g.lineTo(x + Math.sin(angle) * 4, y - Math.cos(angle) * 4);
+      g.strokePath();
+    }
+  }
+
+  private spawnTeleportFlash(x: number, y: number, color: number): void {
+    const ring = this.add
+      .circle(x, y - 8, 18, 0x000000, 0)
+      .setStrokeStyle(2, color, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 3.2,
+      alpha: 0,
+      duration: 320,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy()
+    });
+    const glow = this.add
+      .image(x, y - 8, 'glow')
+      .setDisplaySize(92, 92)
+      .setTint(color)
+      .setAlpha(0.4)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(glow);
+    this.tweens.add({
+      targets: glow,
+      scale: 1.8,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => glow.destroy()
+    });
+  }
+
+  private updatePhase(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const dist = Math.hypot(dx, dy);
+    const slowScale = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+
+    if (enemy.state === 'approach') {
+      if (dist > 4) {
+        enemy.root.x += (dx / dist) * enemy.speed * slowScale * dt;
+        enemy.root.y += (dy / dist) * enemy.speed * slowScale * dt;
+      }
+      if (enemy.attackCd <= 0 && dist < 440) {
+        const angle = combatRandom() * Math.PI * 2;
+        const radius = 170 + combatRandom() * 60;
+        const nx = Phaser.Math.Clamp(
+          this.playerRoot.x + Math.cos(angle) * radius,
+          84,
+          ARENA - 84
+        );
+        const ny = Phaser.Math.Clamp(
+          this.playerRoot.y + Math.sin(angle) * radius,
+          92,
+          ARENA - 84
+        );
+        this.spawnTeleportFlash(enemy.root.x, enemy.root.y, COLORS.purple);
+        enemy.root.setPosition(nx, ny);
+        this.spawnTeleportFlash(nx, ny, COLORS.cyan);
+        const ndx = this.playerRoot.x - nx;
+        const ndy = this.playerRoot.y - ny;
+        const len = Math.hypot(ndx, ndy) || 1;
+        enemy.chargeDir.set(ndx / len, ndy / len);
+        enemy.state = 'telegraph';
+        enemy.stateTimer = 0.6;
+        enemy.warning.setVisible(true);
+        this.drawBeetleWarning(enemy);
+        enemy.attackCd = 4.2;
+        audio.play('spawn');
+      }
+    } else if (enemy.state === 'telegraph') {
+      enemy.stateTimer -= dt;
+      this.drawBeetleWarning(enemy);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'charge';
+        enemy.stateTimer = 0.4;
+        enemy.hasHitThisCharge = false;
+        enemy.warning.setVisible(false);
+        audio.play('dash');
+      }
+    } else if (enemy.state === 'charge') {
+      enemy.stateTimer -= dt;
+      enemy.root.x += enemy.chargeDir.x * 560 * slowScale * dt;
+      enemy.root.y += enemy.chargeDir.y * 560 * slowScale * dt;
+      if (
+        enemy.root.x <= 64 ||
+        enemy.root.x >= ARENA - 64 ||
+        enemy.root.y <= 84 ||
+        enemy.root.y >= ARENA - 64
+      ) {
+        enemy.state = 'recover';
+        enemy.stateTimer = 0.9;
+      } else if (enemy.stateTimer <= 0) {
+        enemy.state = 'recover';
+        enemy.stateTimer = 0.9;
+      }
+      if (!enemy.hasHitThisCharge && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS + 8) {
+        enemy.hasHitThisCharge = true;
+        this.hurtPlayer(13, enemy.root.x, enemy.root.y, 'charge');
+      }
+    } else if (enemy.state === 'recover') {
+      enemy.stateTimer -= dt;
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'approach';
+        enemy.attackCd = 1.2;
+      }
+    }
+
+    if (enemy.state !== 'charge' && enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(6, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private updateCore(enemy: EnemyUnit, dt: number): void {
+    this.bossRef = enemy;
+    const ratio = enemy.hp / enemy.maxHp;
+    const phase = ratio > 0.7 ? 1 : ratio > 0.35 ? 2 : 3;
+    if (phase !== this.bossPhase) {
+      this.bossPhase = phase;
+      this.onCorePhase(phase);
+    }
+
+    this.bossAttackCd -= dt;
+    this.bossSummonCd -= dt;
+    this.bossSealCd -= dt;
+
+    enemy.root.x = ARENA * 0.5 + Math.sin(this.time.now * 0.0006) * 190;
+    enemy.root.y = 235 + Math.sin(this.time.now * 0.0011) * 22;
+
+    if (this.bossAttackCd <= 0) {
+      this.bossAttackCd = phase >= 3 ? 1.7 : phase === 2 ? 2.05 : 2.5;
+      this.fireBossFan(enemy, phase >= 3 ? 7 : 5, phase >= 3 ? 1.15 : 0.85);
+    }
+    if (this.bossSummonCd <= 0) {
+      this.bossSummonCd = 8;
+      this.summonCoreAdds();
+    }
+    if (this.bossSealCd <= 0) {
+      this.bossSealCd = phase >= 3 ? 3.2 : 4.6;
+      this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 56, 0.9);
+      if (phase >= 2) {
+        this.spawnShockZone(combatInt(130, ARENA - 130), combatInt(150, ARENA - 130), 48, 1.2);
+        this.spawnShockZone(combatInt(130, ARENA - 130), combatInt(150, ARENA - 130), 48, 1.35);
+      }
+    }
+
+    if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 1.0;
+      this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private onCorePhase(phase: number): void {
+    this.cameras.main.shake(380, 0.005);
+    this.cameras.main.flash(200, 90, 210, 255);
+    audio.play('rule');
+    showRuleToast(
+      'chain',
+      `失序核心 · 第 ${phase} 阶段`,
+      phase === 1 ? '脉冲 · 扇形弹幕' : phase === 2 ? '过载 · 地面放电加剧' : '失序 · 安全区持续收缩'
+    );
+    this.refreshBossHud();
+  }
+
+  private summonCoreAdds(): void {
+    const alive = this.enemies.filter((item) => !item.dead && !item.elite).length;
+    if (alive >= 4) return;
+    const kinds: EnemyKind[] = this.bossPhase >= 3 ? ['sentry', 'phase'] : ['sentry'];
+    const spots: [number, number][] = [
+      [150, 210],
+      [ARENA - 150, 210]
+    ];
+    kinds.forEach((kind, index) => {
+      this.spawnEnemy(kind, spots[index][0], spots[index][1], false);
+      const spawned = this.enemies[this.enemies.length - 1];
+      if (spawned) {
+        this.tweens.killTweensOf(spawned.root);
+        this.tweens.add({
+          targets: spawned.root,
+          scale: { from: 0.2, to: 1 },
+          alpha: { from: 0, to: 1 },
+          duration: 240,
+          ease: 'Back.easeOut'
+        });
+      }
+    });
+    audio.play('spawn');
+  }
+
   private updateBomber(enemy: EnemyUnit, dt: number): void {
     const dx = this.playerRoot.x - enemy.root.x;
     const dy = this.playerRoot.y - enemy.root.y;
@@ -3286,7 +3592,7 @@ export class M0Scene extends Phaser.Scene {
       return;
     }
     setBossBar({
-      name: ENEMY_SPECS.arbiter.name,
+      name: ENEMY_SPECS[boss.kind].name,
       hp: boss.hp,
       maxHp: boss.maxHp,
       phase: this.bossPhase
@@ -3684,12 +3990,90 @@ export class M0Scene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut'
     });
-    this.hazards.push({ root, x, y, radius, life, maxLife: life, dead: false });
+    this.hazards.push({
+      root,
+      kind: 'fire',
+      x,
+      y,
+      radius,
+      life,
+      maxLife: life,
+      armTime: 0,
+      damage: 5,
+      triggered: false,
+      dead: false
+    });
+  }
+
+  private spawnShockZone(x: number, y: number, radius: number, delay: number): void {
+    const glow = this.add
+      .image(0, 0, 'glow')
+      .setDisplaySize(radius * 2.1, radius * 2.1)
+      .setTint(COLORS.cyan)
+      .setAlpha(0.12)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const disc = this.add.circle(0, 0, radius, 0x65dcf0, 0.08);
+    const ring = this.add
+      .circle(0, 0, radius, 0x000000, 0)
+      .setStrokeStyle(2.5, COLORS.cyan, 0.55);
+    const root = this.add.container(x, y, [glow, disc, ring]);
+    this.addFx(root);
+    this.tweens.add({
+      targets: glow,
+      alpha: 0.4,
+      duration: delay * 1000,
+      ease: 'Sine.easeIn'
+    });
+    this.tweens.add({
+      targets: ring,
+      scale: 0.86,
+      duration: delay * 1000,
+      ease: 'Cubic.easeIn'
+    });
+    this.hazards.push({
+      root,
+      kind: 'shock',
+      x,
+      y,
+      radius,
+      life: delay + 0.18,
+      maxLife: delay + 0.18,
+      armTime: delay,
+      damage: 14,
+      triggered: false,
+      dead: false
+    });
   }
 
   private updateHazards(dt: number): void {
     for (const hazard of this.hazards) {
       if (hazard.dead) continue;
+      if (hazard.kind === 'shock') {
+        hazard.armTime -= dt;
+        if (hazard.armTime <= 0 && !hazard.triggered) {
+          hazard.triggered = true;
+          hazard.root.setAlpha(0);
+          this.spawnExplosion(hazard.x, hazard.y, hazard.radius * 1.35);
+          audio.play('explosion');
+          if (
+            Phaser.Math.Distance.Between(
+              hazard.x,
+              hazard.y,
+              this.playerRoot.x,
+              this.playerRoot.y
+            ) <
+            hazard.radius + PLAYER_RADIUS * 0.55
+          ) {
+            this.hurtPlayer(hazard.damage, hazard.x, hazard.y, 'hazard');
+          }
+        }
+        hazard.life -= dt;
+        if (hazard.life <= 0) {
+          hazard.dead = true;
+          hazard.root.destroy(true);
+        }
+        continue;
+      }
       hazard.life -= dt;
       hazard.root.setAlpha(Math.max(0, hazard.life / hazard.maxLife));
       if (hazard.life <= 0) {
@@ -3707,10 +4091,24 @@ export class M0Scene extends Phaser.Scene {
         ) <
           hazard.radius + PLAYER_RADIUS * 0.55
       ) {
-        this.hurtPlayer(5, hazard.x, hazard.y, 'hazard');
+        this.hurtPlayer(hazard.damage, hazard.x, hazard.y, 'hazard');
       }
     }
     this.hazards = this.hazards.filter((hazard) => !hazard.dead);
+  }
+
+  private updateRoomHazard(dt: number): void {
+    const room = this.getRoom();
+    if (room.hazard !== 'shock-grid') return;
+    this.roomHazardCd -= dt;
+    if (this.roomHazardCd > 0) return;
+    this.roomHazardCd = 4.2;
+    this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 54, 0.95);
+    for (let i = 0; i < 2; i += 1) {
+      const x = combatInt(110, ARENA - 110);
+      const y = combatInt(120, ARENA - 110);
+      this.spawnShockZone(x, y, 48, 1.15);
+    }
   }
 
   private detonate(enemy: EnemyUnit): void {
@@ -4103,6 +4501,7 @@ export class M0Scene extends Phaser.Scene {
     this.updateHazards(dt);
     this.updatePickups(dt);
     this.updateSpawns(dt);
+    this.updateRoomHazard(dt);
     this.updateHud(dt);
   }
 }

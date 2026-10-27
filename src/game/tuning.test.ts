@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ROOMS } from './rooms';
-import { buildRunPlan } from './run';
+import { buildChapterPlan, buildRunPlan } from './run';
 import { PACING, estimateRoomSeconds, estimateRunMinutes, estimateRunSeconds } from './tuning';
 
 const random = () => 0.37;
@@ -17,6 +17,19 @@ describe('pacing model', () => {
     const minutes = estimateRunMinutes(buildRunPlan(random));
     expect(minutes).toBeGreaterThanOrEqual(PACING.targetMinMinutes);
     expect(minutes).toBeLessThanOrEqual(PACING.targetMaxMinutes);
+  });
+
+  it('keeps the workshop chapter near the nine-to-twelve minute target', () => {
+    const minutes = estimateRunMinutes(buildChapterPlan(1, random));
+    expect(minutes).toBeGreaterThanOrEqual(8);
+    expect(minutes).toBeLessThanOrEqual(12);
+  });
+
+  it('keeps the two-chapter route near eighteen-to-twenty-two minutes', () => {
+    const total =
+      estimateRunMinutes(buildRunPlan(random)) + estimateRunMinutes(buildChapterPlan(1, random));
+    expect(total).toBeGreaterThanOrEqual(18);
+    expect(total).toBeLessThanOrEqual(22);
   });
 
   it('counts events and the boss in the budget', () => {

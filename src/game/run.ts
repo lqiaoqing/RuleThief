@@ -248,6 +248,32 @@ export const CHAPTERS: readonly ChapterDef[] = [
         { kind: 'encounter', encounter: room('judgement-hall') }
       ];
     }
+  },
+  {
+    id: 'workshop',
+    index: 1,
+    name: '失序工坊',
+    en: 'DISORDER WORKSHOP',
+    subtitle: '规则被改造成机械，安全地面开始按周期消失。',
+    bossName: '失序核心',
+    bossEn: 'DISORDER CORE',
+    buildPlan: (random) => {
+      const events = shuffle(EVENT_IDS, random).slice(0, 2) as EventId[];
+      return [
+        { kind: 'encounter', encounter: room('workshop-gate') },
+        { kind: 'choice', options: [room('conveyor-hall'), room('furnace-line')] },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[0]] } },
+        { kind: 'choice', options: [room('relay-tower'), room('piston-yard')] },
+        { kind: 'encounter', encounter: room('assembly-line') },
+        { kind: 'choice', options: [room('shield-bay'), room('archive')] },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[1]] } },
+        { kind: 'encounter', encounter: room('scrap-yard') },
+        { kind: 'choice', options: [room('coolant-vault'), room('boiler-room')] },
+        { kind: 'encounter', encounter: room('control-deck') },
+        { kind: 'encounter', encounter: room('core-approach') },
+        { kind: 'encounter', encounter: room('core-chamber') }
+      ];
+    }
   }
 ];
 

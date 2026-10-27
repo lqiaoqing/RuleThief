@@ -826,21 +826,53 @@ try {
   }
 
   await page.evaluate(() => window.__RT_DAMAGE_BOSS__?.(900));
-  await page.waitForFunction(() => !document.getElementById('result-screen')?.hidden, { timeout: 9000 });
-  const bossVictory = await page.evaluate(() => ({
-    title: document.getElementById('result-title')?.textContent,
-    rooms: document.getElementById('result-rooms')?.textContent,
-    bossBarHidden: document.getElementById('boss-bar')?.hidden
+  await page.waitForFunction(() => !document.getElementById('chapter-screen')?.hidden, {
+    timeout: 9000
+  });
+  const chapterClear = await page.evaluate(() => ({
+    kicker: document.getElementById('chapter-kicker')?.textContent,
+    title: document.getElementById('chapter-title')?.textContent,
+    next: document.getElementById('chapter-continue-btn')?.textContent,
+    hp: document.getElementById('chapter-hp')?.textContent,
+    level: document.getElementById('chapter-level')?.textContent
   }));
-  check('killing the arbiter wins the run', bossVictory.title === '审判完成', JSON.stringify(bossVictory));
+  check(
+    'killing the arbiter clears chapter one',
+    /CHAPTER 1 \/ 2 CLEAR/.test(chapterClear.kicker ?? '') &&
+      /审判废墟/.test(chapterClear.title ?? ''),
+    JSON.stringify(chapterClear)
+  );
+  check(
+    'chapter clear offers the workshop and keeps the build',
+    /失序工坊/.test(chapterClear.next ?? '') && /等级 \d+ \/ 6/.test(chapterClear.level ?? ''),
+    JSON.stringify({ next: chapterClear.next, level: chapterClear.level })
+  );
   const leftover = await snapshot(page);
   check(
     'boss death clears the summoned adds',
     Number(leftover.enemies) === 0,
     String(leftover.enemies)
   );
-  check('boss victory reports thirteen steps', bossVictory.rooms === '13 / 13', String(bossVictory.rooms));
-  check('boss bar hides after the kill', bossVictory.bossBarHidden === true, String(bossVictory.bossBarHidden));
+  check(
+    'chapter clear keeps the boss bar hidden',
+    (await page.evaluate(() => document.getElementById('boss-bar')?.hidden)) === true
+  );
+  await page.click('#chapter-stop-btn');
+  await page.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {
+    timeout: 9000
+  });
+  const bossVictory = await page.evaluate(() => ({
+    title: document.getElementById('result-title')?.textContent,
+    kicker: document.getElementById('result-kicker')?.textContent,
+    rooms: document.getElementById('result-rooms')?.textContent
+  }));
+  check(
+    'stopping after chapter one settles as a stage clear',
+    bossVictory.kicker === 'CHAPTER COMPLETE' &&
+      /阶段完成/.test(bossVictory.title ?? '') &&
+      bossVictory.rooms === '13 / 13',
+    JSON.stringify(bossVictory)
+  );
 
   const finalStats = await page.evaluate(() => ({
     combo: document.getElementById('result-combo-name')?.textContent,
@@ -1103,20 +1135,34 @@ try {
   );
   check('boss death locks out further damage', Number(raceLocked.hp) === 100, String(raceLocked.hp));
   await bossPractice.waitForFunction(
+    () => !document.getElementById('chapter-screen')?.hidden,
+    { timeout: 9000 }
+  );
+  const raceChapter = await bossPractice.evaluate(() => ({
+    title: document.getElementById('chapter-title')?.textContent,
+    hp: document.getElementById('chapter-hp')?.textContent
+  }));
+  check(
+    'residual threats cannot turn boss victory into defeat',
+    /审判废墟/.test(raceChapter.title ?? '') && raceChapter.hp === '100 / 100',
+    JSON.stringify(raceChapter)
+  );
+  const raceAfter = await snapshot(bossPractice);
+  check('player survives the boss death window', Number(raceAfter.hp) === 100, String(raceAfter.hp));
+  await bossPractice.click('#chapter-stop-btn');
+  await bossPractice.waitForFunction(
     () => !document.getElementById('result-screen')?.hidden,
     { timeout: 9000 }
   );
   const raceResult = await bossPractice.evaluate(() => ({
-    title: document.getElementById('result-title')?.textContent,
+    kicker: document.getElementById('result-kicker')?.textContent,
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check(
-    'residual threats cannot turn boss victory into defeat',
-    raceResult.title === '审判完成' && raceResult.rooms === '13 / 13',
+    'boss race settles as a stage clear with all thirteen steps',
+    raceResult.kicker === 'CHAPTER COMPLETE' && raceResult.rooms === '13 / 13',
     JSON.stringify(raceResult)
   );
-  const raceAfter = await snapshot(bossPractice);
-  check('player survives the boss death window', Number(raceAfter.hp) === 100, String(raceAfter.hp));
   await bossPractice.close();
 
   const bossPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
@@ -1133,6 +1179,97 @@ try {
     JSON.stringify(bossPresetState.build)
   );
   await bossPreset.close();
+
+  const workshop = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await workshop.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(workshop);
+  await workshop.evaluate(() => window.__RT_CHAPTER_START__?.(1));
+  await workshop.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(300);
+  const workshopPreview = await workshop.evaluate(() => ({
+    kicker: document.getElementById('room-kicker')?.textContent,
+    title: document.getElementById('room-title')?.textContent,
+    objective: document.getElementById('objective-room')?.textContent,
+    state: window.__RT_SNAPSHOT__?.()
+  }));
+  check(
+    'chapter two starts in the disorder workshop',
+    workshopPreview.state?.chapterIndex === 1 &&
+      workshopPreview.state?.chapterName === '失序工坊' &&
+      workshopPreview.title === '装配门厅' &&
+      /W2/.test(workshopPreview.objective ?? ''),
+    JSON.stringify({
+      chapter: workshopPreview.state?.chapterName,
+      title: workshopPreview.title,
+      objective: workshopPreview.objective
+    })
+  );
+
+  await workshop.tap('#room-enter-btn');
+  await sleep(2300);
+  const workshopCombat = await snapshot(workshop);
+  check(
+    'shock-grid telegraphs several zones before detonating',
+    Number(workshopCombat.hazards) >= 3,
+    String(workshopCombat.hazards)
+  );
+  await workshop.evaluate(() => {
+    window.__RT_SPAWN__?.('sentry');
+    window.__RT_SPAWN__?.('phase');
+  });
+  await sleep(850);
+  const workshopEnemies = await snapshot(workshop);
+  check(
+    'workshop enemies spawn with their own behaviours',
+    (workshopEnemies.enemyCounts?.sentry ?? 0) >= 1 &&
+      (workshopEnemies.enemyCounts?.phase ?? 0) >= 1,
+    JSON.stringify(workshopEnemies.enemyCounts)
+  );
+
+  await workshop.evaluate(() => window.__RT_CHAPTER_BOSS__?.(1));
+  await workshop.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(300);
+  const corePreview = await workshop.evaluate(() => ({
+    title: document.getElementById('room-title')?.textContent,
+    kicker: document.getElementById('room-kicker')?.textContent
+  }));
+  check(
+    'disorder core practice jumps to the final workshop room',
+    corePreview.title === '失序核心' && /ROOM 12 \/ 12/.test(corePreview.kicker ?? ''),
+    JSON.stringify(corePreview)
+  );
+  await workshop.tap('#room-enter-btn');
+  await sleep(700);
+  const coreState = await snapshot(workshop);
+  check(
+    'disorder core starts with its own boss bar and health',
+    coreState.bossPhase === 1 &&
+      Number(coreState.bossHp) > 1200 &&
+      Number(coreState.bossHp) <= 1350 &&
+      (await workshop.$eval('#boss-bar-name', (el) => el.textContent)) === '失序核心',
+    JSON.stringify({ hp: coreState.bossHp, phase: coreState.bossPhase })
+  );
+  await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(2000));
+  await workshop.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {
+    timeout: 9000
+  });
+  const coreResult = await workshop.evaluate(() => ({
+    title: document.getElementById('result-title')?.textContent,
+    rooms: document.getElementById('result-rooms')?.textContent,
+    kicker: document.getElementById('result-kicker')?.textContent
+  }));
+  check(
+    'clearing the workshop wins the two-chapter run',
+    coreResult.title === '审判完成' &&
+      coreResult.kicker === 'RUN COMPLETE' &&
+      coreResult.rooms === '12 / 12',
+    JSON.stringify(coreResult)
+  );
+  await workshop.close();
 
   const compact = await newPage(browser, {
     width: 360,

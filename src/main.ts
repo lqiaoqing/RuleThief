@@ -71,6 +71,8 @@ declare global {
     __RT_OPEN_EVENT__?: (id: string) => void;
     __RT_CAST_SEAL__?: () => void;
     __RT_SPAWN_HAZARD__?: (x: number, y: number) => void;
+    __RT_CHAPTER_BOSS__?: (index?: number) => void;
+    __RT_CHAPTER_START__?: (index: number) => void;
     __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
@@ -504,6 +506,8 @@ function handleReady(): void {
   window.__RT_OPEN_EVENT__ = (id) => scene?.debugOpenEvent(id as never);
   window.__RT_CAST_SEAL__ = () => scene?.debugCastSeal();
   window.__RT_SPAWN_HAZARD__ = (x, y) => scene?.debugSpawnHazard(x, y);
+  window.__RT_CHAPTER_BOSS__ = (index) => scene?.debugJumpToChapterBoss(index);
+  window.__RT_CHAPTER_START__ = (index) => scene?.debugStartChapter(index);
   window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
