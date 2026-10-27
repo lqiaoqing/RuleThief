@@ -50,6 +50,7 @@ import {
 } from './lateUpgrades';
 import { getMutator, clampMutator } from './mutators';
 import { getWorldTheme } from './worldTheme';
+import { updateArbiter as updateArbiterBoss, type ArbiterHost } from './bosses/arbiter';
 import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
@@ -260,6 +261,7 @@ export class M0Scene extends Phaser.Scene {
   private arenaFrame?: Phaser.GameObjects.Graphics;
   private brazierGlows: Phaser.GameObjects.Image[] = [];
   private dustEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
+  private arbiterHost!: ArbiterHost;
   private playerRoot!: Phaser.GameObjects.Container;
   private playerSprite!: Phaser.GameObjects.Image;
   private playerAura!: Phaser.GameObjects.Image;
@@ -415,6 +417,46 @@ export class M0Scene extends Phaser.Scene {
     this.createPlayer();
     this.fxLayer = this.add.container(0, 0);
     this.world.add(this.fxLayer);
+    this.arbiterHost = {
+      arena: ARENA,
+      playerRadius: PLAYER_RADIUS,
+      playerX: () => this.playerRoot.x,
+      playerY: () => this.playerRoot.y,
+      getPhase: () => this.bossPhase,
+      setPhase: (phase) => {
+        this.bossPhase = phase;
+      },
+      timers: () => ({
+        attackCd: this.bossAttackCd,
+        chargeCd: this.bossChargeCd,
+        summonCd: this.bossSummonCd,
+        sealCd: this.bossSealCd
+      }),
+      setTimers: (timers) => {
+        this.bossAttackCd = timers.attackCd;
+        this.bossChargeCd = timers.chargeCd;
+        this.bossSummonCd = timers.summonCd;
+        this.bossSealCd = timers.sealCd;
+      },
+      setBossRef: (enemy) => {
+        this.bossRef = enemy as unknown as EnemyUnit;
+      },
+      distanceToPlayer: (enemy) =>
+        this.distanceToPlayer(enemy as unknown as EnemyUnit),
+      strafe: (enemy, dt, preferred, near, far) =>
+        this.strafeAtRange(enemy as unknown as EnemyUnit, dt, preferred, near, far),
+      fireFan: (enemy, bolts, spread) =>
+        this.fireBossFan(enemy as unknown as EnemyUnit, bolts, spread),
+      summon: () => this.summonBossAdds(),
+      castSeal: () => this.castRuleSeal(),
+      drawWarning: (enemy) => this.drawBeetleWarning(enemy as unknown as EnemyUnit),
+      hurt: (amount, x, y, source) => this.hurtPlayer(amount, x, y, source),
+      onPhase: (phase) => this.onBossPhase(phase),
+      onChargeWall: () => this.cameras.main.shake(140, 0.0024),
+      audio: (name) => audio.play(name),
+      bonusBolts: () => (this.mutatorLevel >= 3 ? 2 : 0),
+      isPlaying: () => this.runState === 'playing'
+    };
 
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
@@ -3306,7 +3348,7 @@ export class M0Scene extends Phaser.Scene {
           this.updateBomber(enemy, dt);
           break;
         case 'arbiter':
-          this.updateArbiter(enemy, dt);
+          updateArbiterBoss(enemy, dt, this.arbiterHost);
           break;
         case 'sentry':
           this.updateSentry(enemy, dt);
@@ -4254,94 +4296,6 @@ export class M0Scene extends Phaser.Scene {
     });
   }
 
-  private updateArbiter(enemy: EnemyUnit, dt: number): void {
-    this.bossRef = enemy;
-    const ratio = enemy.hp / enemy.maxHp;
-    const phase = ratio > 0.7 ? 1 : ratio > 0.35 ? 2 : 3;
-    if (phase !== this.bossPhase) {
-      this.bossPhase = phase;
-      this.onBossPhase(enemy, phase);
-    }
-
-    this.bossAttackCd -= dt;
-    this.bossChargeCd -= dt;
-    this.bossSummonCd -= dt;
-    this.bossSealCd -= dt;
-
-    if (enemy.state === 'telegraph') {
-      enemy.stateTimer -= dt;
-      this.drawBeetleWarning(enemy);
-      if (enemy.stateTimer <= 0) {
-        enemy.state = 'charge';
-        enemy.stateTimer = 0.52;
-        enemy.hasHitThisCharge = false;
-        enemy.warning.setVisible(false);
-        audio.play('dash');
-      }
-      return;
-    }
-
-    if (enemy.state === 'charge') {
-      enemy.stateTimer -= dt;
-      enemy.root.x += enemy.chargeDir.x * 560 * dt;
-      enemy.root.y += enemy.chargeDir.y * 560 * dt;
-      const contact = this.distanceToPlayer(enemy);
-      if (!enemy.hasHitThisCharge && contact < enemy.radius + PLAYER_RADIUS + 12) {
-        enemy.hasHitThisCharge = true;
-        this.hurtPlayer(16, enemy.root.x, enemy.root.y, 'charge');
-      }
-      const atWall =
-        enemy.root.x <= 70 ||
-        enemy.root.x >= ARENA - 70 ||
-        enemy.root.y <= 90 ||
-        enemy.root.y >= ARENA - 70;
-      if (atWall || enemy.stateTimer <= 0) {
-        enemy.state = 'idle';
-        enemy.stateTimer = 0;
-        this.cameras.main.shake(140, 0.0024);
-      }
-      return;
-    }
-
-    this.strafeAtRange(enemy, dt, 330, 240, 430);
-
-    if (this.bossAttackCd <= 0) {
-      this.bossAttackCd = this.bossPhase >= 3 ? 1.55 : this.bossPhase === 2 ? 1.95 : 2.4;
-      this.fireBossFan(
-        enemy,
-        (this.bossPhase >= 3 ? 11 : 9) + (this.mutatorLevel >= 3 ? 2 : 0),
-        0.95
-      );
-    }
-
-    if (this.bossPhase >= 2 && this.bossChargeCd <= 0) {
-      this.bossChargeCd = 5.0;
-      enemy.state = 'telegraph';
-      enemy.stateTimer = 0.75;
-      const dx = this.playerRoot.x - enemy.root.x;
-      const dy = this.playerRoot.y - enemy.root.y;
-      enemy.chargeDir.set(dx, dy).normalize();
-      enemy.warning.setVisible(true);
-      audio.play('spawn');
-      this.refreshBossHud();
-    }
-
-    if (this.bossPhase >= 2 && this.bossSummonCd <= 0) {
-      this.bossSummonCd = 7.5;
-      this.summonBossAdds();
-    }
-
-    if (this.bossPhase >= 3 && this.bossSealCd <= 0) {
-      this.bossSealCd = 6.5;
-      this.castRuleSeal();
-    }
-
-    if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
-      enemy.contactCd = 1.0;
-      this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
-    }
-  }
-
   private fireBossFan(enemy: EnemyUnit, bolts: number, spreadRad: number): void {
     const base = Math.atan2(this.playerRoot.y - enemy.root.y, this.playerRoot.x - enemy.root.x);
     for (let i = 0; i < bolts; i += 1) {
@@ -4439,7 +4393,7 @@ export class M0Scene extends Phaser.Scene {
     );
   }
 
-  private onBossPhase(enemy: EnemyUnit, phase: number): void {
+  private onBossPhase(phase: number): void {
     if (phase === 2) {
       this.bossChargeCd = 1.4;
       this.bossSummonCd = 2.6;
@@ -4448,8 +4402,11 @@ export class M0Scene extends Phaser.Scene {
     }
     this.cameras.main.shake(420, 0.006);
     this.cameras.main.flash(220, 150, 110, 255);
+    const enemy = this.bossRef;
+    const ringX = enemy?.root.x ?? ARENA / 2;
+    const ringY = (enemy?.root.y ?? 235) - 10;
     const ring = this.add
-      .circle(enemy.root.x, enemy.root.y - 10, 60, 0x000000, 0)
+      .circle(ringX, ringY, 60, 0x000000, 0)
       .setStrokeStyle(4, COLORS.purple, 0.9)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.addFx(ring);

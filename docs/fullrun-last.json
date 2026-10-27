@@ -14,18 +14,18 @@
         "name": "雷鸣徽章"
       },
       {
-        "kind": "support",
-        "name": "瞬时折叠"
+        "kind": "relic",
+        "name": "血焰之心"
       },
       {
         "kind": "support",
-        "name": "碎片缝合"
+        "name": "规则韧性"
       }
     ],
     [
       {
-        "kind": "support",
-        "name": "规则韧性"
+        "kind": "relic",
+        "name": "血焰之心"
       },
       {
         "kind": "support",
@@ -43,14 +43,14 @@
   "expectedSteps": 37,
   "roomsCleared": 31,
   "picks": 30,
-  "seconds": 59,
+  "seconds": 61,
   "relics": [
-    "bloodflame-heart",
-    "thunder-emblem"
+    "thunder-emblem",
+    "bloodflame-heart"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "pierce-momentum",
+    "rift-echo",
     "ember-spread"
   ],
   "errors": []
