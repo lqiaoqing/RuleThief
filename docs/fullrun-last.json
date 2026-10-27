@@ -14,8 +14,8 @@
         "name": "雷鸣徽章"
       },
       {
-        "kind": "support",
-        "name": "轻装疾行"
+        "kind": "relic",
+        "name": "血焰之心"
       },
       {
         "kind": "support",
@@ -24,8 +24,8 @@
     ],
     [
       {
-        "kind": "support",
-        "name": "瞬时折叠"
+        "kind": "relic",
+        "name": "血焰之心"
       },
       {
         "kind": "support",
@@ -33,7 +33,7 @@
       },
       {
         "kind": "support",
-        "name": "轻装疾行"
+        "name": "规则韧性"
       }
     ]
   ],
@@ -41,10 +41,10 @@
   "chaptersTotal": 3,
   "roomsCleared": 31,
   "picks": 30,
-  "seconds": 59,
+  "seconds": 63,
   "relics": [
-    "bloodflame-heart",
-    "thunder-emblem"
+    "thunder-emblem",
+    "bloodflame-heart"
   ],
   "ascensions": [],
   "errors": []

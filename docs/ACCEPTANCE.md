@@ -6,10 +6,10 @@
 ## A. 当前自动化结果
 
 ```text
-npm test                       132/132 通过（11 个测试文件）
+npm test                       133/133 通过（11 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  215/215 通过（主流程固定 seed=5 + 9 项遗物/升阶效果）
+npm run smoke                  216/216 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 起点世界）
 npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
 scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
 scripts/lowend.mjs             CPU ×1/×4/×6：59.5 / 58.0 / 47.8 fps（min 44）
@@ -57,6 +57,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M7 | 遗物/升阶解锁进入下一局奖励池 | 自动 | `buildChapterRewards` 解锁池单测；`setMetaUnlocks` 接入场景 |
 | M7 | localStorage 存档、损坏数据修复 | 自动 | `meta.test.ts` round-trip / corrupt repair；战绩扩展记录章节/遗物/升阶/异变/构筑 |
 | M7 | 规则图鉴（已见/已升阶） | 自动 | `meta.test.ts` `seenRules`/`ascendedRules`；冒烟图鉴 6 条规则行 |
+| M7 | 世界探索：按通关深度解锁第二/第三世界起点 | 自动 | `meta.test.ts` `maxStartChapter`；冒烟 `?start=2` 继承 Lv.3 双规则 + 2 遗物 |
 | M7 | 成就与解锁反馈 | 自动 | `meta.test.ts` 9 项成就；图鉴面板与结算新成就行 |
 | M8 | 第三世界 14 个房间、void-rift、rule-null | 自动 | `rooms.test.ts`；冒烟「void-rift spawns larger telegraph zones」「rule-null briefly seals a rule」 |
 | M8 | 特殊精英「逆律先知」 | 自动（生成/行为） | 章节 3 精英房；`updateSeer` 瞬移 + 虚空领域 |

@@ -173,6 +173,7 @@ export interface RunEndPayload {
   roomsTotal: number;
   chapterIndex: number;
   chaptersTotal: number;
+  startChapter: number;
   chapterName: string;
   mutatorLevel: number;
   mutatorName: string;
@@ -265,6 +266,7 @@ export class M0Scene extends Phaser.Scene {
   private plan: RunStep[] = [];
   private stepIndex = 0;
   private chapterIndex = 0;
+  private startChapter = 0;
   private stepsClearedBefore = 0;
   private chapterTransitionOpen = false;
   private encounter: Encounter | null = null;
@@ -458,10 +460,10 @@ export class M0Scene extends Phaser.Scene {
     this.thunderDomainCasts = 0;
     setRelics([]);
     resetRandomStreams();
-    this.chapterIndex = 0;
+    this.chapterIndex = this.startChapter;
     this.stepsClearedBefore = 0;
     this.chapterTransitionOpen = false;
-    this.plan = buildChapterPlan(0, random);
+    this.plan = buildChapterPlan(this.chapterIndex, random);
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
@@ -490,11 +492,39 @@ export class M0Scene extends Phaser.Scene {
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
     this.playerSprite.setFlipX(false);
+    this.applyStartChapterKit();
     resetM0Hud();
     setRunClock(0);
     setBuild(this.build, this.acquired);
     setDash(1, 0);
     this.loadStep(0);
+  }
+
+  private applyStartChapterKit(): void {
+    if (this.startChapter <= 0) return;
+    const level = (this.startChapter >= 2 ? 3 : 2) as RuleLevel;
+    this.build = {
+      trajectory: { key: 'spread', level },
+      impact: { key: 'burn', level }
+    };
+    this.acquired.add('spread');
+    this.acquired.add('burn');
+    const pool = this.unlockedRelics.filter((id) => !this.relics.includes(id));
+    const count = this.startChapter >= 2 ? 2 : 1;
+    for (let i = 0; i < count && pool.length > 0; i += 1) {
+      const [id] = pool.splice(combatInt(0, pool.length - 1), 1);
+      if (id) this.relics.push(id);
+    }
+    setRelics(this.relics.map((id) => RELICS[id].name));
+    showRuleToast(
+      'chain',
+      '继承构筑',
+      `W${this.startChapter + 1} 起始 · Lv.${level} 双规则 · ${this.relics.length} 件遗物`
+    );
+  }
+
+  public setStartChapter(index: number): void {
+    this.startChapter = Math.max(0, Math.min(2, Math.floor(index)));
   }
 
   public getRoom(): RoomDef {
@@ -1494,6 +1524,7 @@ export class M0Scene extends Phaser.Scene {
       stepTotal: this.stepTotal,
       chapterIndex: this.chapterIndex,
       chaptersTotal: CHAPTERS.length,
+      startChapter: this.startChapter,
       chapterName: this.chapter.name,
       chapterTransitionOpen: this.chapterTransitionOpen,
       mutatorLevel: this.mutatorLevel,
@@ -4744,6 +4775,7 @@ export class M0Scene extends Phaser.Scene {
       roomsTotal: this.stepsClearedBefore + this.stepTotal,
       chapterIndex: this.chapterIndex,
       chaptersTotal: CHAPTERS.length,
+      startChapter: this.startChapter,
       chapterName: this.chapter.name,
       mutatorLevel: this.mutatorLevel,
       mutatorName: getMutator(this.mutatorLevel).name,

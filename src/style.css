@@ -2335,3 +2335,10 @@ kbd {
   max-height: 88dvh;
   overflow-y: auto;
 }
+
+.meta-starts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}

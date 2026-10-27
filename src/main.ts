@@ -10,6 +10,7 @@ import { ALL_RULE_KEYS, getRuleName } from './game/rules';
 import type { RelicId } from './game/relics';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
+import { CHAPTERS } from './game/run';
 import { formatRecordLine, saveRun, summarize } from './game/telemetry';
 import {
   ACHIEVEMENTS,
@@ -185,6 +186,7 @@ const metaVictories = byId<HTMLElement>('meta-victories');
 const metaUnlocks = byId<HTMLElement>('meta-unlocks');
 const metaAchievements = byId<HTMLElement>('meta-achievements');
 const metaMutators = byId<HTMLElement>('meta-mutators');
+const metaStarts = byId<HTMLElement>('meta-starts');
 const metaDaily = byId<HTMLElement>('meta-daily');
 const metaCodex = byId<HTMLElement>('meta-codex');
 const resultMode = byId<HTMLElement>('result-mode');
@@ -203,6 +205,7 @@ const bossPractice = params.get('boss') === '1';
 const buildParam = params.get('build');
 const seedParam = params.get('seed');
 const mutatorParam = params.get('mutator');
+const startParam = params.get('start');
 let dailyMode = params.get('daily') === '1';
 setRandomSeed(seedParam);
 
@@ -218,6 +221,11 @@ if (dailyMode) setRandomSeed(dailySeed());
 if (mutatorParam !== null) {
   const requested = clampMutator(Number(mutatorParam));
   meta.selectedMutator = Math.min(requested, meta.maxMutator);
+  saveMeta(meta);
+}
+if (startParam !== null) {
+  const requested = Math.max(0, Math.min(2, Math.floor(Number(startParam) || 0)));
+  meta.selectedStartChapter = Math.min(requested, meta.maxStartChapter);
   saveMeta(meta);
 }
 const INTRO_KEY = 'rulethief.intro.v1';
@@ -317,12 +325,15 @@ function showResult(payload: RunEndPayload): void {
     rulesSeen: payload.rulesSeen,
     rulesAscended: payload.rulesAscended,
     mutatorLevel: payload.mutatorLevel,
+    startChapter: payload.startChapter,
     daily: dailyMode,
     date: dailySeedDate()
   });
   meta = runMeta.state;
   saveMeta(meta);
-  resultMode.textContent = `模式 · ${payload.mutatorName}${dailyMode ? ' · 每日挑战' : ''}`;
+  resultMode.textContent = `模式 · ${payload.mutatorName}${
+    payload.startChapter > 0 ? ` · 起点 W${payload.startChapter + 1}` : ''
+  }${dailyMode ? ' · 每日挑战' : ''}`;
   resultShards.textContent = `法则碎片 +${runMeta.gained} · 累计 ${meta.shards}${
     runMeta.unlocked.length
       ? ` · 新成就 ${runMeta.unlocked.map((id) => ACHIEVEMENTS[id]?.name ?? id).join(' / ')}`
@@ -436,6 +447,23 @@ function renderMeta(): void {
   }
   metaDaily.textContent = `每日挑战 · ${meta.dailyBest ? `最佳 ${meta.dailyBest}` : '未完成'}`;
 
+  metaStarts.textContent = '';
+  CHAPTERS.forEach((chapter, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `meta-mutator${meta.selectedStartChapter === index ? ' is-selected' : ''}`;
+    button.disabled = index > meta.maxStartChapter;
+    button.textContent = `W${index + 1} ${chapter.name}`;
+    button.title = index === 0 ? '从第一世界开始' : '继承构筑，从该世界开始';
+    button.addEventListener('click', () => {
+      meta = { ...meta, selectedStartChapter: index };
+      saveMeta(meta);
+      applyMetaToScene();
+      renderMeta();
+    });
+    metaStarts.append(button);
+  });
+
   metaCodex.textContent = '';
   for (const key of ALL_RULE_KEYS) {
     const seen = meta.seenRules.includes(key);
@@ -454,6 +482,7 @@ function renderMeta(): void {
 function applyMetaToScene(): void {
   scene?.setMetaUnlocks(meta.unlockedRelics, meta.unlockedAscensions);
   scene?.setMutator(meta.selectedMutator);
+  scene?.setStartChapter(meta.selectedStartChapter);
 }
 
 function openMeta(): void {

@@ -13,6 +13,8 @@ export interface MetaState {
   victories: number;
   maxMutator: number;
   selectedMutator: number;
+  maxStartChapter: number;
+  selectedStartChapter: number;
   dailyBest: string | null;
   unlockedRelics: RelicId[];
   unlockedAscensions: AscensionId[];
@@ -33,6 +35,7 @@ export interface MetaRunInput {
   rulesSeen?: string[];
   rulesAscended?: string[];
   mutatorLevel?: number;
+  startChapter?: number;
   daily?: boolean;
   date?: string;
 }
@@ -118,6 +121,8 @@ export function defaultMeta(): MetaState {
     victories: 0,
     maxMutator: 0,
     selectedMutator: 0,
+    maxStartChapter: 0,
+    selectedStartChapter: 0,
     dailyBest: null,
     unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
     unlockedAscensions: ['thunder-domain'],
@@ -148,6 +153,14 @@ function sanitize(value: unknown): MetaState {
   const ascendedRules = Array.isArray(source.ascendedRules)
     ? source.ascendedRules.filter((id): id is RuleKey => ALL_RULE_KEYS.includes(id as RuleKey))
     : [];
+  const maxStartChapter = Math.max(
+    0,
+    Math.min(2, Math.floor(Number(source.maxStartChapter) || 0))
+  );
+  const selectedStartChapter = Math.min(
+    maxStartChapter,
+    Math.max(0, Math.min(2, Math.floor(Number(source.selectedStartChapter) || 0)))
+  );
   return {
     version: 1,
     shards: Math.max(0, Math.floor(Number(source.shards) || 0)),
@@ -156,6 +169,8 @@ function sanitize(value: unknown): MetaState {
     victories: Math.max(0, Math.floor(Number(source.victories) || 0)),
     maxMutator: clampMutator(Number(source.maxMutator) || 0),
     selectedMutator: clampMutator(Number(source.selectedMutator) || 0),
+    maxStartChapter,
+    selectedStartChapter,
     dailyBest: typeof source.dailyBest === 'string' ? source.dailyBest : null,
     unlockedRelics: [...new Set([...base.unlockedRelics, ...relics])],
     unlockedAscensions: [...new Set([...base.unlockedAscensions, ...ascensions])],
@@ -194,10 +209,12 @@ function safeStorage(): Storage | null {
 }
 
 export function shardsForRun(input: MetaRunInput): number {
-  const clearedChapters = input.victory
+  const startChapter = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
+  const reached = input.victory
     ? input.chaptersTotal
     : input.chapterIndex + (input.stageOnly ? 1 : 0);
-  const depth = 15 * Math.max(0, clearedChapters);
+  const clearedChapters = Math.max(0, reached - startChapter);
+  const depth = 15 * clearedChapters;
   const victoryBonus = input.victory ? 20 : 0;
   const killBonus = Math.floor(Math.max(0, input.kills) / 10);
   const base = depth + victoryBonus + killBonus;
@@ -206,19 +223,26 @@ export function shardsForRun(input: MetaRunInput): number {
 
 export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaResult {
   const gained = shardsForRun(input);
-  const clearedChapters = input.victory
+  const startChapter = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
+  const reached = input.victory
     ? input.chaptersTotal
     : input.chapterIndex + (input.stageOnly ? 1 : 0);
-  const mutatorLevel = clampMutator(input.mutatorLevel ?? 0);
+  const clearedThisRun = Math.max(0, reached - startChapter);
+  const muLevel = clampMutator(input.mutatorLevel ?? 0);
   const next: MetaState = {
     ...state,
     shards: state.shards + gained,
     runs: state.runs + 1,
-    chaptersCleared: Math.max(state.chaptersCleared, clearedChapters),
+    chaptersCleared: Math.max(state.chaptersCleared, clearedThisRun),
     victories: state.victories + (input.victory ? 1 : 0),
     maxMutator: input.victory
-      ? Math.max(state.maxMutator, Math.min(5, mutatorLevel + 1))
+      ? Math.max(state.maxMutator, Math.min(5, muLevel + 1))
       : state.maxMutator,
+    maxStartChapter: Math.max(state.maxStartChapter, Math.min(2, reached)),
+    selectedStartChapter: Math.min(
+      Math.max(state.maxStartChapter, Math.min(2, reached)),
+      Math.max(state.selectedStartChapter, startChapter)
+    ),
     dailyBest:
       input.daily && input.victory && input.date ? input.date : state.dailyBest,
     unlockedRelics: [...state.unlockedRelics],
@@ -249,13 +273,13 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
     newlyUnlocked.push(id);
   };
   award('first-run');
-  if (next.chaptersCleared >= 1) award('chapter-one');
-  if (next.victories >= 1) award('two-chapters');
+  if (clearedThisRun >= 1) award('chapter-one');
+  if (clearedThisRun >= 2) award('two-chapters');
   if (input.ascensions.length > 0) award('ascended');
   if (input.relics.length >= 2) award('two-relics');
   if (input.victory && input.seconds <= 20 * 60) award('speedrun');
-  if (input.victory && mutatorLevel >= 3) award('mutator-iii');
-  if (input.victory && mutatorLevel >= 5) award('mutator-v');
+  if (input.victory && muLevel >= 3) award('mutator-iii');
+  if (input.victory && muLevel >= 5) award('mutator-v');
   if (input.victory && input.daily) award('daily-clear');
 
   return {

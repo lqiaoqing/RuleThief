@@ -74,6 +74,7 @@ describe('meta progression', () => {
     expect(first.state.victories).toBe(1);
     expect(first.state.chaptersCleared).toBe(2);
     expect(first.state.maxMutator).toBe(1);
+    expect(first.state.maxStartChapter).toBe(2);
     expect(first.newMutator).toBe(1);
     expect(first.unlocked).toContain('first-run');
     expect(first.unlocked).toContain('chapter-one');
@@ -110,6 +111,27 @@ describe('meta progression', () => {
     });
     expect(result.state.seenRules).toEqual(['chain', 'burn']);
     expect(result.state.ascendedRules).toEqual(['burn']);
+  });
+
+  it('unlocks later starting chapters by depth and discounts their shards', () => {
+    const fromSecond = applyRunToMeta(defaultMeta(), {
+      ...fullRun,
+      startChapter: 1
+    });
+    expect(fromSecond.state.maxStartChapter).toBe(2);
+    expect(fromSecond.state.chaptersCleared).toBe(1);
+    expect(fromSecond.gained).toBe(50);
+
+    const early = applyRunToMeta(defaultMeta(), {
+      ...fullRun,
+      victory: false,
+      stageOnly: true,
+      chapterIndex: 0,
+      startChapter: 0,
+      kills: 0
+    });
+    expect(early.state.maxStartChapter).toBe(1);
+    expect(early.state.selectedStartChapter).toBe(0);
   });
 
   it('unlocks paid content only when the shard cost is met', () => {

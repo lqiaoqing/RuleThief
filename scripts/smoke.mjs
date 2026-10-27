@@ -174,16 +174,18 @@ try {
     unlocks: document.querySelectorAll('#meta-unlocks .meta-unlock').length,
     achievements: document.querySelectorAll('#meta-achievements .meta-achievement').length,
     mutators: document.querySelectorAll('#meta-mutators .meta-mutator').length,
+    starts: document.querySelectorAll('#meta-starts .meta-mutator').length,
     codex: document.querySelectorAll('#meta-codex .meta-codex-row').length,
     daily: document.getElementById('meta-daily')?.textContent
   }));
   check(
-    'meta screen lists shards, unlocks, achievements and mutators',
+    'meta screen lists shards, unlocks, achievements, mutators and starts',
     metaPanel.visible &&
       metaPanel.shards === '0' &&
       metaPanel.unlocks === 6 &&
       metaPanel.achievements === 9 &&
       metaPanel.mutators === 6 &&
+      metaPanel.starts === 3 &&
       metaPanel.codex === 6 &&
       /每日挑战/.test(metaPanel.daily ?? ''),
     JSON.stringify(metaPanel)
@@ -237,6 +239,59 @@ try {
     })
   );
   await modePage.close();
+
+  const startPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await startPage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+  await startPage.evaluate(() => {
+    localStorage.setItem(
+      'rulethief.meta.v1',
+      JSON.stringify({
+        version: 1,
+        shards: 0,
+        runs: 0,
+        chaptersCleared: 2,
+        victories: 1,
+        maxMutator: 0,
+        selectedMutator: 0,
+        maxStartChapter: 2,
+        selectedStartChapter: 0,
+        dailyBest: null,
+        unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
+        unlockedAscensions: ['thunder-domain'],
+        seenRules: [],
+        ascendedRules: [],
+        achievements: []
+      })
+    );
+  });
+  await startPage.goto(`${BASE}/?arena=1&start=2`, { waitUntil: 'networkidle0' });
+  await waitReady(startPage);
+  await startPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(250);
+  const startState = await startPage.evaluate(() => ({
+    snapshot: window.__RT_SNAPSHOT__?.(),
+    title: document.getElementById('room-title')?.textContent,
+    objective: document.getElementById('objective-room')?.textContent
+  }));
+  check(
+    'third-world start inherits a maxed build and two relics',
+    startState.snapshot?.startChapter === 2 &&
+      startState.snapshot?.chapterIndex === 2 &&
+      startState.snapshot?.build?.trajectory?.level === 3 &&
+      startState.snapshot?.build?.impact?.level === 3 &&
+      (startState.snapshot?.relics?.length ?? 0) === 2 &&
+      /W3/.test(startState.objective ?? ''),
+    JSON.stringify({
+      startChapter: startState.snapshot?.startChapter,
+      build: startState.snapshot?.build,
+      relics: startState.snapshot?.relics,
+      title: startState.title,
+      objective: startState.objective
+    })
+  );
+  await startPage.close();
   check('hud hidden on load', await page.$eval('#hud', (el) => el.hidden));
   check(
     'overlays hidden on load',
