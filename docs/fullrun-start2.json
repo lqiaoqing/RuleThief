@@ -11,15 +11,15 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 27,
+  "seconds": 21,
   "relics": [
     "bloodflame-heart",
     "thunder-emblem"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "frost-ring",
-    "rift-echo"
+    "rift-echo",
+    "frost-ring"
   ],
   "errors": []
 }
