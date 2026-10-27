@@ -1,107 +1,101 @@
 # 验收矩阵（设计文档 → 证据）
 
-日期：2026-10-26
-用途：把设计文档与可行性分析的验收条款逐条映射到可复现的命令与结果。标记为「自动」的项均由脚本验证；标记为「人工」的项需要真人或真机。
+日期：2026-10-27（M9 收口版）
+用途：把 M0–M9 的功能条款逐条映射到可复现的命令与结果。标记为「自动」的项由脚本验证；标记为「人工」的项需要真人或真机。
 
-## A. 设计文档功能清单
+## A. 当前自动化结果
+
+```text
+npm test                       130/130 通过（11 个测试文件）
+npm run build                  tsc + vite build 通过（dist 1.91MB）
+npm run verify                 31/31 静态资源检查通过
+npm run smoke                  204/204 通过（主流程固定 seed=5）
+npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
+scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
+scripts/lowend.mjs             CPU ×1/×4/×6：59.5 / 58.0 / 47.8 fps（min 44）
+scripts/soak.mjs               8 分钟：监听器 +0、堆 8–34.7MB 随 GC 波动、60fps
+scripts/combo-bench.mjs        9 组合 DPS：26–125（聚怪木桩）
+scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀（1 套剩 86HP）
+```
+
+性能与浸泡结果在 `docs/STATUS.md` 与脚本输出中维护；本轮 M9 构建的复测结果见 C 节末尾。
+
+## B. 基础规则与战斗（M0–M5 回归）
 
 | 要求 | 状态 | 证据 |
 | --- | --- | --- |
 | 基础魔弹自动锁最近目标 | 自动 | 冒烟「room 1 spawns enemies」+ 战斗截图 |
-| 3 条弹道规则 × 3 条命中规则 = 9 组合 | 自动 | `rules.test.ts` 19 项；冒烟「all 9 rule combos still render their names」 |
+| 3 条弹道 × 3 条命中 = 9 组合 | 自动 | `rules.test.ts` 19 项；冒烟 9 组合名称 |
 | 规则 Lv.1–3，升级改变目标数/跳数/弹数/半径/时长 | 自动 | `rules.test.ts` 等级断言；HUD 截图 |
-| 装备 / 升级 / 替换，替换重置 Lv.1 | 自动 | `rules.test.ts` + 冒烟精英/普通房奖励 |
-| 单次攻击最多 3 次命中规则；爆炸与 DOT 不再触发 | 自动 | 冒烟「single volley never exceeds the 3-impact budget」（3 proc / 7 次爆炸伤害）、「burn DOT keeps dealing damage without new impact procs」（0 新 proc） |
-| 弹射不重复选取已命中目标 | 自动 | `rules.test.ts` `selectChainTargets` 去重 |
-| 冰霜减速有上限 | 自动 | `rules.test.ts` `mergeFrost` 0.8 上限 |
-| 寒霜浮灵的弹会减速玩家 | 自动 | 冒烟「frost wisp bolt slows the player」（`slowTime` 1.8s） |
-| 6 种敌人，各自携带一条规则 | 自动 | `rooms.test.ts` 敌人→规则 1:1；冒烟各敌人可生成 |
-| 2 个精英（双冲锋 / 三连雷击 + 锁定预警） | 自动 | 冒烟行为断言：裂甲精英连续冲锋 2 次、雷暴精英一次施法 3 发弹；雷暴施法前有青色锁定扇区（截图 m9-thunder-telegraph） |
-| 3 条突变，每局最多 1 条 | 自动 | `mutations.test.ts` 12 项；冒烟精英房突变卡数量断言 |
-| 4 种随机事件，每局 2 种 | 自动 | `run.test.ts` 事件数量/唯一性；冒烟「run visited two events」「visited events are distinct」 |
-| 跨房修饰只影响下一房 | 自动 | 冒烟「event speed modifier applies to the next room only」+「room N has no leftover speed modifier」 |
-| 诅咒宝箱：额外精英 + 额外奖励 | 自动 | 冒烟「curse chest adds an extra elite」 |
-| 三阶段 BOSS（70% / 35%） | 自动 | 冒烟 phase 1/2/3 断言 + BOSS 血条截图 |
-| 第三阶段规则封印 4 秒、可躲、自动恢复 | 自动 | 冒烟：站桩被封印（sealTime 3.9s）→ 自动解封；第二道预警时走出圈（位移 283 > 半径 96+20）不再被封印 |
-| BOSS 召唤物正确清理 | 自动 | `onBossDefeated` 清场；冒烟击杀后结算 |
-| 房间预览敌人类型 | 自动 | 冒烟「boss preview lists the arbiter」「room N preview lists enemies」 |
-| 清场三选一 / 精英四选一 | 自动 | 冒烟「room N opens rewards」「elite room N offers four rewards」 |
-| 规则奖励来自本房敌人 | 自动 | `rooms.test.ts` + M2 报告 |
-| 切房清弹幕、保留构筑 | 自动 | 冒烟「switching rooms clears bolts, enemies, hazards and slow」 |
-| 承伤构成为整局累计 | 自动 | 冒烟「damage totals survive a room transition」；重开清零「restart resets run damage totals」 |
-| BOSS 死亡后锁定胜利 | 自动 | 冒烟：残余弹幕与火焰清空、玩家满血、「residual threats cannot turn boss victory into defeat」 |
-| 同种子整局可复现（含同页重开） | 自动 | 冒烟「restart with the same seed recreates the plan」；`rng.test.ts` 双流隔离 |
-| 「最常构筑」按出现次数统计 | 自动 | `telemetry.test.ts` 次数优先、等级与最近局并列规则 |
-| 无可升级规则时事件文案与结算一致 | 自动 | `run.test.ts` 4 项；冒烟「maxed blood altar rewrites its offer to a heal」 |
-| 死亡 / 胜利 / 重开 | 自动 | 冒烟 defeat 0/13、victory 13/13、restart 重置 |
-| 暂停 / 失焦 / 切后台 | 自动 | 冒烟「window blur pauses」「backgrounding the tab pauses」 |
-| 双端操作（摇杆 / 闪避按钮 / 键鼠） | 自动 | 冒烟移动与闪避（桌面 + 手机视口） |
-| 音频（合成音效、解锁、静音） | 自动 | 冒烟静音按钮 + `__RT_AUDIO_STATE__.state === running` |
-| 本地记录（最近 20 局） | 自动 | `telemetry.test.ts` 7 项 + 冒烟 localStorage 断言 |
+| 装备 / 升级 / 替换，替换重置 Lv.1 | 自动 | `rules.test.ts` + 冒烟房间奖励 |
+| 单次攻击最多 3 次命中规则；爆炸/DOT 不递归 | 自动 | 冒烟齐射 3 proc / 7 次爆炸；`TriggerBudget` 单测 |
+| 弹射不重复目标、冰霜减速上限 | 自动 | `rules.test.ts` |
+| 6 种基础敌人各带一条规则 | 自动 | `rooms.test.ts`；冒烟逐个生成 |
+| 3 个精英（双冲锋 / 三连雷击 / 逆律先知） | 自动 | 冒烟前两者行为断言；先知生成与虚空领域由章节 3 冒烟覆盖 |
+| 3 条突变，每局最多 1 条，精英保底 | 自动 | `mutations.test.ts` 12 项；冒烟突变卡数量 |
+| 6 种随机事件，每局 2 种 | 自动 | `run.test.ts` 事件数量/唯一性；冒烟事件流程 |
+| 跨房修饰只影响下一房 | 自动 | 冒烟 speed modifier 清理断言 |
+| 三阶段旧 BOSS（70% / 35%）+ 封印 4s 可躲 | 自动 | 冒烟 phase 1/2/3、封印与躲避断言 |
+| BOSS 死亡锁定胜利、清残余弹幕/火焰 | 自动 | 冒烟「residual threats cannot turn boss victory into defeat」 |
+| BOSS 死亡后迟到生成不再打开空奖励 | 自动 | 冒烟「chapter reward includes a relic or ascension」+ fullrun；`victoryLocked` 守护 `clearRoom`/`spawnPortal` |
+| 承伤整局累计、重开清零 | 自动 | 冒烟「damage totals survive a room transition」/「restart resets run damage totals」 |
+| 同种子整局复现、双随机流隔离 | 自动 | 冒烟同种子重开断言；`rng.test.ts` |
+| 暂停 / 失焦 / 切后台 / 重开 | 自动 | 冒烟 blur / visibilitychange / 暂停重开 |
+| 双端输入（键鼠 / 摇杆 / 双触点） | 自动 | 冒烟桌面 + 手机视口 |
+| 音频、本地记录、静态部署 | 自动 | 冒烟音频 state、`telemetry.test.ts`、`verify` |
 
-## B. 可行性分析 §7 验收清单
+## C. M6–M9 新增系统
 
-| 类别 | 验收项 | 状态 | 证据 |
+| 里程碑 | 要求 | 状态 | 证据 |
 | --- | --- | --- | --- |
-| 组合 | 贯穿+爆裂不递归 | 自动 | 冒烟单次齐射 3 proc / 7 次爆炸伤害 |
-| 组合 | 燃烧/冰霜在敌人身上真实生效 | 自动 | 冒烟：命中后敌人 burning=true；冰霜命中后 3 个敌人 slowed=true |
-| 组合 | 火焰地面会伤害玩家 | 自动 | 冒烟：`debugSpawnHazard` 在脚下生成火焰，按 `damageTaken.hazard` 归因确认掉血（实测 +5） |
-| 组合 | 弹射+燃烧 DOT 不触发弹射 | 自动 | 冒烟 DOT 0 新 proc 且持续掉血 |
-| 组合 | 散射+冰霜方向正确、不无限减速 | 自动 | `rules.test.ts` 角度对称 + 减速上限 |
-| 规则 | 9 组合生效、等级、替换即时生效、满级处理 | 自动 | 冒烟：切弹道清在飞弹体（1→0）、切命中清燃烧（3→0）、替换后 Lv.1 且另一槽保级、满级构筑只出强化卡 |
-| 房间 | 13 步 / 18 节点；敌人预览；清场结算；切房清弹幕；图鉴跟随房间 | 自动 | `run.test.ts`；冒烟逐房检查 `room preview lists its enemies`、`switching rooms clears bolts, enemies, hazards and slow` |
-| 奖励 | 三选一；规则来自本房；前两房保底弹道+命中；基础强化生效 | 自动 | `run.test.ts`「guarantees a trajectory then an impact rule」；冒烟卡数与突变断言、`support reward applies a stat change`（选卡前先扣 10 血，治疗/上限/速度/冷却均可见变化） |
-| 事件 | 4 种；每局 2 种；跨房修饰正确清除 | 自动 | `run.test.ts`；冒烟固定 seed=5（诅咒宝箱 + 不稳定实验），两条条件断言每次都跑 |
-| 突变 | 3 种；每局最多 1；精英保底 | 自动 | `mutations.test.ts`；冒烟 `elite room N spawns its leader immediately` + 突变卡数量 |
-| BOSS | 3 阶段阈值；封印 4s 可躲可恢复；召唤物清理 | 自动 | 冒烟：phase 2 召唤 3 个杂兵、击杀 BOSS 后场上归零；封印预警截图 |
-| 状态 | 死亡/暂停/失焦/切后台/重开（含暂停页一键重开）；无旧弹幕/旧状态；无 pause/resume 告警 | 自动 | 冒烟 blur / visibilitychange / 切房清理 / 重开 / 暂停重开 |
-| 移动 | 手机暂停菜单三按钮不溢出 | 自动 | 390×844 下 card 入屏、3 按钮、无横向滚动 |
-| 体验 | 预警可读；受击来源清楚；构筑面板常驻；结算显示构筑 | 自动 + 截图 | 受击方向弧、结算「承伤构成」百分比、组合+突变行、截图 |
-| 体验 | 死亡归因可量化 | 自动 | 按 6 类来源（接触/冲锋/敌弹/火焰/自爆/其他）累计承伤，写入结算与 localStorage |
-| 体验 | 随时查看本局构筑与进度 | 自动 | 暂停页显示组合/等级/突变/步数/用时/击杀/生命（冒烟断言） |
-| 体验 | 新手理解操作目标与预警 | 自动 + 截图 | 首启「训练须知」三条要点，冒烟验证显示/记忆 |
-| 移动 | 安全区；横竖屏；音频解锁 | 自动 | 冒烟 390×844 / 844×390 无溢出；横屏下房间预览/奖励/路线覆盖层均完整入屏（354/340/313px ≤ 390）；音频 running |
-| 移动 | 小屏竖屏（360×640）覆盖层不溢出 | 自动 | 卡片 394px / 视口 640px，可滚动、无横向溢出 |
-| 性能 | 对象池 | 自动 | 伤害数字池复用且上限 48（冒烟：池 14 / 活跃 3）；压测帧率不回归 |
-| 性能 | 长时间运行不泄漏 | 自动近似 | 8 分钟浸泡：监听器 95→95、堆无累积、节点无单调增长、60fps |
-| 移动 | BOSS 血条在手机上不压 HUD | 自动 | hud-bottom 66 < boss-bar-top 146，无横向溢出 |
-| 移动 | 摇杆 / 闪避按钮 / 多点触控 | 自动 | 冒烟：摇杆拖拽移动、按钮闪避、CDP 双触点同时移动+闪避；横屏覆盖层自适应 |
-| 平衡 | 9 组合强度基准 | 自动 | `combo-bench.mjs`：爆裂 99–138 / 燃烧 40–88 / 冰霜 26–73（聚怪木桩） |
-| 平衡 | 9 组合清房实测 | 自动 | `combo-run.mjs`：9 套组合均 39–46s 满血清第 1 房（13 杀），清房时间仍由刷怪节奏决定 |
-| 节奏 | 节奏模型经实测校准 | 自动 + 人工 | 真人 8:30 通关 → 模型乘 0.7 校准；随后配额 +10%，预期约 9.9 分钟 |
-| 移动 | 低端机性能 | 自动近似 | Chrome CPU ×4 55.7fps / ×6 41.0fps（30 敌人）；真机仍需确认 |
-| 工程 | 单测/构建/静态部署/无 console error | 自动 | 见下 |
-| 工程 | 可复现随机（`?seed=`） | 自动 | 同种子路线一致、不同种子路线不同（冒烟属性断言） |
-| 工程 | 试玩入口：一键 BOSS / 指定构筑 | 自动 | `?arena=1&boss=1` 跳第 13 步；`&build=spread,burn,3,3` 载入预设组合、且显式 build 覆盖 BOSS 起始构筑（冒烟断言） |
+| M6 | 章节数据驱动、章节结算/继续/收工 | 自动 | `run.test.ts` `CHAPTERS`；冒烟 CHAPTER 1/2/3 切换；fullrun 两次切换 |
+| M6 | 第二世界 14 个房间、环境机制、2 种新敌人、区域 BOSS | 自动 | `rooms.test.ts`；冒烟 shock-grid ≥3 预警、sentry/phase 生成、失序核心血条 |
+| M6 | 3 种规则升阶 | 自动（数据/应用） | `ascensions.test.ts` 8 项；章节奖励卡；`ascendRule`/`canAscend` 单测 |
+| M6 | 首批 4 件遗物、最多装备 2 件 | 自动（数据/应用） | `ascensions.test.ts` 遗物池；章节奖励；HUD ` relic-count` |
+| M6 | 第一世界后至少一次可感知升级 | 自动 | 冒烟「chapter reward includes a relic or ascension」；升阶/遗物卡进入章节奖励 |
+| M7 | 法则碎片、按深度/BOSS 进度结算 | 自动 | `meta.test.ts` 碎片公式；冒烟「stage clear awards shards」 |
+| M7 | 遗物/升阶解锁进入下一局奖励池 | 自动 | `buildChapterRewards` 解锁池单测；`setMetaUnlocks` 接入场景 |
+| M7 | localStorage 存档、损坏数据修复 | 自动 | `meta.test.ts` round-trip / corrupt repair |
+| M7 | 规则图鉴（已见/已升阶） | 自动 | `meta.test.ts` `seenRules`/`ascendedRules`；冒烟图鉴 6 条规则行 |
+| M7 | 成就与解锁反馈 | 自动 | `meta.test.ts` 9 项成就；图鉴面板与结算新成就行 |
+| M8 | 第三世界 14 个房间、void-rift、rule-null | 自动 | `rooms.test.ts`；冒烟「void-rift spawns larger telegraph zones」「rule-null briefly seals a rule」 |
+| M8 | 特殊精英「逆律先知」 | 自动（生成/行为） | 章节 3 精英房；`updateSeer` 瞬移 + 虚空领域 |
+| M8 | 最终 BOSS「规则之源」 | 自动 | 冒烟标题/血量/血条；三阶段 `updateSource` |
+| M8 | 扩展遗物（第 5/6 件） | 自动（数据） | `relics.ts` 6 件；`ascensions.test.ts` |
+| M8 | 25–35 分钟三章路线 | 模型 + 结构 | `tuning.test.ts` 25–35；fullrun 37/37（结构时长约 63 秒） |
+| M9 | 异变 I–V | 自动 | `mutators.test.ts`；冒烟 `?mutator=3` + HUD M3 |
+| M9 | 异变影响敌人/BOSS/环境/奖励 | 自动 | 敌人 HP/速度、BOSS 血量/弹幕、hazard 间隔、碎片倍率代码与单测 |
+| M9 | 每日种子挑战与最佳记录 | 自动 | `?daily=1` 冒烟；`meta.test.ts` `dailyBest`/成就 |
+| M9 | 9 项成就与图鉴难度选择 | 自动 | 冒烟图鉴 9 项成就、6 个异变按钮；单测 |
+| M9 | 更丰富事件与隐藏奖励 | 自动 | 规则喷泉 / 虚空交易（随机遗物）进入事件池；`run.test.ts` 6 事件 |
 
-## C. 当前自动化结果（2026-10-27）
+## D. 性能与长时运行
 
-```text
-npm test                       98/98 通过
-npm run build                  dist 1.31MB JS（gzip 355KB）+ 51KB CSS
-npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 182/182 通过（主流程固定 seed=5）
-scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
-scripts/lowend.mjs             CPU ×1/×4/×6：57.0 / 55.7 / 43.7 fps（30 敌人，对象池后）
-scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部满血（13 杀）
-scripts/soak.mjs               8 分钟浸泡：监听器 +0、堆 10→30→9MB、60fps
-scripts/autoplay.mjs           8/13，6:35，123 杀；房间 53–68s，止步第 9 步精英（机器人只做风筝走位）
-scripts/combo-bench.mjs        9 组合 DPS 基准（2 次采样 × 5 秒）
-```
+| 项目 | 状态 | 证据 |
+| --- | --- | --- |
+| 生产构建 | 自动 | `npm run build`；dist 1.91MB（JS 约 1.31MB / gzip 355KB + CSS 51KB） |
+| 静态资源 | 自动 | `npm run verify` 31/31 |
+| 40 敌人压力 | 自动近似 | `stress.mjs`：40 敌人 / 45 发敌弹，avg 59.6 / min 59 fps |
+| CPU 节流 | 自动近似 | `lowend.mjs`：×1 59.5 / ×4 58.0 / ×6 47.8 fps（min 44） |
+| 8 分钟浸泡 | 自动近似 | `soak.mjs`：监听器 +0、节点 1.5k–2.5k 波动、堆 8–34.7MB 随 GC 波动、60fps |
+| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs` 26–125 DPS；`combo-run.mjs` 39–46s、全部 13 杀 |
 
-- 单测文件：`rules` 19、`rooms` 23、`mutations` 12、`run` 17、`tuning` 6、`telemetry` 9、`rng` 9、`theme` 3。
-- 冒烟覆盖 13 步完整流程（10 场战斗 + 2 事件 + BOSS）、5 个分支、精英房、突变、封印、记录持久化、双端视口。
-
-## D. 未完成项（需要外部条件）
+## E. 仅外部可完成的验收
 
 | 项目 | 原因 | 当前状态 |
 | --- | --- | --- |
-| 5–10 人真人试玩 | 需要外部参与者 | 协议与导出方式已就绪（`docs/PLAYTEST.md`）；已用自动试玩做下限验证 |
-| 真机手机验收 | 需要真实设备 | 未开始；仅模拟视口 |
-| 低端机长时运行压测 | 需要真实设备跑满一局 | 仅完成 CPU 节流近似（×6 → 41fps） |
-| 单局时长 15 分钟 | 内容体量 | 模型 ×0.7 校准 + 配额 +10% 后预期约 9.9 分钟，真人首局 8:30；落在设计 10–20 分钟区间边缘，仍低于 15 分钟期望（有意接受，见 `docs/PLAYTEST_RESULTS.md`） |
+| 5–10 人真人试玩 | 需要外部参与者 | 已回收 1 局（8:30 通关）；M6–M9 新内容尚无真人样本 |
+| 真人 25–35 分钟时长 | 需要真人节奏 | 仅有节奏模型与结构性 fullrun；自动机器人试玩仍早死，不能替代 |
+| 真机触控 / 发热 / 长时运行 | 需要真实设备 | 仅 CDP 双触点、视口与 CPU 节流近似 |
+| 构筑强弱与再玩意愿 | 主观体验 | 需要多人样本 |
 
-## E. 复现步骤
+## F. 已知偏差
+
+- `M0Scene.ts` 已约 4,984 行，超过蓝图「不扩大巨型场景类」的工程约束；`meta`/`mutators`/`relics`/`ascensions` 已独立成模块，但敌人与 BOSS AI 仍在场景类内。
+- 遗物与升阶的每一条战斗效果尚未全部有独立回归断言；当前覆盖数据、应用链路与部分机制（护盾/奖励/图鉴），完整效果仍需专项测试与真人验证。
+- 自动试玩机器人在 +10% 配额下止步第 2 房（2/13），不作为难度或时长结论。
+
+## G. 复现步骤
 
 ```bash
 npm ci
@@ -110,8 +104,10 @@ npm run build
 npm run preview -- --port 4177
 BASE_URL=http://127.0.0.1:4177 npm run smoke
 BASE_URL=http://127.0.0.1:4177 npm run verify
+BASE_URL=http://127.0.0.1:4177 npm run fullrun
 BASE_URL=http://127.0.0.1:4177 node scripts/stress.mjs
-BASE_URL=http://127.0.0.1:4177 node scripts/autoplay.mjs   # 需要真实窗口，约 6–10 分钟
+BASE_URL=http://127.0.0.1:4177 npm run lowend
+BASE_URL=http://127.0.0.1:4177 npm run soak
 ```
 
 自动化脚本依赖本机 Chrome/Edge（`scripts/*.mjs` 会自动探测常见安装路径）。
