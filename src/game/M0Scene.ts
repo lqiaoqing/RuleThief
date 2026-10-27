@@ -292,6 +292,7 @@ export class M0Scene extends Phaser.Scene {
   private lastExplosionRadius = 0;
   private lastExplosionDistances: number[] = [];
   private prismTriggers = 0;
+  private thunderDomainCasts = 0;
 
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
@@ -454,6 +455,7 @@ export class M0Scene extends Phaser.Scene {
     this.lastExplosionRadius = 0;
     this.lastExplosionDistances = [];
     this.prismTriggers = 0;
+    this.thunderDomainCasts = 0;
     setRelics([]);
     resetRandomStreams();
     this.chapterIndex = 0;
@@ -1315,6 +1317,12 @@ export class M0Scene extends Phaser.Scene {
     this.hurtPlayer(amount, this.playerRoot.x, this.playerRoot.y - 40, 'other');
   }
 
+  public debugDamageFrom(amount: number, x: number, y: number): void {
+    if (this.runState !== 'playing') return;
+    this.invuln = 0;
+    this.hurtPlayer(amount, x, y, 'other');
+  }
+
   public debugEndRun(victory: boolean): void {
     this.endRun(victory);
   }
@@ -1519,6 +1527,9 @@ export class M0Scene extends Phaser.Scene {
       lastExplosionHits: this.lastExplosionHits,
       lastExplosionRadius: this.lastExplosionRadius,
       lastExplosionDistances: this.lastExplosionDistances,
+      chainAscendJumps: this.chainAscendJumps,
+      thunderDomainCasts: this.thunderDomainCasts,
+      relicDamageMultiplier: this.relicDamageMultiplier(),
       featherTime: this.featherTime,
       enemies: this.enemies.length,
       hazards: this.hazards.length,
@@ -2581,6 +2592,7 @@ export class M0Scene extends Phaser.Scene {
       .sort((a, b) => this.distanceToPlayer(a) - this.distanceToPlayer(b))
       .slice(0, 3);
     if (!targets.length) return;
+    this.thunderDomainCasts += 1;
     const budget = new TriggerBudget(targets.length);
     for (const target of targets) {
       if (!budget.tryConsume()) break;

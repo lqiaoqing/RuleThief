@@ -1682,6 +1682,103 @@ try {
   );
   await frostPage.close();
 
+  const greedPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await greedPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(greedPage);
+  await greedPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(greedPage);
+  await sleep(500);
+  await greedPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_RELIC__?.('greed');
+  });
+  const greedBefore = await snapshot(greedPage);
+  await greedPage.evaluate(() => window.__RT_DAMAGE__?.(10));
+  await sleep(250);
+  const greedAfter = await snapshot(greedPage);
+  check(
+    'greed pact raises damage dealt and taken by 20%',
+    Math.abs(Number(greedBefore.relicDamageMultiplier) - 1.2) < 0.001 &&
+      Number(greedBefore.hp) - Number(greedAfter.hp) === 12,
+    JSON.stringify({
+      multiplier: greedBefore.relicDamageMultiplier,
+      hp: [greedBefore.hp, greedAfter.hp]
+    })
+  );
+  await greedPage.close();
+
+  const crownPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await crownPage.goto(`${BASE}/?arena=1&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(crownPage);
+  await crownPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(crownPage);
+  await sleep(500);
+  await crownPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_RELIC__?.('frost-crown');
+    window.__RT_SPAWN_AT__?.('spore', 400, 500);
+  });
+  await sleep(150);
+  await crownPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(450);
+  const crownSlowed = await snapshot(crownPage);
+  const crownBefore = Number(crownSlowed.hp);
+  await crownPage.evaluate(() => window.__RT_DAMAGE_FROM__?.(10, 400, 500));
+  await sleep(250);
+  const crownAfter = await snapshot(crownPage);
+  check(
+    'frost crown reduces damage from a slowed source by 25%',
+    (crownSlowed.enemyList ?? []).some((enemy) => enemy.slowed) &&
+      crownBefore - Number(crownAfter.hp) === 8,
+    JSON.stringify({ hp: [crownBefore, crownAfter.hp], enemies: crownSlowed.enemyList })
+  );
+  await crownPage.close();
+
+  const domainPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await domainPage.goto(`${BASE}/?arena=1&build=chain,burn,3,1`, { waitUntil: 'networkidle0' });
+  await waitReady(domainPage);
+  await domainPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(domainPage);
+  await sleep(500);
+  await domainPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_ASCEND__?.('chain');
+    for (const [x, y] of [
+      [400, 300],
+      [450, 300],
+      [500, 300],
+      [400, 400],
+      [450, 400],
+      [500, 400]
+    ]) {
+      window.__RT_SPAWN_AT__?.('beetle', x, y);
+    }
+  });
+  await sleep(250);
+  await domainPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(450);
+  await domainPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(1200);
+  const domainState = await snapshot(domainPage);
+  check(
+    'thunder domain fires after six accumulated chain jumps',
+    Number(domainState.thunderDomainCasts) >= 1,
+    JSON.stringify({
+      jumps: domainState.chainAscendJumps,
+      casts: domainState.thunderDomainCasts
+    })
+  );
+  await domainPage.close();
+
   const compact = await newPage(browser, {
     width: 360,
     height: 640,

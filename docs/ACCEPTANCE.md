@@ -9,7 +9,7 @@
 npm test                       132/132 通过（11 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  212/212 通过（主流程固定 seed=5 + 遗物/升阶效果）
+npm run smoke                  215/215 通过（主流程固定 seed=5 + 9 项遗物/升阶效果）
 npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
 scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
 scripts/lowend.mjs             CPU ×1/×4/×6：59.5 / 58.0 / 47.8 fps（min 44）
@@ -50,8 +50,8 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | --- | --- | --- | --- |
 | M6 | 章节数据驱动、章节结算/继续/收工 | 自动 | `run.test.ts` `CHAPTERS`；冒烟 CHAPTER 1/2/3 切换；fullrun 两次切换 |
 | M6 | 第二世界 14 个房间、环境机制、2 种新敌人、区域 BOSS | 自动 | `rooms.test.ts`；冒烟 shock-grid ≥3 预警、sentry/phase 生成、失序核心血条 |
-| M6 | 3 种规则升阶 | 自动（数据/应用/2 效果） | `ascensions.test.ts` 8 项；烈焰引爆与极寒禁锢有战斗内断言；雷霆领域仅数据/应用覆盖 |
-| M6 | 首批 4 件遗物、最多装备 2 件 | 自动（数据/应用/4 效果） | `ascensions.test.ts` 遗物池；章奖励；雷鸣徽章/血焰之心/破裂棱镜/疾行之羽有战斗内断言 |
+| M6 | 3 种规则升阶 | 自动（3 效果） | `ascensions.test.ts`；烈焰引爆、极寒禁锢、雷霆领域均有战斗内断言 |
+| M6 | 首批 4 件遗物、最多装备 2 件 | 自动（6 效果） | `ascensions.test.ts`；雷鸣徽章、血焰之心、破裂棱镜、疾行之羽、寒霜王冠、贪婪契约均有战斗内断言 |
 | M6 | 第一世界后至少一次可感知升级 | 自动 | 冒烟「chapter reward includes a relic or ascension」；升阶/遗物卡进入章节奖励 |
 | M7 | 法则碎片、按深度/BOSS 进度结算 | 自动 | `meta.test.ts` 碎片公式；冒烟「stage clear awards shards」 |
 | M7 | 遗物/升阶解锁进入下一局奖励池 | 自动 | `buildChapterRewards` 解锁池单测；`setMetaUnlocks` 接入场景 |
@@ -92,7 +92,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 ## F. 已知偏差
 
 - `M0Scene.ts` 已约 4,984 行，超过蓝图「不扩大巨型场景类」的工程约束；`meta`/`mutators`/`relics`/`ascensions` 已独立成模块，但敌人与 BOSS AI 仍在场景类内。
-- 遗物与升阶的战斗效果已覆盖 6 项（雷鸣徽章、血焰之心、破裂棱镜、疾行之羽、烈焰引爆、极寒禁锢）；寒霜王冠、贪婪契约与雷霆领域仍只有数据/应用覆盖，完整效果仍需专项测试与真人验证。
+- 遗物与升阶的 9 项战斗效果均已有定向战斗断言；真人手感、效果强度与组合强弱仍需外部试玩。
 - 自动试玩机器人在 +10% 配额下止步第 2 房（2/13），不作为难度或时长结论。
 
 ## G. 复现步骤

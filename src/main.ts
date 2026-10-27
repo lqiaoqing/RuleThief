@@ -47,6 +47,7 @@ declare global {
     __RT_GRANT__?: (rule: RuleKey) => void;
     __RT_GRANT_ALL__?: () => void;
     __RT_DAMAGE__?: (amount: number) => void;
+    __RT_DAMAGE_FROM__?: (amount: number, x: number, y: number) => void;
     __RT_END__?: (victory: boolean) => void;
     __RT_SPAWN__?: (kind?: EnemyKind) => void;
     __RT_SPAWN_AT__?: (kind: EnemyKind, x: number, y: number) => void;
@@ -685,6 +686,7 @@ function handleReady(): void {
   window.__RT_GRANT__ = (rule) => scene?.debugGrantRule(rule);
   window.__RT_GRANT_ALL__ = () => scene?.debugGrantAll();
   window.__RT_DAMAGE__ = (amount) => scene?.debugDamagePlayer(amount);
+  window.__RT_DAMAGE_FROM__ = (amount, x, y) => scene?.debugDamageFrom(amount, x, y);
   window.__RT_END__ = (victory) => scene?.debugEndRun(victory);
   window.__RT_SPAWN__ = (kind) => scene?.debugSpawn(kind);
   window.__RT_SPAWN_AT__ = (kind, x, y) => scene?.debugSpawnAt(kind, x, y);
