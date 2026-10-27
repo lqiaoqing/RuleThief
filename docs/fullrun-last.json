@@ -10,6 +10,20 @@
   "chapterRewards": [
     [
       {
+        "kind": "ascension",
+        "name": "雷霆领域"
+      },
+      {
+        "kind": "relic",
+        "name": "血焰之心"
+      },
+      {
+        "kind": "support",
+        "name": "碎片缝合"
+      }
+    ],
+    [
+      {
         "kind": "relic",
         "name": "血焰之心"
       },
@@ -21,30 +35,17 @@
         "kind": "support",
         "name": "规则韧性"
       }
-    ],
-    [
-      {
-        "kind": "ascension",
-        "name": "雷霆领域"
-      },
-      {
-        "kind": "support",
-        "name": "轻装疾行"
-      },
-      {
-        "kind": "support",
-        "name": "规则韧性"
-      }
     ]
   ],
   "chapterIndex": 2,
   "chaptersTotal": 3,
+  "startChapter": 0,
+  "expectedSteps": 37,
   "roomsCleared": 31,
   "picks": 30,
   "seconds": 61,
   "relics": [
-    "bloodflame-heart",
-    "thunder-emblem"
+    "bloodflame-heart"
   ],
   "ascensions": [],
   "errors": []

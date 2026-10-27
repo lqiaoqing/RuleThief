@@ -9,6 +9,8 @@ const executablePath = CHROME_CANDIDATES.find((candidate) => fs.existsSync(candi
 if (!executablePath) throw new Error('No Chrome or Edge executable found.');
 
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:4177';
+const START = Math.max(0, Math.min(2, Number(process.argv[2] ?? process.env.START ?? 0)));
+const EXPECTED_STEPS = START === 0 ? 37 : START === 1 ? 24 : 12;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function snapshot(page) {
@@ -79,7 +81,35 @@ try {
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
-  await page.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  if (START > 0) {
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'rulethief.meta.v1',
+        JSON.stringify({
+          version: 1,
+          shards: 0,
+          runs: 0,
+          chaptersCleared: 2,
+          victories: 1,
+          maxMutator: 0,
+          selectedMutator: 0,
+          maxStartChapter: 2,
+          selectedStartChapter: 0,
+          dailyBest: null,
+          unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
+          unlockedAscensions: ['thunder-domain'],
+          seenRules: [],
+          ascendedRules: [],
+          achievements: []
+        })
+      );
+    });
+  }
+  const startParam = START > 0 ? `&start=${START}` : '';
+  await page.goto(`${BASE}/?arena=1&build=spread,burn,3,3${startParam}`, {
+    waitUntil: 'networkidle0'
+  });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
 
   const started = Date.now();
@@ -152,6 +182,8 @@ try {
     chapterRewards,
     chapterIndex: finalState.chapterIndex,
     chaptersTotal: finalState.chaptersTotal,
+    startChapter: finalState.startChapter,
+    expectedSteps: EXPECTED_STEPS,
     roomsCleared,
     picks,
     seconds: Math.round((Date.now() - started) / 1000),
@@ -160,8 +192,10 @@ try {
     errors
   };
   console.log(JSON.stringify(summary, null, 2));
-  fs.writeFileSync('docs/fullrun-last.json', JSON.stringify(summary, null, 2));
-  if (!result || result.title !== '审判完成' || result.rooms !== '37 / 37') {
+  const output = START > 0 ? `docs/fullrun-start${START}.json` : 'docs/fullrun-last.json';
+  fs.writeFileSync(output, JSON.stringify(summary, null, 2));
+  const expected = `${EXPECTED_STEPS} / ${EXPECTED_STEPS}`;
+  if (!result || result.title !== '审判完成' || result.rooms !== expected) {
     process.exitCode = 1;
   }
   if (errors.length) process.exitCode = 1;

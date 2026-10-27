@@ -1,0 +1,21 @@
+{
+  "result": {
+    "title": "审判完成",
+    "rooms": "12 / 12"
+  },
+  "chapters": [],
+  "chapterRewards": [],
+  "chapterIndex": 2,
+  "chaptersTotal": 3,
+  "startChapter": 2,
+  "expectedSteps": 12,
+  "roomsCleared": 10,
+  "picks": 9,
+  "seconds": 21,
+  "relics": [
+    "thunder-emblem",
+    "bloodflame-heart"
+  ],
+  "ascensions": [],
+  "errors": []
+}

@@ -1,0 +1,38 @@
+{
+  "result": {
+    "title": "审判完成",
+    "rooms": "24 / 24"
+  },
+  "chapters": [
+    "失序工坊 · 已完成"
+  ],
+  "chapterRewards": [
+    [
+      {
+        "kind": "support",
+        "name": "碎片缝合"
+      },
+      {
+        "kind": "support",
+        "name": "轻装疾行"
+      },
+      {
+        "kind": "support",
+        "name": "规则韧性"
+      }
+    ]
+  ],
+  "chapterIndex": 2,
+  "chaptersTotal": 3,
+  "startChapter": 1,
+  "expectedSteps": 24,
+  "roomsCleared": 20,
+  "picks": 19,
+  "seconds": 39,
+  "relics": [
+    "thunder-emblem",
+    "bloodflame-heart"
+  ],
+  "ascensions": [],
+  "errors": []
+}

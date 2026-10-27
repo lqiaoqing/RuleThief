@@ -15,7 +15,9 @@
     "lowend": "node scripts/lowend.mjs",
     "combo-run": "node scripts/combo-run.mjs",
     "soak": "node scripts/soak.mjs",
-    "fullrun": "node scripts/fullrun.mjs"
+    "fullrun": "node scripts/fullrun.mjs",
+    "fullrun-start1": "node scripts/fullrun.mjs 1",
+    "fullrun-start2": "node scripts/fullrun.mjs 2"
   },
   "dependencies": {
     "phaser": "3.90.0"
