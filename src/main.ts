@@ -224,6 +224,11 @@ function dailySeed(): string {
   return `rulethief-daily-${dailySeedDate()}`;
 }
 
+function dailyModifierLevel(): number {
+  const day = Number(dailySeedDate().slice(-2));
+  return 1 + (day % 3);
+}
+
 if (dailyMode) setRandomSeed(dailySeed());
 if (mutatorParam !== null) {
   const requested = clampMutator(Number(mutatorParam));
@@ -463,7 +468,9 @@ function renderMeta(): void {
     });
     metaMutators.append(button);
   }
-  metaDaily.textContent = `每日挑战 · ${meta.dailyBest ? `最佳 ${meta.dailyBest}` : '未完成'}`;
+  metaDaily.textContent = `每日挑战 · ${
+    meta.dailyBest ? `最佳 ${meta.dailyBest}` : '未完成'
+  } · 今日修正 ${getMutator(dailyModifierLevel()).name}`;
 
   metaStarts.textContent = '';
   CHAPTERS.forEach((chapter, index) => {
@@ -499,7 +506,7 @@ function renderMeta(): void {
 
 function applyMetaToScene(): void {
   scene?.setMetaUnlocks(meta.unlockedRelics, meta.unlockedAscensions);
-  scene?.setMutator(meta.selectedMutator);
+  scene?.setMutator(dailyMode ? dailyModifierLevel() : meta.selectedMutator);
   scene?.setStartChapter(meta.selectedStartChapter);
 }
 

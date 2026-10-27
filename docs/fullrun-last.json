@@ -19,21 +19,21 @@
       },
       {
         "kind": "support",
-        "name": "碎片缝合"
+        "name": "规则韧性"
       }
     ],
     [
+      {
+        "kind": "ascension",
+        "name": "雷霆领域"
+      },
       {
         "kind": "relic",
         "name": "雷鸣徽章"
       },
       {
         "kind": "support",
-        "name": "碎片缝合"
-      },
-      {
-        "kind": "support",
-        "name": "规则韧性"
+        "name": "轻装疾行"
       }
     ]
   ],
@@ -43,7 +43,7 @@
   "expectedSteps": 37,
   "roomsCleared": 31,
   "picks": 30,
-  "seconds": 63,
+  "seconds": 66,
   "relics": [
     "bloodflame-heart",
     "thunder-emblem"
@@ -51,7 +51,7 @@
   "ascensions": [],
   "lateUpgrades": [
     "ember-spread",
-    "pierce-momentum"
+    "rift-echo"
   ],
   "errors": []
 }

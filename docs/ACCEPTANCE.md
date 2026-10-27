@@ -9,7 +9,7 @@
 npm test                       147/147 通过（13 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  225/225 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 起点世界 + 导出 + 物品说明）
+npm run smoke                  226/226 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 每日修正 + 起点世界 + 导出 + 物品说明）
 npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
@@ -68,7 +68,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M8 | 25–35 分钟三章路线 | 模型 + 结构 | `tuning.test.ts` 25–35；fullrun 37/37（结构时长约 63 秒） |
 | M9 | 异变 I–V | 自动 | `mutators.test.ts`；冒烟 `?mutator=3` + HUD M3 |
 | M9 | 异变影响敌人/BOSS/环境/奖励 | 自动 | 敌人 HP/速度、BOSS 血量/弹幕、hazard 间隔、碎片倍率代码与单测 |
-| M9 | 每日种子挑战与最佳记录 | 自动 | `?daily=1` 冒烟；`meta.test.ts` `dailyBest`/成就 |
+| M9 | 每日种子挑战与最佳记录 | 自动 | `?daily=1` 固定种子 + 每日异变 I–III 修正；冒烟「daily challenge applies a deterministic mutator」；`meta.test.ts` `dailyBest`/成就 |
 | M9 | 9 项成就与图鉴难度选择 | 自动 | 冒烟图鉴 9 项成就、6 个异变按钮；单测 |
 | M9 | 更丰富事件与隐藏奖励 | 自动 | 规则喷泉 / 虚空交易（随机遗物）进入事件池；`run.test.ts` 6 事件 |
 | M9.5 | 后期强化池（规则满级 + 遗物满槽后） | 自动 | 4 项：余烬蔓延/裂隙回响/霜环驻留/穿透蓄势；每局最多 2 个；4 项均有战斗内断言；fullrun W3 起点实拿 2 项 |

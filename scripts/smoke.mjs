@@ -221,7 +221,7 @@ try {
       })
     );
   });
-  await modePage.goto(`${BASE}/?arena=1&mutator=3&daily=1`, { waitUntil: 'networkidle0' });
+  await modePage.goto(`${BASE}/?arena=1&mutator=3`, { waitUntil: 'networkidle0' });
   await waitReady(modePage);
   await modePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -233,10 +233,10 @@ try {
     objective: document.getElementById('objective-room')?.textContent
   }));
   check(
-    'mutator and daily modes apply to a run',
+    'mutator level applies to a run',
     modeState.snapshot?.mutatorLevel === 3 &&
       /M3/.test(modeState.objective ?? '') &&
-      modeState.daily === true,
+      modeState.daily === false,
     JSON.stringify({
       mutator: modeState.snapshot?.mutatorLevel,
       objective: modeState.objective,
@@ -244,6 +244,32 @@ try {
     })
   );
   await modePage.close();
+
+  const dailyPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await dailyPage.goto(`${BASE}/?arena=1&daily=1`, { waitUntil: 'networkidle0' });
+  await waitReady(dailyPage);
+  await dailyPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(250);
+  const dailyState = await dailyPage.evaluate(() => ({
+    snapshot: window.__RT_SNAPSHOT__?.(),
+    daily: window.__RT_DAILY__?.(),
+    objective: document.getElementById('objective-room')?.textContent
+  }));
+  check(
+    'daily challenge applies a deterministic mutator',
+    dailyState.daily === true &&
+      Number(dailyState.snapshot?.mutatorLevel) >= 1 &&
+      Number(dailyState.snapshot?.mutatorLevel) <= 3 &&
+      /M[1-3]/.test(dailyState.objective ?? ''),
+    JSON.stringify({
+      mutator: dailyState.snapshot?.mutatorLevel,
+      objective: dailyState.objective,
+      daily: dailyState.daily
+    })
+  );
+  await dailyPage.close();
 
   const startPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await startPage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
