@@ -7,6 +7,7 @@ import { audio } from './game/audio';
 import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import { ALL_RULE_KEYS, getRuleName } from './game/rules';
+import type { RelicId } from './game/relics';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
 import { formatRecordLine, saveRun, summarize } from './game/telemetry';
@@ -85,6 +86,8 @@ declare global {
     __RT_CHAPTER_BOSS__?: (index?: number) => void;
     __RT_CHAPTER_START__?: (index: number) => void;
     __RT_DAILY__?: () => boolean;
+    __RT_RELIC__?: (id: RelicId) => void;
+    __RT_ASCEND__?: (key: RuleKey) => void;
     __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
@@ -694,6 +697,8 @@ function handleReady(): void {
   window.__RT_CHAPTER_BOSS__ = (index) => scene?.debugJumpToChapterBoss(index);
   window.__RT_CHAPTER_START__ = (index) => scene?.debugStartChapter(index);
   window.__RT_DAILY__ = () => dailyMode;
+  window.__RT_RELIC__ = (id) => scene?.debugGrantRelic(id);
+  window.__RT_ASCEND__ = (key) => scene?.debugAscendRule(key);
   window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();

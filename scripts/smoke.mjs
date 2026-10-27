@@ -1342,11 +1342,21 @@ try {
   );
 
   await workshop.tap('#room-enter-btn');
-  await sleep(2300);
+  const workshopFighting = await poll(
+    workshop,
+    () => window.__RT_SNAPSHOT__?.().roomState === 'fighting',
+    5000
+  );
+  check('chapter two room enters combat', workshopFighting);
+  const shockSeen = await poll(
+    workshop,
+    () => Number(window.__RT_SNAPSHOT__?.().hazards ?? 0) >= 3,
+    6000
+  );
   const workshopCombat = await snapshot(workshop);
   check(
     'shock-grid telegraphs several zones before detonating',
-    Number(workshopCombat.hazards) >= 3,
+    shockSeen,
     String(workshopCombat.hazards)
   );
   await workshop.evaluate(() => {
@@ -1453,11 +1463,15 @@ try {
     Number(abyssHazards.hazards) >= 3,
     String(abyssHazards.hazards)
   );
-  await sleep(2800);
+  const ruleNullSeen = await poll(
+    workshop,
+    () => Boolean(window.__RT_SNAPSHOT__?.().sealSlot),
+    9000
+  );
   const abyssRuleNull = await snapshot(workshop);
   check(
     'rule-null briefly seals an equipped rule',
-    Boolean(abyssRuleNull.sealSlot),
+    ruleNullSeen,
     JSON.stringify({ sealSlot: abyssRuleNull.sealSlot, sealTime: abyssRuleNull.sealTime })
   );
 
@@ -1503,6 +1517,170 @@ try {
     JSON.stringify(sourceResult)
   );
   await workshop.close();
+
+  const relicPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await relicPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(relicPage);
+  await relicPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(relicPage);
+  await sleep(500);
+  await relicPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_RELIC__?.('feather');
+    window.__RT_RELIC__?.('thunder-emblem');
+  });
+  await relicPage.keyboard.press('Space');
+  await sleep(120);
+  const featherState = await snapshot(relicPage);
+  check(
+    'swift feather opens a post-dash speed window',
+    Number(featherState.featherTime) > 0,
+    String(featherState.featherTime)
+  );
+  await relicPage.evaluate(() => {
+    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 450, 200);
+    window.__RT_SPAWN_AT__?.('beetle', 500, 100);
+  });
+  await sleep(250);
+  await relicPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(600);
+  const thunderState = await snapshot(relicPage);
+  check(
+    'thunder emblem stacks from a multi-target pierce hit',
+    Number(thunderState.thunderStacks) >= 1,
+    String(thunderState.thunderStacks)
+  );
+  await relicPage.close();
+
+  const bloodPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await bloodPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(bloodPage);
+  await bloodPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(bloodPage);
+  await sleep(500);
+  await bloodPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_RELIC__?.('bloodflame-heart');
+    window.__RT_DAMAGE__?.(30);
+    window.__RT_SPAWN_AT__?.('beetle', 430, 300);
+  });
+  await sleep(250);
+  const hpBeforeLeech = Number((await snapshot(bloodPage)).hp);
+  await bloodPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(550);
+  const burned = await snapshot(bloodPage);
+  check(
+    'bloodflame target is burning before the kill',
+    (burned.enemyList ?? []).some((enemy) => enemy.burning),
+    JSON.stringify(burned.enemyList)
+  );
+  await bloodPage.evaluate(() => window.__RT_KILL_ALL__?.());
+  await sleep(250);
+  const hpAfterLeech = Number((await snapshot(bloodPage)).hp);
+  check(
+    'bloodflame heart heals on a burning kill',
+    hpAfterLeech > hpBeforeLeech,
+    `${hpBeforeLeech} -> ${hpAfterLeech}`
+  );
+  await bloodPage.close();
+
+  const prismPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await prismPage.goto(`${BASE}/?arena=1&build=chain,blast,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(prismPage);
+  await prismPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(prismPage);
+  await sleep(500);
+  await prismPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_RELIC__?.('prism');
+    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 410, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 405, 315);
+  });
+  await sleep(30);
+  await prismPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(800);
+  const prismState = await snapshot(prismPage);
+  check(
+    'rupture prism triggers from a multi-target blast',
+    Number(prismState.prismTime) > 0,
+    JSON.stringify({
+      prismTime: prismState.prismTime,
+      hits: prismState.lastExplosionHits,
+      distances: prismState.lastExplosionDistances
+    })
+  );
+  await prismPage.close();
+
+  const flamePage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await flamePage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(flamePage);
+  await flamePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(flamePage);
+  await sleep(500);
+  await flamePage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_ASCEND__?.('burn');
+    window.__RT_SPAWN_AT__?.('beetle', 400, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 420, 300);
+  });
+  await sleep(250);
+  await flamePage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(500);
+  const flameBurning = await snapshot(flamePage);
+  const blastBefore = Number(flameBurning.blastDamageEvents);
+  await flamePage.evaluate(() => window.__RT_KILL_ALL__?.());
+  await sleep(300);
+  const flameAfter = await snapshot(flamePage);
+  check(
+    'flame detonation adds blast damage on burning deaths',
+    (flameBurning.enemyList ?? []).some((enemy) => enemy.burning) &&
+      Number(flameAfter.blastDamageEvents) > blastBefore,
+    JSON.stringify({ before: blastBefore, after: flameAfter.blastDamageEvents })
+  );
+  await flamePage.close();
+
+  const frostPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await frostPage.goto(`${BASE}/?arena=1&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(frostPage);
+  await frostPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(frostPage);
+  await sleep(500);
+  await frostPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_ASCEND__?.('frost');
+    window.__RT_SPAWN_AT__?.('sunder', 460, 300);
+  });
+  await sleep(250);
+  for (let hit = 0; hit < 4; hit += 1) {
+    await frostPage.evaluate(() => window.__RT_VOLLEY__?.());
+    await sleep(250);
+  }
+  await sleep(250);
+  const frostState = await snapshot(frostPage);
+  const frozen = (frostState.enemyList ?? []).find((enemy) => enemy.kind === 'sunder');
+  check(
+    'absolute zero freezes a target after four frost hits',
+    Boolean(frozen) && Number(frozen.slow) >= 1,
+    JSON.stringify(frozen)
+  );
+  await frostPage.close();
 
   const compact = await newPage(browser, {
     width: 360,

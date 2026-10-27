@@ -280,11 +280,17 @@ export class M0Scene extends Phaser.Scene {
   private unlockedAscensions: AscensionId[] = [...ASCENSION_IDS];
   private chapterRewardOpen = false;
   private thunderStacks = 0;
+  private attackHits = new Set<EnemyUnit>();
+  private attackThunderAwarded = false;
   private prismTime = 0;
   private bloodflameCd = 0;
   private featherTime = 0;
   private frostAscendHits = 0;
   private chainAscendJumps = 0;
+  private lastExplosionHits = 0;
+  private lastExplosionRadius = 0;
+  private lastExplosionDistances: number[] = [];
+  private prismTriggers = 0;
 
   private enemies: EnemyUnit[] = [];
   private bolts: PlayerBolt[] = [];
@@ -443,6 +449,10 @@ export class M0Scene extends Phaser.Scene {
     this.featherTime = 0;
     this.frostAscendHits = 0;
     this.chainAscendJumps = 0;
+    this.lastExplosionHits = 0;
+    this.lastExplosionRadius = 0;
+    this.lastExplosionDistances = [];
+    this.prismTriggers = 0;
     setRelics([]);
     resetRandomStreams();
     this.chapterIndex = 0;
@@ -774,6 +784,21 @@ export class M0Scene extends Phaser.Scene {
 
   public setMutator(level: number): void {
     this.mutatorLevel = clampMutator(level);
+  }
+
+  public debugGrantRelic(id: RelicId): void {
+    if (this.relics.includes(id) || this.relics.length >= MAX_RELICS) return;
+    this.relics.push(id);
+    setRelics(this.relics.map((relicId) => RELICS[relicId].name));
+  }
+
+  public debugAscendRule(key: RuleKey): void {
+    const ref = key === 'pierce' || key === 'chain' || key === 'spread'
+      ? this.build.trajectory
+      : this.build.impact;
+    if (!ref || ref.key !== key || ref.level !== 3) return;
+    this.build = ascendRule(this.build, key);
+    setBuild(this.build, this.acquired);
   }
 
   private openChapterReward(): void {
@@ -1484,6 +1509,16 @@ export class M0Scene extends Phaser.Scene {
         this.build.trajectory?.ascended ? this.build.trajectory.key : null,
         this.build.impact?.ascended ? this.build.impact.key : null
       ].filter(Boolean),
+      thunderStacks: this.thunderStacks,
+      attackHits: this.attackHits.size,
+      attackThunderAwarded: this.attackThunderAwarded,
+      frostAscendHits: this.frostAscendHits,
+      prismTime: this.prismTime,
+      prismTriggers: this.prismTriggers,
+      lastExplosionHits: this.lastExplosionHits,
+      lastExplosionRadius: this.lastExplosionRadius,
+      lastExplosionDistances: this.lastExplosionDistances,
+      featherTime: this.featherTime,
       enemies: this.enemies.length,
       hazards: this.hazards.length,
       liveDamageNumbers: this.liveDamageNumbers,
@@ -1534,6 +1569,7 @@ export class M0Scene extends Phaser.Scene {
         hp: Math.round(enemy.hp),
         burning: enemy.burnTime > 0,
         slowed: enemy.frostTime > 0,
+        slow: enemy.frostSlow,
         elite: enemy.elite,
         state: enemy.state,
         charging: enemy.state === 'charge'
@@ -2097,6 +2133,8 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private fireAttack(target: EnemyUnit): void {
+    this.attackHits.clear();
+    this.attackThunderAwarded = false;
     const baseAngle = Math.atan2(
       target.root.y - (this.playerRoot.y - 14),
       target.root.x - this.playerRoot.x
@@ -2338,15 +2376,27 @@ export class M0Scene extends Phaser.Scene {
   private destroyBolt(bolt: PlayerBolt): void {
     if (bolt.dead) return;
     bolt.dead = true;
-    if (bolt.hitEnemies.size >= 2 && this.relics.includes('thunder-emblem')) {
-      this.thunderStacks = Math.min(3, this.thunderStacks + 1);
-      this.spawnStatusSpark(this.playerRoot.x, this.playerRoot.y - 18, COLORS.cyan);
-    }
+    this.checkThunderEmblem();
     this.tweens.killTweensOf(bolt.root);
     bolt.root.destroy(true);
   }
 
+  private checkThunderEmblem(): void {
+    if (
+      this.attackThunderAwarded ||
+      !this.relics.includes('thunder-emblem') ||
+      this.attackHits.size < 2
+    ) {
+      return;
+    }
+    this.attackThunderAwarded = true;
+    this.thunderStacks = Math.min(3, this.thunderStacks + 1);
+    this.spawnStatusSpark(this.playerRoot.x, this.playerRoot.y - 18, COLORS.cyan);
+  }
+
   private handleBoltHit(bolt: PlayerBolt, enemy: EnemyUnit): void {
+    this.attackHits.add(enemy);
+    this.checkThunderEmblem();
     const pierceBonus = bolt.mode === 'pierce' ? 1 + 0.2 * bolt.pierceHits : 1;
     bolt.pierceHits += 1;
     this.applyDamage(enemy, bolt.damage * pierceBonus, 'hit');
@@ -2418,8 +2468,10 @@ export class M0Scene extends Phaser.Scene {
       this.time.delayedCall(70 + index * 70, () => {
         if (this.runState !== 'playing' || target.dead || !target.root.active) return;
         this.drawLightning(sourceX, sourceY, target.root.x, target.root.y - 10);
+        this.attackHits.add(target);
         const damage = Math.round(BASE_DAMAGE * multiplier);
         this.applyDamage(target, damage, 'hit');
+        this.checkThunderEmblem();
         if (this.registerOverloadHit()) {
           this.showOverloadReady();
         }
@@ -2600,11 +2652,23 @@ export class M0Scene extends Phaser.Scene {
       const dist = Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y - 10);
       if (dist <= enemy.radius + profile.radius) {
         this.applyDamage(enemy, profile.damage, 'blast');
+        this.attackHits.add(enemy);
         hits += 1;
       }
     }
+    this.checkThunderEmblem();
+    this.lastExplosionHits = hits;
+    this.lastExplosionRadius = profile.radius;
+    this.lastExplosionDistances = this.enemies
+      .filter((enemy) => !enemy.dead && enemy !== source)
+      .map((enemy) =>
+        Math.round(
+          Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y - 10)
+        )
+      );
     if (hits >= 2 && this.relics.includes('prism')) {
       this.prismTime = 4;
+      this.prismTriggers += 1;
       const ring = this.add
         .circle(this.playerRoot.x, this.playerRoot.y - 10, 34, 0x000000, 0)
         .setStrokeStyle(2, 0xffd27a, 0.8)
