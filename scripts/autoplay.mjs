@@ -141,7 +141,8 @@ async function runOnce(browser, runIndex) {
     if (message.type() === 'error') errors.push(message.text());
   });
 
-  await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  const build = process.env.BUILD ? `&build=${process.env.BUILD}` : '';
+  await page.goto(`${BASE}/?arena=1${build}`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
   await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);

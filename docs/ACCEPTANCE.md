@@ -6,7 +6,7 @@
 ## A. 当前自动化结果
 
 ```text
-npm test                       133/133 通过（11 个测试文件）
+npm test                       135/135 通过（11 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
 npm run smoke                  216/216 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 起点世界）
@@ -53,7 +53,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M6 | 3 种规则升阶 | 自动（3 效果） | `ascensions.test.ts`；烈焰引爆、极寒禁锢、雷霆领域均有战斗内断言 |
 | M6 | 首批 4 件遗物、最多装备 2 件 | 自动（6 效果） | `ascensions.test.ts`；雷鸣徽章、血焰之心、破裂棱镜、疾行之羽、寒霜王冠、贪婪契约均有战斗内断言 |
 | M6 | 第一世界后至少一次可感知升级 | 自动 | 冒烟「chapter reward includes a relic or ascension」；升阶/遗物卡进入章节奖励 |
-| M7 | 法则碎片、按深度/BOSS 进度结算 | 自动 | `meta.test.ts` 碎片公式；冒烟「stage clear awards shards」 |
+| M7 | 法则碎片、按深度/BOSS 进度结算 | 自动 | `meta.test.ts` 碎片公式；冒烟「stage clear awards shards」；阶段完成只计一章，不按全通结算 |
 | M7 | 遗物/升阶解锁进入下一局奖励池 | 自动 | `buildChapterRewards` 解锁池单测；`setMetaUnlocks` 接入场景 |
 | M7 | localStorage 存档、损坏数据修复 | 自动 | `meta.test.ts` round-trip / corrupt repair；战绩扩展记录章节/遗物/升阶/异变/构筑 |
 | M7 | 规则图鉴（已见/已升阶） | 自动 | `meta.test.ts` `seenRules`/`ascendedRules`；冒烟图鉴 6 条规则行 |

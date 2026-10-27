@@ -210,12 +210,14 @@ function safeStorage(): Storage | null {
 
 export function shardsForRun(input: MetaRunInput): number {
   const startChapter = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
-  const reached = input.victory
-    ? input.chaptersTotal
-    : input.chapterIndex + (input.stageOnly ? 1 : 0);
+  const reached = input.stageOnly
+    ? input.chapterIndex + 1
+    : input.victory
+      ? input.chaptersTotal
+      : input.chapterIndex;
   const clearedChapters = Math.max(0, reached - startChapter);
   const depth = 15 * clearedChapters;
-  const victoryBonus = input.victory ? 20 : 0;
+  const victoryBonus = input.victory && !input.stageOnly ? 20 : 0;
   const killBonus = Math.floor(Math.max(0, input.kills) / 10);
   const base = depth + victoryBonus + killBonus;
   return Math.floor(base * getMutator(input.mutatorLevel ?? 0).shardBonus);
@@ -224,18 +226,21 @@ export function shardsForRun(input: MetaRunInput): number {
 export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaResult {
   const gained = shardsForRun(input);
   const startChapter = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
-  const reached = input.victory
-    ? input.chaptersTotal
-    : input.chapterIndex + (input.stageOnly ? 1 : 0);
+  const reached = input.stageOnly
+    ? input.chapterIndex + 1
+    : input.victory
+      ? input.chaptersTotal
+      : input.chapterIndex;
   const clearedThisRun = Math.max(0, reached - startChapter);
   const muLevel = clampMutator(input.mutatorLevel ?? 0);
+  const fullVictory = input.victory && !input.stageOnly;
   const next: MetaState = {
     ...state,
     shards: state.shards + gained,
     runs: state.runs + 1,
     chaptersCleared: Math.max(state.chaptersCleared, clearedThisRun),
-    victories: state.victories + (input.victory ? 1 : 0),
-    maxMutator: input.victory
+    victories: state.victories + (fullVictory ? 1 : 0),
+    maxMutator: fullVictory
       ? Math.max(state.maxMutator, Math.min(5, muLevel + 1))
       : state.maxMutator,
     maxStartChapter: Math.max(state.maxStartChapter, Math.min(2, reached)),
@@ -244,7 +249,7 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
       Math.max(state.selectedStartChapter, startChapter)
     ),
     dailyBest:
-      input.daily && input.victory && input.date ? input.date : state.dailyBest,
+      input.daily && fullVictory && input.date ? input.date : state.dailyBest,
     unlockedRelics: [...state.unlockedRelics],
     unlockedAscensions: [...state.unlockedAscensions],
     seenRules: [
@@ -277,10 +282,10 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
   if (clearedThisRun >= 2) award('two-chapters');
   if (input.ascensions.length > 0) award('ascended');
   if (input.relics.length >= 2) award('two-relics');
-  if (input.victory && input.seconds <= 20 * 60) award('speedrun');
-  if (input.victory && muLevel >= 3) award('mutator-iii');
-  if (input.victory && muLevel >= 5) award('mutator-v');
-  if (input.victory && input.daily) award('daily-clear');
+  if (input.victory && !input.stageOnly && input.seconds <= 20 * 60) award('speedrun');
+  if (input.victory && !input.stageOnly && muLevel >= 3) award('mutator-iii');
+  if (input.victory && !input.stageOnly && muLevel >= 5) award('mutator-v');
+  if (input.victory && !input.stageOnly && input.daily) award('daily-clear');
 
   return {
     state: next,

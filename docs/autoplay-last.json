@@ -3,21 +3,21 @@
     "run": 1,
     "result": "规则耗尽",
     "rooms": "2 / 13",
-    "time": "03:03",
-    "seconds": 186,
+    "time": "02:34",
+    "seconds": 157,
     "roomLog": [
       {
         "room": 1,
-        "seconds": 53,
+        "seconds": 41,
         "hpAtStart": 100,
-        "hpAtEnd": 58,
+        "hpAtEnd": 100,
         "kills": 13
       },
       {
         "room": 2,
-        "seconds": 73,
-        "hpAtStart": 58,
-        "hpAtEnd": 33,
+        "seconds": 58,
+        "hpAtStart": 100,
+        "hpAtEnd": 100,
         "kills": 33
       }
     ],

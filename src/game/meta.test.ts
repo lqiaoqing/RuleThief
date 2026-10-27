@@ -113,6 +113,24 @@ describe('meta progression', () => {
     expect(result.state.ascendedRules).toEqual(['burn']);
   });
 
+  it('treats a stage clear as one chapter, not a full victory', () => {
+    const stage = applyRunToMeta(defaultMeta(), {
+      ...fullRun,
+      victory: true,
+      stageOnly: true,
+      chapterIndex: 0,
+      chaptersTotal: 2,
+      kills: 40
+    });
+    expect(stage.state.victories).toBe(0);
+    expect(stage.state.chaptersCleared).toBe(1);
+    expect(stage.state.maxStartChapter).toBe(1);
+    expect(stage.state.maxMutator).toBe(0);
+    expect(stage.gained).toBe(15 + 4);
+    expect(stage.unlocked).toContain('chapter-one');
+    expect(stage.unlocked).not.toContain('two-chapters');
+  });
+
   it('unlocks later starting chapters by depth and discounts their shards', () => {
     const fromSecond = applyRunToMeta(defaultMeta(), {
       ...fullRun,
@@ -170,6 +188,29 @@ describe('meta progression', () => {
     expect(repaired.unlockedRelics).toContain('thunder-emblem');
     expect(repaired.unlockedAscensions).toContain('absolute-zero');
     expect(repaired.achievements).toEqual(['first-run']);
+  });
+
+  it('clamps a selected start chapter to the unlocked depth', () => {
+    const storage = new MemoryStorage() as unknown as Storage;
+    storage.setItem(
+      META_KEY,
+      JSON.stringify({
+        ...defaultMeta(),
+        maxStartChapter: 0,
+        selectedStartChapter: 2
+      })
+    );
+    expect(loadMeta(storage).selectedStartChapter).toBe(0);
+
+    storage.setItem(
+      META_KEY,
+      JSON.stringify({
+        ...defaultMeta(),
+        maxStartChapter: 2,
+        selectedStartChapter: 2
+      })
+    );
+    expect(loadMeta(storage).selectedStartChapter).toBe(2);
   });
 
   it('defines every achievement with a name and description', () => {

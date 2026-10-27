@@ -175,6 +175,9 @@ try {
     achievements: document.querySelectorAll('#meta-achievements .meta-achievement').length,
     mutators: document.querySelectorAll('#meta-mutators .meta-mutator').length,
     starts: document.querySelectorAll('#meta-starts .meta-mutator').length,
+    startLocked: [...document.querySelectorAll('#meta-starts .meta-mutator')].map(
+      (button) => button.disabled
+    ),
     codex: document.querySelectorAll('#meta-codex .meta-codex-row').length,
     daily: document.getElementById('meta-daily')?.textContent
   }));
@@ -186,6 +189,7 @@ try {
       metaPanel.achievements === 9 &&
       metaPanel.mutators === 6 &&
       metaPanel.starts === 3 &&
+      metaPanel.startLocked.join(',') === 'false,true,true' &&
       metaPanel.codex === 6 &&
       /每日挑战/.test(metaPanel.daily ?? ''),
     JSON.stringify(metaPanel)
@@ -292,6 +296,9 @@ try {
     })
   );
   await startPage.close();
+  await page.evaluate(() => localStorage.removeItem('rulethief.meta.v1'));
+  await page.reload({ waitUntil: 'networkidle0' });
+  await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
   check('hud hidden on load', await page.$eval('#hud', (el) => el.hidden));
   check(
     'overlays hidden on load',
@@ -1049,7 +1056,8 @@ try {
     'stage clear awards shards and persists meta progression',
     /法则碎片 \+\d+/.test(bossVictory.shards ?? '') &&
       Number(bossVictory.meta?.shards) > 0 &&
-      Number(bossVictory.meta?.runs) === 1,
+      Number(bossVictory.meta?.runs) === 1 &&
+      Number(bossVictory.meta?.maxStartChapter) === 1,
     JSON.stringify({ shards: bossVictory.shards, meta: bossVictory.meta })
   );
 
@@ -1574,7 +1582,7 @@ try {
   await workshop.close();
 
   const relicPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await relicPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await relicPage.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(relicPage);
   await relicPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1597,10 +1605,10 @@ try {
   );
   await relicPage.evaluate(() => {
     window.__RT_SPAWN_AT__?.('beetle', 400, 300);
-    window.__RT_SPAWN_AT__?.('beetle', 450, 200);
-    window.__RT_SPAWN_AT__?.('beetle', 500, 100);
+    window.__RT_SPAWN_AT__?.('beetle', 410, 300);
+    window.__RT_SPAWN_AT__?.('beetle', 420, 300);
   });
-  await sleep(250);
+  await sleep(30);
   await relicPage.evaluate(() => window.__RT_VOLLEY__?.());
   await sleep(600);
   const thunderState = await snapshot(relicPage);
@@ -1723,13 +1731,14 @@ try {
     window.__RT_SPAWN_AT__?.('sunder', 460, 300);
   });
   await sleep(250);
-  for (let hit = 0; hit < 4; hit += 1) {
+  let frozen = null;
+  for (let hit = 0; hit < 8; hit += 1) {
     await frostPage.evaluate(() => window.__RT_VOLLEY__?.());
     await sleep(250);
+    const sample = await snapshot(frostPage);
+    frozen = (sample.enemyList ?? []).find((enemy) => enemy.kind === 'sunder') ?? frozen;
+    if (frozen && Number(frozen.slow) >= 1) break;
   }
-  await sleep(250);
-  const frostState = await snapshot(frostPage);
-  const frozen = (frostState.enemyList ?? []).find((enemy) => enemy.kind === 'sunder');
   check(
     'absolute zero freezes a target after four frost hits',
     Boolean(frozen) && Number(frozen.slow) >= 1,
