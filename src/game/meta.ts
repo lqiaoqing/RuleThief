@@ -1,6 +1,7 @@
 import { ASCENSION_IDS, ASCENSIONS, type AscensionId } from './ascensions';
 import { RELIC_IDS, RELICS, type RelicId } from './relics';
 import { clampMutator, getMutator } from './mutators';
+import { ALL_RULE_KEYS, type RuleKey } from './rules';
 
 export const META_KEY = 'rulethief.meta.v1';
 
@@ -15,6 +16,8 @@ export interface MetaState {
   dailyBest: string | null;
   unlockedRelics: RelicId[];
   unlockedAscensions: AscensionId[];
+  seenRules: RuleKey[];
+  ascendedRules: RuleKey[];
   achievements: string[];
 }
 
@@ -27,6 +30,8 @@ export interface MetaRunInput {
   seconds: number;
   relics: string[];
   ascensions: string[];
+  rulesSeen?: string[];
+  rulesAscended?: string[];
   mutatorLevel?: number;
   daily?: boolean;
   date?: string;
@@ -116,6 +121,8 @@ export function defaultMeta(): MetaState {
     dailyBest: null,
     unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
     unlockedAscensions: ['thunder-domain'],
+    seenRules: [],
+    ascendedRules: [],
     achievements: []
   };
 }
@@ -135,6 +142,12 @@ function sanitize(value: unknown): MetaState {
   const achievements = Array.isArray(source.achievements)
     ? source.achievements.filter((id): id is string => typeof id === 'string')
     : [];
+  const seenRules = Array.isArray(source.seenRules)
+    ? source.seenRules.filter((id): id is RuleKey => ALL_RULE_KEYS.includes(id as RuleKey))
+    : [];
+  const ascendedRules = Array.isArray(source.ascendedRules)
+    ? source.ascendedRules.filter((id): id is RuleKey => ALL_RULE_KEYS.includes(id as RuleKey))
+    : [];
   return {
     version: 1,
     shards: Math.max(0, Math.floor(Number(source.shards) || 0)),
@@ -146,6 +159,8 @@ function sanitize(value: unknown): MetaState {
     dailyBest: typeof source.dailyBest === 'string' ? source.dailyBest : null,
     unlockedRelics: [...new Set([...base.unlockedRelics, ...relics])],
     unlockedAscensions: [...new Set([...base.unlockedAscensions, ...ascensions])],
+    seenRules: [...new Set(seenRules)],
+    ascendedRules: [...new Set(ascendedRules)],
     achievements: [...new Set(achievements)]
   };
 }
@@ -208,6 +223,22 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
       input.daily && input.victory && input.date ? input.date : state.dailyBest,
     unlockedRelics: [...state.unlockedRelics],
     unlockedAscensions: [...state.unlockedAscensions],
+    seenRules: [
+      ...new Set([
+        ...state.seenRules,
+        ...(input.rulesSeen ?? []).filter((id): id is RuleKey =>
+          ALL_RULE_KEYS.includes(id as RuleKey)
+        )
+      ])
+    ],
+    ascendedRules: [
+      ...new Set([
+        ...state.ascendedRules,
+        ...(input.rulesAscended ?? []).filter((id): id is RuleKey =>
+          ALL_RULE_KEYS.includes(id as RuleKey)
+        )
+      ])
+    ],
     achievements: [...state.achievements]
   };
 

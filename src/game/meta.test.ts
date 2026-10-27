@@ -102,6 +102,16 @@ describe('meta progression', () => {
     expect(daily.unlocked).toContain('daily-clear');
   });
 
+  it('records seen and ascended rules for the codex', () => {
+    const result = applyRunToMeta(defaultMeta(), {
+      ...fullRun,
+      rulesSeen: ['chain', 'burn', 'chain'],
+      rulesAscended: ['burn', 'nope']
+    });
+    expect(result.state.seenRules).toEqual(['chain', 'burn']);
+    expect(result.state.ascendedRules).toEqual(['burn']);
+  });
+
   it('unlocks paid content only when the shard cost is met', () => {
     const meta = defaultMeta();
     const frost = UNLOCKS.find((entry) => entry.id === 'frost-crown')!;

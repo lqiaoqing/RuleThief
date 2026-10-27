@@ -174,6 +174,7 @@ try {
     unlocks: document.querySelectorAll('#meta-unlocks .meta-unlock').length,
     achievements: document.querySelectorAll('#meta-achievements .meta-achievement').length,
     mutators: document.querySelectorAll('#meta-mutators .meta-mutator').length,
+    codex: document.querySelectorAll('#meta-codex .meta-codex-row').length,
     daily: document.getElementById('meta-daily')?.textContent
   }));
   check(
@@ -183,6 +184,7 @@ try {
       metaPanel.unlocks === 6 &&
       metaPanel.achievements === 9 &&
       metaPanel.mutators === 6 &&
+      metaPanel.codex === 6 &&
       /每日挑战/.test(metaPanel.daily ?? ''),
     JSON.stringify(metaPanel)
   );

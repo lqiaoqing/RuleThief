@@ -179,6 +179,8 @@ export interface RunEndPayload {
   mutation: string | null;
   relics: string[];
   ascensions: string[];
+  rulesSeen: RuleKey[];
+  rulesAscended: RuleKey[];
   maxHp: number;
   damage: { source: string; label: string; amount: number }[];
 }
@@ -4673,6 +4675,18 @@ export class M0Scene extends Phaser.Scene {
       ascensions: [this.build.trajectory, this.build.impact]
         .map((ref) => (ref?.ascended ? getAscensionForRule(ref.key)?.name ?? null : null))
         .filter((name): name is string => Boolean(name)),
+      rulesSeen: [
+        ...new Set(
+          [
+            ...this.acquired,
+            this.build.trajectory?.key,
+            this.build.impact?.key
+          ].filter((key): key is RuleKey => Boolean(key))
+        )
+      ],
+      rulesAscended: [this.build.trajectory, this.build.impact]
+        .map((ref) => (ref?.ascended ? ref.key : null))
+        .filter((key): key is RuleKey => Boolean(key)),
       maxHp: this.maxHp,
       damage: DAMAGE_SOURCES.map((source) => ({
         source,

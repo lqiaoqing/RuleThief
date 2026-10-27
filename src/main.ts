@@ -6,6 +6,7 @@ import type { RunEndPayload, ChapterClearPayload } from './game/M0Scene';
 import { audio } from './game/audio';
 import { formatTime } from './game/theme';
 import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
+import { ALL_RULE_KEYS, getRuleName } from './game/rules';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
 import { formatRecordLine, saveRun, summarize } from './game/telemetry';
@@ -181,6 +182,7 @@ const metaUnlocks = byId<HTMLElement>('meta-unlocks');
 const metaAchievements = byId<HTMLElement>('meta-achievements');
 const metaMutators = byId<HTMLElement>('meta-mutators');
 const metaDaily = byId<HTMLElement>('meta-daily');
+const metaCodex = byId<HTMLElement>('meta-codex');
 const resultMode = byId<HTMLElement>('result-mode');
 
 let meta = loadMeta();
@@ -298,6 +300,8 @@ function showResult(payload: RunEndPayload): void {
     seconds: payload.time,
     relics: payload.relics,
     ascensions: payload.ascensions,
+    rulesSeen: payload.rulesSeen,
+    rulesAscended: payload.rulesAscended,
     mutatorLevel: payload.mutatorLevel,
     daily: dailyMode,
     date: dailySeedDate()
@@ -417,6 +421,20 @@ function renderMeta(): void {
     metaMutators.append(button);
   }
   metaDaily.textContent = `每日挑战 · ${meta.dailyBest ? `最佳 ${meta.dailyBest}` : '未完成'}`;
+
+  metaCodex.textContent = '';
+  for (const key of ALL_RULE_KEYS) {
+    const seen = meta.seenRules.includes(key);
+    const ascended = meta.ascendedRules.includes(key);
+    const row = document.createElement('div');
+    row.className = `meta-codex-row${seen ? ' is-seen' : ''}${ascended ? ' is-ascended' : ''}`;
+    const name = document.createElement('b');
+    name.textContent = getRuleName(key);
+    const status = document.createElement('span');
+    status.textContent = ascended ? '已升阶' : seen ? '已见' : '未发现';
+    row.append(name, status);
+    metaCodex.append(row);
+  }
 }
 
 function applyMetaToScene(): void {

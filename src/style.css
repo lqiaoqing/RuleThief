@@ -2292,3 +2292,46 @@ kbd {
   font-size: 10px;
   letter-spacing: 0.04em;
 }
+
+.meta-codex {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+
+.meta-codex-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 9px;
+  border: 1px solid rgba(112, 136, 161, 0.2);
+  border-radius: 5px;
+  color: #60748c;
+  font-size: 10px;
+}
+
+.meta-codex-row b {
+  font-size: 11px;
+}
+
+.meta-codex-row.is-seen {
+  border-color: rgba(101, 220, 240, 0.28);
+  color: #9fb4c9;
+}
+
+.meta-codex-row.is-ascended {
+  border-color: rgba(255, 210, 122, 0.4);
+  color: #ffd27a;
+}
+
+@media (max-width: 640px) {
+  .meta-codex {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.meta-card {
+  max-height: 88dvh;
+  overflow-y: auto;
+}
