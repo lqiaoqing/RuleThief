@@ -38,8 +38,8 @@ import {
   type TrajectoryProfile
 } from './rules';
 import { ROOMS, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
-import { EVENTS, buildRunPlan, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
-import { random } from './rng';
+import { EVENTS, buildRunPlan, eventOptionsFor, hasUpgradeableRule, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
+import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
   MUTATIONS,
   createMutationState,
@@ -252,6 +252,7 @@ export class M0Scene extends Phaser.Scene {
   private impactProcs = 0;
   private blastDamageEvents = 0;
   private damageDealt = 0;
+  private victoryLocked = false;
   private damageTaken: Record<DamageSource, number> = {
     melee: 0,
     charge: 0,
@@ -363,6 +364,8 @@ export class M0Scene extends Phaser.Scene {
     this.time.removeAllEvents();
     this.runToken += 1;
     this.clearTransient();
+    for (const key of DAMAGE_SOURCES) this.damageTaken[key] = 0;
+    this.victoryLocked = false;
     this.runState = 'playing';
     this.playEnabled = true;
     this.hp = PLAYER_MAX_HP;
@@ -382,6 +385,7 @@ export class M0Scene extends Phaser.Scene {
     this.spawnedTotal = 0;
     this.build = createEmptyBuild();
     this.acquired.clear();
+    resetRandomStreams();
     this.plan = buildRunPlan(random);
     this.stepIndex = 0;
     this.encounter = null;
@@ -537,6 +541,7 @@ export class M0Scene extends Phaser.Scene {
       index: this.stepIndex,
       total: this.stepTotal,
       event,
+      options: eventOptionsFor(event, this.build),
       hp: this.hp,
       maxHp: this.maxHp,
       kills: this.kills,
@@ -546,7 +551,8 @@ export class M0Scene extends Phaser.Scene {
 
   public chooseEventOption(optionIndex: 0 | 1): void {
     if (this.roomState !== 'event' || this.encounter?.kind !== 'event') return;
-    const option = this.encounter.event.options[optionIndex];
+    const options = eventOptionsFor(this.encounter.event, this.build);
+    const option = options[optionIndex];
     if (!option) return;
     audio.play('rule');
     this.applyEventEffect(option.effect);
@@ -562,16 +568,22 @@ export class M0Scene extends Phaser.Scene {
         setHp(this.hp, this.maxHp);
         break;
       case 'loseHpUpgrade':
+        if (!hasUpgradeableRule(this.build)) {
+          this.hp = Math.min(this.maxHp, this.hp + 20);
+          setHp(this.hp, this.maxHp);
+          break;
+        }
         this.hp = Math.max(1, this.hp - effect.hp);
         setHp(this.hp, this.maxHp);
         if (!this.upgradeRandomRule()) {
-          this.hp = Math.min(this.maxHp, this.hp + 20);
+          this.hp = Math.min(this.maxHp, this.hp + effect.hp);
           setHp(this.hp, this.maxHp);
         }
         break;
       case 'upgradeAndSpeedRisk':
-        this.upgradeRandomRule();
-        this.pendingSpeedMult = 1 + effect.percent / 100;
+        if (this.upgradeRandomRule()) {
+          this.pendingSpeedMult = 1 + effect.percent / 100;
+        }
         break;
       case 'swapRuleHeal':
         this.swapRandomRule();
@@ -591,7 +603,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.build.trajectory && this.build.trajectory.level < 3) slots.push('trajectory');
     if (this.build.impact && this.build.impact.level < 3) slots.push('impact');
     if (!slots.length) return false;
-    const slot = slots[Math.floor(Math.random() * slots.length)];
+    const slot = slots[combatInt(0, slots.length - 1)];
     const ref = slot === 'trajectory' ? this.build.trajectory : this.build.impact;
     if (!ref) return false;
     const next: PlayerBuild = {
@@ -617,13 +629,13 @@ export class M0Scene extends Phaser.Scene {
     if (this.build.trajectory) slots.push('trajectory');
     if (this.build.impact) slots.push('impact');
     if (!slots.length) return false;
-    const slot = slots[Math.floor(Math.random() * slots.length)];
+    const slot = slots[combatInt(0, slots.length - 1)];
     const current = slot === 'trajectory' ? this.build.trajectory : this.build.impact;
     if (!current) return false;
     const pool: RuleKey[] =
       slot === 'trajectory' ? ['pierce', 'chain', 'spread'] : ['burn', 'frost', 'blast'];
     const options = pool.filter((key) => key !== current.key);
-    const key = options[Math.floor(Math.random() * options.length)];
+    const key = options[combatInt(0, options.length - 1)];
     const next: PlayerBuild = {
       trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
       impact: this.build.impact ? { ...this.build.impact } : null
@@ -699,7 +711,7 @@ export class M0Scene extends Phaser.Scene {
       if (room.elite || room.boss) {
         this.pendingBonusCards = 0;
       } else {
-        const kind: EnemyKind = Math.random() < 0.5 ? 'sunder' : 'thunder';
+        const kind: EnemyKind = combatRandom() < 0.5 ? 'sunder' : 'thunder';
         this.spawnEnemy(kind, ARENA - 150, 200, false);
         this.spawnLeaderBurst(ARENA - 150, 200);
         showRuleToast('blast', '诅咒宝箱', `额外出现 ${ENEMY_SPECS[kind].name} · 本房奖励 +1 张`);
@@ -929,6 +941,14 @@ export class M0Scene extends Phaser.Scene {
   public debugSpawnHazard(x: number, y: number): void {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
     this.spawnFirePatch(x, y, 44, 2.6);
+  }
+
+  public debugSpawnEnemyBolt(): void {
+    if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
+    this.spawnEnemyBolt(this.playerRoot.x, this.playerRoot.y - 60, Math.PI / 2, {
+      speed: 320,
+      damage: 10
+    });
   }
 
   public debugCastSeal(): void {
@@ -1266,7 +1286,6 @@ export class M0Scene extends Phaser.Scene {
     this.impactProcs = 0;
     this.blastDamageEvents = 0;
     this.damageDealt = 0;
-    for (const key of DAMAGE_SOURCES) this.damageTaken[key] = 0;
     this.sealSlot = null;
     this.sealTime = 0;
     this.sealZone = null;
@@ -2544,7 +2563,7 @@ export class M0Scene extends Phaser.Scene {
       dead: false,
       state: startsCasting ? 'idle' : 'approach',
       stateTimer: 0,
-      attackCd: startsCasting ? 1.2 + Math.random() * 0.9 : 0.8,
+      attackCd: startsCasting ? 1.2 + combatRandom() * 0.9 : 0.8,
       contactCd: 0,
       chargeDir: new Phaser.Math.Vector2(1, 0),
       hasHitThisCharge: false,
@@ -2568,19 +2587,19 @@ export class M0Scene extends Phaser.Scene {
     let x = margin;
     let y = margin;
     for (let attempt = 0; attempt < 14; attempt += 1) {
-      const side = Phaser.Math.Between(0, 3);
+      const side = combatInt(0, 3);
       if (side === 0) {
-        x = Phaser.Math.Between(margin, ARENA - margin);
+        x = combatInt(margin, ARENA - margin);
         y = margin;
       } else if (side === 1) {
         x = ARENA - margin;
-        y = Phaser.Math.Between(margin, ARENA - margin);
+        y = combatInt(margin, ARENA - margin);
       } else if (side === 2) {
-        x = Phaser.Math.Between(margin, ARENA - margin);
+        x = combatInt(margin, ARENA - margin);
         y = ARENA - margin;
       } else {
         x = margin;
-        y = Phaser.Math.Between(margin, ARENA - margin);
+        y = combatInt(margin, ARENA - margin);
       }
       const distToPlayer = Phaser.Math.Distance.Between(x, y, this.playerRoot.x, this.playerRoot.y);
       if (distToPlayer > 220) return { x, y };
@@ -2758,7 +2777,7 @@ export class M0Scene extends Phaser.Scene {
         enemy.castRing.setVisible(false);
         enemy.sprite.clearTint();
         this.fireEnemyBolt(enemy);
-        enemy.attackCd = 2.1 + Math.random() * 0.7;
+        enemy.attackCd = 2.1 + combatRandom() * 0.7;
       }
     } else {
       if (dist < 205) {
@@ -2887,7 +2906,7 @@ export class M0Scene extends Phaser.Scene {
             this.fireEnemyBolt(enemy, { angle: base + offset, speed: 230, damage: 8, tint: COLORS.cyan });
           }
         });
-        enemy.attackCd = 2.7 + Math.random() * 0.5;
+        enemy.attackCd = 2.7 + combatRandom() * 0.5;
       }
     } else if (enemy.attackCd <= 0) {
       enemy.state = 'cast';
@@ -2969,7 +2988,7 @@ export class M0Scene extends Phaser.Scene {
           slowDuration: 1.8,
           scale: 1.2
         });
-        enemy.attackCd = 2.5 + Math.random() * 0.6;
+        enemy.attackCd = 2.5 + combatRandom() * 0.6;
       }
     } else if (enemy.attackCd <= 0 && this.distanceToPlayer(enemy) < 520) {
       enemy.state = 'cast';
@@ -3023,7 +3042,7 @@ export class M0Scene extends Phaser.Scene {
             scale: 0.75
           });
         }
-        enemy.attackCd = 2.4 + Math.random() * 0.5;
+        enemy.attackCd = 2.4 + combatRandom() * 0.5;
       }
     } else if (enemy.attackCd <= 0 && distance < 470) {
       enemy.state = 'cast';
@@ -3096,6 +3115,20 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private onBossDefeated(boss: EnemyUnit): void {
+    this.victoryLocked = true;
+    this.invuln = Math.max(this.invuln, 3);
+    this.slowTime = 0;
+    this.slowFactor = 0;
+    for (const bolt of this.enemyBolts) {
+      this.tweens.killTweensOf(bolt.root);
+      bolt.root.destroy(true);
+    }
+    this.enemyBolts = [];
+    for (const hazard of this.hazards) {
+      this.tweens.killTweensOf(hazard.root);
+      hazard.root.destroy(true);
+    }
+    this.hazards = [];
     this.bossRef = null;
     this.sealSlot = null;
     this.sealTime = 0;
@@ -3121,7 +3154,7 @@ export class M0Scene extends Phaser.Scene {
     this.cameras.main.flash(420, 255, 235, 190);
     audio.play('victory');
     this.time.delayedCall(900, () => {
-      if (this.runState === 'playing') this.endRun(true);
+      if (this.runState === 'playing' && this.victoryLocked) this.endRun(true);
     });
   }
 
@@ -3307,7 +3340,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.build.trajectory) slots.push('trajectory');
     if (this.build.impact) slots.push('impact');
     if (!slots.length) return;
-    const slot = slots[Phaser.Math.Between(0, slots.length - 1)];
+    const slot = slots[combatInt(0, slots.length - 1)];
     this.sealSlot = slot;
     this.sealTime = 4;
     setSealedRule(slot, true);
@@ -3426,6 +3459,22 @@ export class M0Scene extends Phaser.Scene {
     const angle =
       options.angle ??
       Math.atan2(this.playerRoot.y - enemy.root.y, this.playerRoot.x - enemy.root.x);
+    this.spawnEnemyBolt(enemy.root.x, enemy.root.y - 12, angle, options);
+  }
+
+  private spawnEnemyBolt(
+    x: number,
+    y: number,
+    angle: number,
+    options: {
+      speed?: number;
+      damage?: number;
+      tint?: number;
+      slow?: number;
+      slowDuration?: number;
+      scale?: number;
+    } = {}
+  ): void {
     const tint = options.tint ?? COLORS.cyan;
     const scale = options.scale ?? 1;
     const glow = this.add
@@ -3437,7 +3486,7 @@ export class M0Scene extends Phaser.Scene {
     const core = this.add
       .circle(0, 0, 6 * scale, 0xd7fbff, 1)
       .setBlendMode(Phaser.BlendModes.ADD);
-    const root = this.add.container(enemy.root.x, enemy.root.y - 12, [glow, core]);
+    const root = this.add.container(x, y, [glow, core]);
     this.addFx(root);
     this.enemyBolts.push({
       root,
@@ -3563,7 +3612,7 @@ export class M0Scene extends Phaser.Scene {
     sourceY: number,
     source: DamageSource = 'other'
   ): void {
-    if (this.runState !== 'playing' || this.invuln > 0) return;
+    if (this.runState !== 'playing' || this.victoryLocked || this.invuln > 0) return;
     this.damageTaken[source] += amount;
     this.hp = Math.max(0, this.hp - amount);
     this.invuln = 1.0;
@@ -3600,7 +3649,7 @@ export class M0Scene extends Phaser.Scene {
     if (this.roomSpawned >= room.quota) return;
     this.spawnCd -= dt;
     if (this.spawnCd > 0 || this.enemies.length + this.pendingSpawns >= room.maxAlive) return;
-    const kind = pickSpawnKind(room, random);
+    const kind = pickSpawnKind(room, combatRandom);
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y);
     this.roomSpawned += 1;

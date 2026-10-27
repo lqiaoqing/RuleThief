@@ -1,5 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { mulberry32, random, resetRandomSource, seedFromString, setRandomSource } from './rng';
+import { describe, expect, it, afterEach } from 'vitest';
+import {
+  combatBetween,
+  combatInt,
+  combatRandom,
+  mulberry32,
+  random,
+  resetRandomStreams,
+  seedFromString,
+  setRandomSeed
+} from './rng';
+
+afterEach(() => {
+  setRandomSeed(null);
+});
 
 describe('random source', () => {
   it('is deterministic for the same seed', () => {
@@ -31,11 +44,53 @@ describe('random source', () => {
     expect(seedFromString('alpha')).toBeGreaterThanOrEqual(0);
   });
 
-  it('routes the global source', () => {
-    resetRandomSource();
-    expect(random()).toBeGreaterThanOrEqual(0);
-    setRandomSource(() => 0.25);
-    expect(random()).toBe(0.25);
-    resetRandomSource();
+  it('replays both streams after a reset', () => {
+    setRandomSeed('alpha');
+    const runA = Array.from({ length: 6 }, () => random());
+    const combatA = Array.from({ length: 6 }, () => combatRandom());
+    resetRandomStreams();
+    const runB = Array.from({ length: 6 }, () => random());
+    const combatB = Array.from({ length: 6 }, () => combatRandom());
+    expect(runB).toEqual(runA);
+    expect(combatB).toEqual(combatA);
+  });
+
+  it('keeps combat draws from shifting the route stream', () => {
+    setRandomSeed('alpha');
+    const clean = [random(), random()];
+    resetRandomStreams();
+    combatRandom();
+    combatRandom();
+    const afterCombat = [random(), random()];
+    expect(afterCombat).toEqual(clean);
+  });
+
+  it('separates the run and combat streams', () => {
+    setRandomSeed('alpha');
+    const first = [random(), combatRandom()];
+    resetRandomStreams();
+    const second = [random(), combatRandom()];
+    expect(first).toEqual(second);
+    expect(first[0]).not.toBe(first[1]);
+  });
+
+  it('keeps combat helpers in range', () => {
+    setRandomSeed('range');
+    for (let index = 0; index < 100; index += 1) {
+      const int = combatInt(3, 7);
+      expect(Number.isInteger(int)).toBe(true);
+      expect(int).toBeGreaterThanOrEqual(3);
+      expect(int).toBeLessThanOrEqual(7);
+      const value = combatBetween(-2, 2);
+      expect(value).toBeGreaterThanOrEqual(-2);
+      expect(value).toBeLessThan(2);
+    }
+  });
+
+  it('falls back to an unseeded source', () => {
+    setRandomSeed(null);
+    const value = random();
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(value).toBeLessThan(1);
   });
 });

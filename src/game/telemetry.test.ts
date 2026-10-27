@@ -63,6 +63,27 @@ describe('run telemetry', () => {
     expect(summary.bestCombo).toBe('雷暴连锁');
   });
 
+  it('picks the most frequent combo, not the highest level', () => {
+    const runs = [
+      ...Array.from({ length: 8 }, () => record({ combo: '霜雷网络', levelSum: 4 })),
+      record({ combo: '爆裂火花', levelSum: 6 })
+    ];
+    expect(summarize(runs).bestCombo).toBe('霜雷网络');
+  });
+
+  it('breaks combo ties by level and then by recency', () => {
+    const byLevel = [
+      record({ combo: '霜雷网络', levelSum: 4 }),
+      record({ combo: '爆裂火花', levelSum: 6 })
+    ];
+    expect(summarize(byLevel).bestCombo).toBe('爆裂火花');
+    const byRecency = [
+      record({ at: 1, combo: '霜雷网络', levelSum: 6 }),
+      record({ at: 2, combo: '爆裂火花', levelSum: 6 })
+    ];
+    expect(summarize(byRecency).bestCombo).toBe('爆裂火花');
+  });
+
   it('ignores corrupted payloads', () => {
     const storage = store();
     storage.setItem('rulethief.runs.v1', '{not json');

@@ -1,10 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { EVENTS, EVENT_IDS, buildRunPlan, planNodeCount, planStepCount, stepEncounters } from './run';
+import {
+  EVENTS,
+  EVENT_IDS,
+  buildRunPlan,
+  eventOptionsFor,
+  hasUpgradeableRule,
+  planNodeCount,
+  planStepCount,
+  stepEncounters
+} from './run';
 import { ROOMS } from './rooms';
 import { buildRoomRewards } from './rooms';
-import { createEmptyBuild } from './rules';
+import { createEmptyBuild, type PlayerBuild } from './rules';
 
 const random = () => 0.37;
+
+const maxedBuild: PlayerBuild = {
+  trajectory: { key: 'spread', level: 3 },
+  impact: { key: 'burn', level: 3 }
+};
+const midBuild: PlayerBuild = {
+  trajectory: { key: 'pierce', level: 2 },
+  impact: { key: 'frost', level: 1 }
+};
 
 describe('event definitions', () => {
   it('ships four events with two options each', () => {
@@ -33,6 +51,37 @@ describe('event definitions', () => {
     });
     expect(EVENTS['forgotten-idol'].options[0].effect).toEqual({ kind: 'swapRuleHeal', heal: 15 });
     expect(EVENTS['cursed-chest'].options[0].effect).toEqual({ kind: 'curseElite' });
+  });
+
+  it('detects whether any rule can still be upgraded', () => {
+    expect(hasUpgradeableRule(createEmptyBuild())).toBe(false);
+    expect(hasUpgradeableRule(maxedBuild)).toBe(false);
+    expect(hasUpgradeableRule(midBuild)).toBe(true);
+  });
+
+  it('turns the blood altar into a heal when nothing can be upgraded', () => {
+    const options = eventOptionsFor(EVENTS['blood-altar'], maxedBuild);
+    expect(options[0].title).toContain('馈赠');
+    expect(options[0].tone).toBe('safe');
+    expect(options[0].effect).toEqual({ kind: 'heal', amount: 20 });
+    expect(options[1]).toEqual(EVENTS['blood-altar'].options[1]);
+    expect(EVENTS['blood-altar'].options[0].effect).toEqual({ kind: 'loseHpUpgrade', hp: 20 });
+  });
+
+  it('refuses the unstable experiment when nothing can be upgraded', () => {
+    const options = eventOptionsFor(EVENTS['unstable-lab'], maxedBuild);
+    expect(options[0].title).toContain('终止');
+    expect(options[0].tone).toBe('safe');
+    expect(options[0].effect).toEqual({ kind: 'none' });
+  });
+
+  it('keeps the original risky options while an upgrade exists', () => {
+    expect(eventOptionsFor(EVENTS['blood-altar'], midBuild)).toEqual(
+      EVENTS['blood-altar'].options
+    );
+    expect(eventOptionsFor(EVENTS['unstable-lab'], midBuild)).toEqual(
+      EVENTS['unstable-lab'].options
+    );
   });
 });
 

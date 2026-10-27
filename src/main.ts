@@ -9,7 +9,7 @@ import type { ImpactKey, RuleKey, TrajectoryKey } from './game/rules';
 import type { RoomCleared, RoomPreview, EnemyKind, SupportId } from './game/rooms';
 import type { EventPayload, RouteChoicePayload } from './game/run';
 import { formatRecordLine, saveRun, summarize } from './game/telemetry';
-import { mulberry32, seedFromString, setRandomSource } from './game/rng';
+import { setRandomSeed } from './game/rng';
 import {
   isEventVisible,
   isRewardVisible,
@@ -71,6 +71,7 @@ declare global {
     __RT_OPEN_EVENT__?: (id: string) => void;
     __RT_CAST_SEAL__?: () => void;
     __RT_SPAWN_HAZARD__?: (x: number, y: number) => void;
+    __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
     __RT_REWARD__?: () => boolean;
     __RT_ROUTE__?: () => boolean;
@@ -157,9 +158,7 @@ const autoArena = params.get('arena') === '1';
 const bossPractice = params.get('boss') === '1';
 const buildParam = params.get('build');
 const seedParam = params.get('seed');
-if (seedParam) {
-  setRandomSource(mulberry32(seedFromString(seedParam)));
-}
+setRandomSeed(seedParam);
 const INTRO_KEY = 'rulethief.intro.v1';
 
 function maybeShowIntro(): void {
@@ -442,6 +441,7 @@ function handleReady(): void {
   window.__RT_OPEN_EVENT__ = (id) => scene?.debugOpenEvent(id as never);
   window.__RT_CAST_SEAL__ = () => scene?.debugCastSeal();
   window.__RT_SPAWN_HAZARD__ = (x, y) => scene?.debugSpawnHazard(x, y);
+  window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();
   window.__RT_REWARD__ = () => isRewardVisible();
   window.__RT_ROUTE__ = () => isRouteVisible();

@@ -345,7 +345,7 @@ export function renderEvent(
   eventFoot.textContent = '二选一，选择后立刻结算。';
   eventOptions.textContent = '';
 
-  payload.event.options.forEach((option, index) => {
+  payload.options.forEach((option, index) => {
     const card = el('button', `event-option is-${option.tone}`);
     card.type = 'button';
     card.dataset.index = String(index);

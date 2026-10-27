@@ -143,6 +143,46 @@ export const EVENT_IDS: EventId[] = [
   'cursed-chest'
 ];
 
+export function hasUpgradeableRule(build: PlayerBuild): boolean {
+  return Boolean(
+    (build.trajectory && build.trajectory.level < 3) ||
+      (build.impact && build.impact.level < 3)
+  );
+}
+
+export function eventOptionsFor(
+  event: EventDef,
+  build: PlayerBuild
+): [EventOption, EventOption] {
+  if (event.id === 'blood-altar' && !hasUpgradeableRule(build)) {
+    return [
+      {
+        ...event.options[0],
+        title: '接受祭坛的馈赠',
+        description: '没有可升级的规则，祭坛转而回复 20 生命。',
+        detail: '本次不会扣除生命。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 20 }
+      },
+      event.options[1]
+    ];
+  }
+  if (event.id === 'unstable-lab' && !hasUpgradeableRule(build)) {
+    return [
+      {
+        ...event.options[0],
+        title: '终止实验',
+        description: '没有可升级的规则，实验无法进行。',
+        detail: '不产生任何变化，也不会留下移速惩罚。',
+        tone: 'safe',
+        effect: { kind: 'none' }
+      },
+      event.options[1]
+    ];
+  }
+  return event.options;
+}
+
 export type Encounter =
   | { kind: 'room'; room: RoomDef }
   | { kind: 'event'; event: EventDef };
@@ -205,6 +245,7 @@ export interface EventPayload {
   index: number;
   total: number;
   event: EventDef;
+  options: [EventOption, EventOption];
   hp: number;
   maxHp: number;
   kills: number;

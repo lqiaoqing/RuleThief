@@ -1,17 +1,41 @@
 export type RandomSource = () => number;
 
-let source: RandomSource = Math.random;
+let storedSeed: string | null = null;
+let runSource: RandomSource = Math.random;
+let combatSource: RandomSource = Math.random;
 
-export function setRandomSource(next: RandomSource): void {
-  source = next;
+export function setRandomSeed(seed: string | null): void {
+  storedSeed = seed && seed.length ? seed : null;
+  resetRandomStreams();
 }
 
-export function resetRandomSource(): void {
-  source = Math.random;
+export function resetRandomStreams(): void {
+  if (!storedSeed) {
+    runSource = Math.random;
+    combatSource = Math.random;
+    return;
+  }
+  const base = seedFromString(storedSeed);
+  runSource = mulberry32(base);
+  combatSource = mulberry32((base ^ 0x9e3779b9) >>> 0);
 }
 
+/** Route, reward and event randomness. */
 export function random(): number {
-  return source();
+  return runSource();
+}
+
+/** Combat timing, spawn placement and in-fight choices. */
+export function combatRandom(): number {
+  return combatSource();
+}
+
+export function combatBetween(min: number, max: number): number {
+  return min + combatRandom() * (max - min);
+}
+
+export function combatInt(min: number, max: number): number {
+  return min + Math.floor(combatRandom() * (max - min + 1));
 }
 
 export function mulberry32(seed: number): RandomSource {

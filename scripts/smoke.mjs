@@ -874,6 +874,32 @@ try {
   );
   check('restart reopens room 1 preview', overlay.roomVisible, String(overlay.roomVisible));
   check('restart resets the HUD and codex', roomHud.roomNum === '01' && roomHud.objective === '0 / 13' && roomHud.codexRows === 1, JSON.stringify(roomHud));
+  check(
+    'restart with the same seed recreates the plan',
+    Array.isArray(leftover.plan) &&
+      leftover.plan.length > 0 &&
+      JSON.stringify(leftover.plan) === JSON.stringify(state.plan),
+    JSON.stringify({ before: leftover.plan?.length, after: state.plan?.length })
+  );
+  check(
+    'restart resets run damage totals',
+    Object.values(state.damageTaken ?? {}).every((value) => Number(value) === 0),
+    JSON.stringify(state.damageTaken)
+  );
+
+  await enterRoom(page);
+  await page.evaluate(() => window.__RT_DAMAGE__?.(10));
+  await sleep(120);
+  const damagedRoom = await snapshot(page);
+  await page.evaluate(() => window.__RT_ENTER_ROOM__?.());
+  await sleep(220);
+  const reenteredRoom = await snapshot(page);
+  check(
+    'damage totals survive a room transition',
+    Number(damagedRoom.damageTaken?.other) === 10 &&
+      Number(reenteredRoom.damageTaken?.other) === 10,
+    JSON.stringify({ before: damagedRoom.damageTaken, after: reenteredRoom.damageTaken })
+  );
 
   await enterRoom(page);
   await page.evaluate(() => window.__RT_DAMAGE__?.(500));
@@ -1051,6 +1077,46 @@ try {
       practiceState.build?.trajectory?.key === 'chain',
     JSON.stringify({ phase: practiceState.bossPhase, hp: practiceState.bossHp, build: practiceState.build })
   );
+
+  await bossPractice.evaluate(() => {
+    const snap = window.__RT_SNAPSHOT__?.() ?? {};
+    window.__RT_HEAL__?.(200);
+    window.__RT_SPAWN_HAZARD__?.(Number(snap.playerX), Number(snap.playerY));
+    window.__RT_SPAWN_ENEMY_BOLT__?.();
+    window.__RT_RACE_SETUP__ = window.__RT_SNAPSHOT__?.();
+    window.__RT_DAMAGE_BOSS__?.(2000);
+  });
+  const raceSetup = await bossPractice.evaluate(() => window.__RT_RACE_SETUP__);
+  check(
+    'boss death scenario starts with residual threats',
+    Number(raceSetup?.enemyBolts) >= 1 &&
+      Number(raceSetup?.hazards) >= 1 &&
+      Number(raceSetup?.hp) === 100,
+    JSON.stringify({ bolts: raceSetup?.enemyBolts, hazards: raceSetup?.hazards, hp: raceSetup?.hp })
+  );
+  await sleep(150);
+  const raceLocked = await snapshot(bossPractice);
+  check(
+    'boss death clears residual bolts and fire',
+    Number(raceLocked.enemyBolts) === 0 && Number(raceLocked.hazards) === 0,
+    JSON.stringify({ bolts: raceLocked.enemyBolts, hazards: raceLocked.hazards })
+  );
+  check('boss death locks out further damage', Number(raceLocked.hp) === 100, String(raceLocked.hp));
+  await bossPractice.waitForFunction(
+    () => !document.getElementById('result-screen')?.hidden,
+    { timeout: 9000 }
+  );
+  const raceResult = await bossPractice.evaluate(() => ({
+    title: document.getElementById('result-title')?.textContent,
+    rooms: document.getElementById('result-rooms')?.textContent
+  }));
+  check(
+    'residual threats cannot turn boss victory into defeat',
+    raceResult.title === '审判完成' && raceResult.rooms === '13 / 13',
+    JSON.stringify(raceResult)
+  );
+  const raceAfter = await snapshot(bossPractice);
+  check('player survives the boss death window', Number(raceAfter.hp) === 100, String(raceAfter.hp));
   await bossPractice.close();
 
   const bossPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
@@ -1169,6 +1235,39 @@ try {
     JSON.stringify(maxedReward)
   );
   await maxed.close();
+
+  const maxedEvent = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await maxedEvent.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(maxedEvent);
+  await maxedEvent.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
+  await sleep(300);
+  await maxedEvent.tap('#room-enter-btn');
+  await sleep(320);
+  await maxedEvent.evaluate(() => window.__RT_OPEN_EVENT__?.('blood-altar'));
+  await maxedEvent.waitForFunction(() => !document.getElementById('event-screen')?.hidden, { timeout: 6000 });
+  const altarOptions = await maxedEvent.$$eval('#event-options .event-option', (cards) =>
+    cards.map((card) => card.textContent ?? '')
+  );
+  check(
+    'maxed blood altar rewrites its offer to a heal',
+    /接受祭坛的馈赠/.test(altarOptions[0] ?? '') &&
+      /回复 20 生命/.test(altarOptions[0] ?? ''),
+    JSON.stringify(altarOptions)
+  );
+  const beforeAltar = await snapshot(maxedEvent);
+  await maxedEvent.evaluate(() =>
+    document.querySelectorAll('#event-options .event-option')[0]?.click()
+  );
+  await sleep(350);
+  const afterAltar = await snapshot(maxedEvent);
+  check(
+    'maxed blood altar heals without charging or upgrading',
+    Number(afterAltar.hp) >= Number(beforeAltar.hp) &&
+      afterAltar.build?.trajectory?.level === 3 &&
+      afterAltar.build?.impact?.level === 3,
+    JSON.stringify({ hp: [beforeAltar.hp, afterAltar.hp], build: afterAltar.build })
+  );
+  await maxedEvent.close();
 
   const mobile = await newPage(browser, {
     width: 390,

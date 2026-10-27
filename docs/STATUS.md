@@ -29,13 +29,15 @@
 
 节奏：13 步。真人第 1 局 8:30 通关（模型 12.8 → 实测系数 0.66）；据此加入 0.7 校准并把配额 +10%，预期约 9.9 分钟。
 
+**2026-10-27 源码审查修复（5 项）**：承伤改为整局累计（原每房清零）；BOSS 死亡立即锁定胜利并清残余弹幕/火焰；随机源拆为路线/战斗双流且每局重播种；「最常构筑」改按出现次数；无可升级规则时血色祭坛改为回复、不稳定实验不再白扣风险。对应回归：单测 98、冒烟 182。
+
 ## 3. 验证入口
 
 ```bash
-npm test                                    # 88/88
+npm test                                    # 98/98
 npm run build
 npm run preview -- --port 4177
-BASE_URL=http://127.0.0.1:4177 npm run smoke     # 172/172
+BASE_URL=http://127.0.0.1:4177 npm run smoke     # 182/182
 BASE_URL=http://127.0.0.1:4177 npm run verify    # 31/31
 BASE_URL=http://127.0.0.1:4177 npm run lowend    # CPU 节流 57/55.7/43.7 fps
 BASE_URL=http://127.0.0.1:4177 node scripts/stress.mjs      # 40 敌 57fps

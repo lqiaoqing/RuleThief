@@ -28,6 +28,11 @@
 | 清场三选一 / 精英四选一 | 自动 | 冒烟「room N opens rewards」「elite room N offers four rewards」 |
 | 规则奖励来自本房敌人 | 自动 | `rooms.test.ts` + M2 报告 |
 | 切房清弹幕、保留构筑 | 自动 | 冒烟「switching rooms clears bolts, enemies, hazards and slow」 |
+| 承伤构成为整局累计 | 自动 | 冒烟「damage totals survive a room transition」；重开清零「restart resets run damage totals」 |
+| BOSS 死亡后锁定胜利 | 自动 | 冒烟：残余弹幕与火焰清空、玩家满血、「residual threats cannot turn boss victory into defeat」 |
+| 同种子整局可复现（含同页重开） | 自动 | 冒烟「restart with the same seed recreates the plan」；`rng.test.ts` 双流隔离 |
+| 「最常构筑」按出现次数统计 | 自动 | `telemetry.test.ts` 次数优先、等级与最近局并列规则 |
+| 无可升级规则时事件文案与结算一致 | 自动 | `run.test.ts` 4 项；冒烟「maxed blood altar rewrites its offer to a heal」 |
 | 死亡 / 胜利 / 重开 | 自动 | 冒烟 defeat 0/13、victory 13/13、restart 重置 |
 | 暂停 / 失焦 / 切后台 | 自动 | 冒烟「window blur pauses」「backgrounding the tab pauses」 |
 | 双端操作（摇杆 / 闪避按钮 / 键鼠） | 自动 | 冒烟移动与闪避（桌面 + 手机视口） |
@@ -69,13 +74,13 @@
 | 工程 | 可复现随机（`?seed=`） | 自动 | 同种子路线一致、不同种子路线不同（冒烟属性断言） |
 | 工程 | 试玩入口：一键 BOSS / 指定构筑 | 自动 | `?arena=1&boss=1` 跳第 13 步；`&build=spread,burn,3,3` 载入预设组合、且显式 build 覆盖 BOSS 起始构筑（冒烟断言） |
 
-## C. 当前自动化结果（2026-10-26）
+## C. 当前自动化结果（2026-10-27）
 
 ```text
-npm test                       88/88 通过
-npm run build                  dist 1.31MB JS（gzip 353KB）+ 51KB CSS
+npm test                       98/98 通过
+npm run build                  dist 1.31MB JS（gzip 355KB）+ 51KB CSS
 npm run verify                 31/31 通过（资源与服务）
-npm run smoke                 172/172 通过（主流程固定 seed=5）
+npm run smoke                 182/182 通过（主流程固定 seed=5）
 scripts/stress.mjs             40 敌人 / 45 发敌弹：57fps（最低 57）
 scripts/lowend.mjs             CPU ×1/×4/×6：57.0 / 55.7 / 43.7 fps（30 敌人，对象池后）
 scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部满血（13 杀）
@@ -84,7 +89,7 @@ scripts/autoplay.mjs           8/13，6:35，123 杀；房间 53–68s，止步�
 scripts/combo-bench.mjs        9 组合 DPS 基准（2 次采样 × 5 秒）
 ```
 
-- 单测文件：`rules` 19、`rooms` 23、`mutations` 12、`run` 13、`tuning` 6、`telemetry` 7、`rng` 5、`theme` 3。
+- 单测文件：`rules` 19、`rooms` 23、`mutations` 12、`run` 17、`tuning` 6、`telemetry` 9、`rng` 9、`theme` 3。
 - 冒烟覆盖 13 步完整流程（10 场战斗 + 2 事件 + BOSS）、5 个分支、精英房、突变、封印、记录持久化、双端视口。
 
 ## D. 未完成项（需要外部条件）

@@ -71,10 +71,20 @@ export function summarize(runs: readonly RunRecord[]): RunSummary {
   const victories = runs.filter((run) => run.victory).length;
   const victoryTimes = runs.filter((run) => run.victory).map((run) => run.seconds);
   const bestSeconds = victoryTimes.length ? Math.min(...victoryTimes) : null;
-  const bestCombo =
-    runs
-      .filter((run) => run.levelSum >= 4)
-      .sort((a, b) => b.levelSum - a.levelSum)[0]?.combo ?? null;
+  const eligible = runs.filter((run) => run.levelSum >= 4);
+  const counts = new Map<string, number>();
+  for (const run of eligible) counts.set(run.combo, (counts.get(run.combo) ?? 0) + 1);
+  let bestCombo: string | null = null;
+  let bestCount = 0;
+  let bestLevel = -1;
+  for (const run of eligible) {
+    const count = counts.get(run.combo) ?? 0;
+    if (count > bestCount || (count === bestCount && run.levelSum >= bestLevel)) {
+      bestCombo = run.combo;
+      bestCount = count;
+      bestLevel = run.levelSum;
+    }
+  }
   return { total: runs.length, victories, bestSeconds, bestCombo };
 }
 
