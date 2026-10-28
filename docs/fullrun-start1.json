@@ -14,13 +14,463 @@
       },
       {
         "kind": "relic",
-        "name": "雷鸣徽章"
+        "name": "疾行之羽"
       },
       {
-        "kind": "support",
-        "name": "轻装疾行"
+        "kind": "reforge",
+        "name": "弹射 → 爆裂"
       }
     ]
+  ],
+  "rewardStates": [
+    {
+      "label": "ROOM 1 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 2 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 10 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 11 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "失序工坊 · 章节奖励",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 1 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 2 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 1
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 2
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 10 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 11 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "chain"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    }
   ],
   "chapterIndex": 2,
   "chaptersTotal": 3,
@@ -28,11 +478,13 @@
   "expectedSteps": 24,
   "roomsCleared": 20,
   "picks": 19,
-  "seconds": 51,
+  "seconds": 42,
   "relics": [
-    "bloodflame-heart"
+    "frost-crown"
   ],
-  "ascensions": [],
+  "ascensions": [
+    "chain"
+  ],
   "lateUpgrades": [],
   "errors": []
 }

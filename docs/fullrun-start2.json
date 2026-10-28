@@ -5,6 +5,233 @@
   },
   "chapters": [],
   "chapterRewards": [],
+  "rewardStates": [
+    {
+      "label": "ROOM 1 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 2 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 1
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 2
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 10 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 11 / 12 已清空",
+      "relics": [
+        "prism",
+        "bloodflame-heart"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 2
+        }
+      }
+    }
+  ],
   "chapterIndex": 2,
   "chaptersTotal": 3,
   "startChapter": 2,
@@ -13,13 +240,13 @@
   "picks": 9,
   "seconds": 21,
   "relics": [
-    "bloodflame-heart",
-    "thunder-emblem"
+    "prism",
+    "bloodflame-heart"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "rift-echo",
-    "frost-ring"
+    "ember-spread",
+    "pierce-momentum"
   ],
   "errors": []
 }

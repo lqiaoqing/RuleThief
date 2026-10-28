@@ -1,23 +1,23 @@
 # 验收矩阵（设计文档 → 证据）
 
-日期：2026-10-27（M9 收口版）
+日期：2026-10-28（M9.7 收口版）
 用途：把 M0–M9 的功能条款逐条映射到可复现的命令与结果。标记为「自动」的项由脚本验证；标记为「人工」的项需要真人或真机。
 
 ## A. 当前自动化结果
 
 ```text
-npm test                       147/147 通过（13 个测试文件）
+npm test                       163/163 通过（15 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  228/228 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
-npm run fullrun                37/37 三章结构性全流程通过（约 63 秒，非真实时长）
+npm run smoke                  231/231 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 有限重铸 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
+npm run fullrun                37/37 三章结构性全流程通过（约 62 秒，非真实时长；升阶规则跨三章保留）
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
 scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
-scripts/lowend.mjs             CPU ×1/×4/×6：59.5 / 58.0 / 47.8 fps（min 44）
-scripts/soak.mjs               8 分钟：监听器 +0、堆 8–34.7MB 随 GC 波动、60fps
-scripts/combo-bench.mjs        9 组合 DPS：26–125（聚怪木桩）
-scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀（1 套剩 86HP）
+scripts/lowend.mjs             CPU ×1/×4/×6：59.3 / 57.2 / 45.0 fps（min 41，含第三规则）
+scripts/soak.mjs               3 分钟（含第三规则）：监听器 +0、堆 8.9–31.7MB 随 GC 波动、60fps
+scripts/combo-bench.mjs        9 组合（含第三规则）DPS：40–105（聚怪木桩）
+scripts/combo-run.mjs          9 组合（含第三规则）清第 1 房：39–44s，全部 13 杀
 ```
 
 性能与浸泡结果在 `docs/STATUS.md` 与脚本输出中维护；本轮 M9 构建的复测结果见 C 节末尾。
@@ -76,7 +76,11 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | M9.6 | 遗物/突变/高阶强化说明 | 自动 | HUD 悬停/点击/聚焦显示完整说明；冒烟「relic tooltip shows the full description」 |
 | M9.6 | 完整第三规则槽 | 自动 | 主槽满后可装备第三规则；双命中叠加、第三弹道额外开火；总等级 9；双满级后不再出替换卡；W2/W3 敌人与 BOSS 血量 +15% |
 | M9.6 | 第二世界机制差异 | 自动 | 装配门厅/传送带/总装线有传送带推挤；新增护盾机兵（周期 40% 减伤）；失序核心二阶段起旋转激光扫射；冒烟逐项断言 |
-| M9.5 | 战斗场景代码不再主要膨胀 | 进行中 | Arbiter 已拆到 `src/game/bosses/arbiter.ts`（135 行）+ `ArbiterHost`，4 项单测；`M0Scene.ts` 5,272 行，Core/Source 待后续 |
+| M9.7 | 遗忘神像不再丢第三槽 | 自动 | `swapRandomRule` 完整克隆 `secondary`；冒烟「forgotten idol swap preserves the third rule」；fullrun 升阶段落跨章保留 |
+| M9.7 | 雷鸣徽章可叠满 3 层 | 自动 | 每轮最多叠 1 层，3 层后的下一轮消耗并结算 +36%；冒烟断言 `1,2,3,1`；遗物说明同步 |
+| M9.7 | 满槽后的有限重铸 | 自动 | 每局 2 次；精英房/章节奖励提供「规则重铸」；只替换最低等级未升阶槽位，类型匹配、目标 Lv.1，其余规则不变；`rules.test.ts` + `rooms.test.ts` + 冒烟 |
+| M9.7 | Core / Source 行为移出场景 | 自动 | `bosses/core.ts` / `source.ts` + `CoreHost` / `SourceHost`；10 项模块单测；`M0Scene.ts` 约 5,519 行，宿主与其余 AI 仍在场景类 |
+| M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 5,519 行，超过蓝图约束，普通敌人 AI/渲染待后续拆分 |
 
 ## D. 性能与长时运行
 
@@ -85,9 +89,9 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 | 生产构建 | 自动 | `npm run build`；dist 1.91MB（JS 约 1.31MB / gzip 355KB + CSS 51KB） |
 | 静态资源 | 自动 | `npm run verify` 31/31 |
 | 40 敌人压力 | 自动近似 | `stress.mjs`：40 敌人 / 45 发敌弹，avg 59.6 / min 59 fps |
-| CPU 节流 | 自动近似 | `lowend.mjs`：×1 59.5 / ×4 58.0 / ×6 47.8 fps（min 44） |
-| 8 分钟浸泡 | 自动近似 | `soak.mjs`：监听器 +0、节点 1.5k–2.5k 波动、堆 8–34.7MB 随 GC 波动、60fps |
-| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs` 26–125 DPS；`combo-run.mjs` 39–46s、全部 13 杀 |
+| CPU 节流 | 自动近似 | `lowend.mjs`（含第三规则）：×1 59.3 / ×4 57.2 / ×6 45.0 fps（min 41） |
+| 长时浸泡 | 自动近似 | `soak.mjs`（含第三规则，3 分钟）：监听器 +0、节点 1.9k–2.6k 波动、堆 8.9–31.7MB 随 GC 波动、60fps；三槽前的 8 分钟基线仍保留 |
+| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs`（含第三规则）40–105 DPS；`combo-run.mjs` 39–44s、全部 13 杀 |
 
 ## E. 仅外部可完成的验收
 
@@ -100,7 +104,7 @@ scripts/combo-run.mjs          9 组合清第 1 房：39–46s，全部 13 杀�
 
 ## F. 已知偏差
 
-- `M0Scene.ts` 已 5,272 行，超过蓝图「不扩大巨型场景类」的工程约束；`meta`/`mutators`/`relics`/`ascensions` 已独立成模块，但敌人与 BOSS AI 仍在场景类内。
+- `M0Scene.ts` 约 5,519 行，仍超过蓝图「不扩大巨型场景类」的工程约束。Arbiter / Core / Source 三段 BOSS 行为已独立成模块（含 14 项单测），但宿主适配、普通敌人 AI 与渲染仍在场景类内；彻底拆分需要单独里程碑，不能靠一次补丁完成。
 - 遗物与升阶的 9 项战斗效果均已有定向战斗断言；真人手感、效果强度与组合强弱仍需外部试玩。
 - 自动试玩机器人在 +10% 配额下止步第 2 房（2/13），不作为难度或时长结论。
 
@@ -119,6 +123,8 @@ BASE_URL=http://127.0.0.1:4177 npm run fullrun-start2
 BASE_URL=http://127.0.0.1:4177 npm run world-shots
 BASE_URL=http://127.0.0.1:4177 node scripts/stress.mjs
 BASE_URL=http://127.0.0.1:4177 npm run lowend
+BASE_URL=http://127.0.0.1:4177 node scripts/combo-bench.mjs
+BASE_URL=http://127.0.0.1:4177 npm run combo-run
 BASE_URL=http://127.0.0.1:4177 npm run soak
 ```
 

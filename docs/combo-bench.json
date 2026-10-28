@@ -2,76 +2,76 @@
   "sampleMs": 5000,
   "rows": [
     {
-      "combo": "pierce+burn",
+      "combo": "pierce+burn+frost",
       "samples": [
-        45,
-        37
+        38,
+        42
       ],
-      "avgDps": 41
+      "avgDps": 40
     },
     {
-      "combo": "pierce+frost",
+      "combo": "pierce+frost+blast",
       "samples": [
-        26,
-        26
-      ],
-      "avgDps": 26
-    },
-    {
-      "combo": "pierce+blast",
-      "samples": [
-        59,
+        69,
         65
       ],
-      "avgDps": 62
+      "avgDps": 67
     },
     {
-      "combo": "chain+burn",
+      "combo": "pierce+blast+frost",
       "samples": [
-        77,
+        65,
+        57
+      ],
+      "avgDps": 61
+    },
+    {
+      "combo": "chain+burn+frost",
+      "samples": [
+        84,
         77
       ],
-      "avgDps": 77
+      "avgDps": 81
     },
     {
-      "combo": "chain+frost",
+      "combo": "chain+frost+blast",
       "samples": [
-        64,
-        61
+        71,
+        73
       ],
-      "avgDps": 63
+      "avgDps": 72
     },
     {
-      "combo": "chain+blast",
+      "combo": "chain+blast+frost",
       "samples": [
-        125,
-        102
+        103,
+        106
       ],
-      "avgDps": 114
+      "avgDps": 105
     },
     {
-      "combo": "spread+burn",
+      "combo": "spread+burn+frost",
       "samples": [
-        88,
-        81
+        69,
+        64
       ],
-      "avgDps": 85
+      "avgDps": 67
     },
     {
-      "combo": "spread+frost",
+      "combo": "spread+frost+blast",
       "samples": [
-        58,
-        62
+        90,
+        84
       ],
-      "avgDps": 60
+      "avgDps": 87
     },
     {
-      "combo": "spread+blast",
+      "combo": "spread+blast+frost",
       "samples": [
-        102,
-        90
+        106,
+        98
       ],
-      "avgDps": 96
+      "avgDps": 102
     }
   ]
 }

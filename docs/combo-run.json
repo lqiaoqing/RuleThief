@@ -1,86 +1,95 @@
 {
-  "limitMs": 75000,
+  "limitMs": 45000,
   "rows": [
     {
-      "combo": "pierce+burn",
+      "combo": "pierce+burn+frost",
       "cleared": true,
       "died": false,
       "seconds": 40,
       "hp": 100,
       "kills": 13,
-      "roomKills": 13
+      "roomKills": 13,
+      "thirdVolleys": 0
     },
     {
-      "combo": "pierce+frost",
-      "cleared": true,
-      "died": false,
-      "seconds": 46,
-      "hp": 100,
-      "kills": 13,
-      "roomKills": 13
-    },
-    {
-      "combo": "pierce+blast",
-      "cleared": true,
-      "died": false,
-      "seconds": 43,
-      "hp": 86,
-      "kills": 13,
-      "roomKills": 13
-    },
-    {
-      "combo": "chain+burn",
-      "cleared": true,
-      "died": false,
-      "seconds": 41,
-      "hp": 100,
-      "kills": 13,
-      "roomKills": 13
-    },
-    {
-      "combo": "chain+frost",
-      "cleared": true,
-      "died": false,
-      "seconds": 42,
-      "hp": 100,
-      "kills": 13,
-      "roomKills": 13
-    },
-    {
-      "combo": "chain+blast",
+      "combo": "pierce+frost+blast",
       "cleared": true,
       "died": false,
       "seconds": 44,
       "hp": 100,
       "kills": 13,
-      "roomKills": 13
+      "roomKills": 13,
+      "thirdVolleys": 0
     },
     {
-      "combo": "spread+burn",
+      "combo": "pierce+blast+frost",
       "cleared": true,
       "died": false,
-      "seconds": 39,
+      "seconds": 44,
       "hp": 100,
       "kills": 13,
-      "roomKills": 13
+      "roomKills": 13,
+      "thirdVolleys": 0
     },
     {
-      "combo": "spread+frost",
+      "combo": "chain+burn+frost",
       "cleared": true,
       "died": false,
       "seconds": 41,
       "hp": 100,
       "kills": 13,
-      "roomKills": 13
+      "roomKills": 13,
+      "thirdVolleys": 0
     },
     {
-      "combo": "spread+blast",
+      "combo": "chain+frost+blast",
       "cleared": true,
       "died": false,
-      "seconds": 40,
+      "seconds": 44,
       "hp": 100,
       "kills": 13,
-      "roomKills": 13
+      "roomKills": 13,
+      "thirdVolleys": 0
+    },
+    {
+      "combo": "chain+blast+frost",
+      "cleared": true,
+      "died": false,
+      "seconds": 41,
+      "hp": 100,
+      "kills": 13,
+      "roomKills": 13,
+      "thirdVolleys": 0
+    },
+    {
+      "combo": "spread+burn+frost",
+      "cleared": true,
+      "died": false,
+      "seconds": 39,
+      "hp": 100,
+      "kills": 13,
+      "roomKills": 13,
+      "thirdVolleys": 0
+    },
+    {
+      "combo": "spread+frost+blast",
+      "cleared": true,
+      "died": false,
+      "seconds": 41,
+      "hp": 100,
+      "kills": 13,
+      "roomKills": 13,
+      "thirdVolleys": 0
+    },
+    {
+      "combo": "spread+blast+frost",
+      "cleared": true,
+      "died": false,
+      "seconds": 41,
+      "hp": 100,
+      "kills": 13,
+      "roomKills": 13,
+      "thirdVolleys": 0
     }
   ]
 }
