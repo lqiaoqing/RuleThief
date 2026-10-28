@@ -5,6 +5,7 @@ import {
   ENEMY_SPECS,
   ROOMS,
   SUPPORTS,
+  buildChapterRewards,
   buildRoomRewards,
   getRoomEnemyKinds,
   getRoomRuleKeys,
@@ -253,5 +254,72 @@ describe('room rewards', () => {
       expect(rule.offer.nextLevel).toBe(1);
       expect(rule.offer.key).toBe('pierce');
     }
+  });
+
+  it('elite rooms offer a limited reforge only once all three slots are full', () => {
+    const elite = ROOMS.find((room) => room.elite)!;
+    const full = {
+      trajectory: { key: 'pierce' as const, level: 3 as const },
+      impact: { key: 'burn' as const, level: 3 as const },
+      secondary: { key: 'frost' as const, level: 3 as const }
+    };
+    const rewards = buildRoomRewards(full, elite, random, {
+      hasMutation: true,
+      reforgeLeft: 2
+    });
+    const reforge = rewards.find((reward) => reward.kind === 'reforge');
+    expect(reforge).toBeDefined();
+    if (reforge?.kind === 'reforge') {
+      expect(reforge.offer.slot).toBe('secondary');
+      expect(reforge.remaining).toBe(2);
+      expect(reforge.offer.from.key).toBe('frost');
+      expect(getRoomRuleKeys(elite)).toContain(reforge.offer.to);
+      expect(reforge.offer.to).not.toBe('frost');
+    }
+    expect(
+      buildRoomRewards(full, elite, random, { hasMutation: true, reforgeLeft: 0 }).some(
+        (reward) => reward.kind === 'reforge'
+      )
+    ).toBe(false);
+    expect(
+      buildRoomRewards(createEmptyBuild(), elite, random, { reforgeLeft: 2 }).some(
+        (reward) => reward.kind === 'reforge'
+      )
+    ).toBe(false);
+  });
+
+  it('normal rooms never offer a reforge', () => {
+    const full = {
+      trajectory: { key: 'pierce' as const, level: 3 as const },
+      impact: { key: 'burn' as const, level: 3 as const },
+      secondary: { key: 'frost' as const, level: 3 as const }
+    };
+    for (const room of ROOMS.filter((item) => !item.elite && !item.boss)) {
+      const rewards = buildRoomRewards(full, room, random, { reforgeLeft: 2 });
+      expect(rewards.some((reward) => reward.kind === 'reforge')).toBe(false);
+    }
+  });
+
+  it('chapter rewards include a reforge for a full build with charges left', () => {
+    const full = {
+      trajectory: { key: 'chain' as const, level: 3 as const },
+      impact: { key: 'burn' as const, level: 3 as const },
+      secondary: { key: 'frost' as const, level: 3 as const }
+    };
+    const rewards = buildChapterRewards(full, ['greed', 'prism'], random, {
+      reforgeLeft: 1
+    });
+    const reforge = rewards.find((reward) => reward.kind === 'reforge');
+    expect(reforge).toBeDefined();
+    if (reforge?.kind === 'reforge') {
+      expect(reforge.remaining).toBe(1);
+      expect(reforge.offer.from.key).toBe('frost');
+      expect(['pierce', 'spread', 'blast']).toContain(reforge.offer.to);
+    }
+    expect(
+      buildChapterRewards(full, ['greed', 'prism'], random, { reforgeLeft: 0 }).some(
+        (reward) => reward.kind === 'reforge'
+      )
+    ).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { getRuleName, getRuleSlotLabel, type RuleOffer } from '../game/rules';
+import { getRuleDef, getRuleName, getRuleSlotLabel, type RuleOffer } from '../game/rules';
 import { ENEMY_SPECS, getRoomEnemyKinds, getRoomRuleKeys, type Reward, type RoomPreview } from '../game/rooms';
 import type { EventPayload, RouteChoicePayload } from '../game/run';
 import { RULE_COLORS } from './hud';
@@ -244,6 +244,47 @@ function lateCard(reward: Extract<Reward, { kind: 'late' }>, index: number) {
   return card;
 }
 
+function reforgeCard(reward: Extract<Reward, { kind: 'reforge' }>, index: number) {
+  const { slot, from, to } = reward.offer;
+  const card = el('button', 'rule-card action-replace');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', RULE_COLORS[to]);
+  card.dataset.key = to;
+  card.dataset.action = 'reforge';
+  card.dataset.kind = 'reforge';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(getRuleDef(to).icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '规则重铸 · REFORGE'),
+    el('span', 'rule-card-name', `${getRuleName(from.key)} → ${getRuleName(to)}`)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action replace', '重铸'));
+
+  const levels = el('div', 'rule-card-levels');
+  levels.append(el('span', 'level-pip active'));
+  levels.append(el('span', undefined, `Lv.${from.level} → Lv.1`));
+
+  card.append(head, levels);
+  card.append(
+    el(
+      'p',
+      'rule-card-desc',
+      `将${getRuleSlotLabel(slot)}的 ${getRuleName(from.key)} 替换为 ${getRuleName(to)}。`
+    )
+  );
+  card.append(
+    el('span', 'rule-card-replace', `本局剩余 ${reward.remaining} 次 · 升阶规则不会被重铸`)
+  );
+  card.append(
+    el('div', 'rule-card-combo', `${getRuleName(to)} Lv.1 · 另外两条规则保持不变`)
+  );
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
   offersWrap.dataset.count = String(rewards.length);
@@ -259,7 +300,9 @@ export function renderRewards(rewards: readonly Reward[], onPick: (reward: Rewar
               ? ascensionCard(reward, index)
               : reward.kind === 'late'
                 ? lateCard(reward, index)
-                : supportCard(reward, index);
+                : reward.kind === 'reforge'
+                  ? reforgeCard(reward, index)
+                  : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
     offersWrap.append(card);
   });

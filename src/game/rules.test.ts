@@ -15,6 +15,8 @@ import {
   getTrajectoryProfile,
   mergeBurn,
   mergeFrost,
+  reforgeRule,
+  reforgeSlot,
   selectChainTargets,
   type ChainCandidate,
   type PlayerBuild,
@@ -155,6 +157,42 @@ describe('rule offers and build mutation', () => {
     expect(trajectoryOffer?.comboName).toBe(
       COMBO_NAMES[trajectoryOffer!.key as 'pierce' | 'chain' | 'spread']['blast']
     );
+  });
+
+  it('reforges the lowest non-ascended slot and keeps the other two rules', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 3 },
+      impact: { key: 'burn', level: 2 },
+      secondary: { key: 'frost', level: 1 }
+    };
+    expect(reforgeSlot(build)).toBe('secondary');
+    const next = reforgeRule(build, 'secondary', 'blast');
+    expect(next.secondary).toEqual({ key: 'blast', level: 1 });
+    expect(next.trajectory).toEqual(build.trajectory);
+    expect(next.impact).toEqual(build.impact);
+  });
+
+  it('never reforges an ascended rule', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 3, ascended: true },
+      impact: { key: 'burn', level: 3 },
+      secondary: { key: 'frost', level: 3, ascended: true }
+    };
+    expect(reforgeSlot(build)).toBe('impact');
+  });
+
+  it('keeps trajectory and impact slot typing on reforge', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 2 },
+      impact: { key: 'burn', level: 2 },
+      secondary: { key: 'frost', level: 2 }
+    };
+    expect(reforgeRule(build, 'trajectory', 'burn').trajectory?.key).toBe('pierce');
+    expect(reforgeRule(build, 'impact', 'chain').impact?.key).toBe('burn');
+    expect(reforgeRule(build, 'secondary', 'chain').secondary).toEqual({
+      key: 'chain',
+      level: 1
+    });
   });
 
   it('sums current rule levels', () => {

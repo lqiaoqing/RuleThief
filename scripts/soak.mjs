@@ -22,6 +22,7 @@ const browser = await puppeteer.launch({
 const samples = [];
 try {
   const page = await browser.newPage();
+  await page.bringToFront();
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
   await page.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 25_000 });
@@ -29,6 +30,7 @@ try {
   await sleep(400);
   await page.tap('#room-enter-btn');
   await sleep(600);
+  await page.evaluate(() => window.__RT_SET_THIRD__?.('frost', 3));
   await page.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
 
   const started = Date.now();

@@ -82,31 +82,36 @@ try {
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
-  if (START > 0) {
-    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-    await page.evaluate(() => {
-      localStorage.setItem(
-        'rulethief.meta.v1',
-        JSON.stringify({
-          version: 1,
-          shards: 0,
-          runs: 0,
-          chaptersCleared: 2,
-          victories: 1,
-          maxMutator: 0,
-          selectedMutator: 0,
-          maxStartChapter: 2,
-          selectedStartChapter: 0,
-          dailyBest: null,
-          unlockedRelics: ['thunder-emblem', 'bloodflame-heart'],
-          unlockedAscensions: ['thunder-domain'],
-          seenRules: [],
-          ascendedRules: [],
-          achievements: []
-        })
-      );
-    });
-  }
+  await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => {
+    localStorage.setItem(
+      'rulethief.meta.v1',
+      JSON.stringify({
+        version: 1,
+        shards: 0,
+        runs: 0,
+        chaptersCleared: 2,
+        victories: 1,
+        maxMutator: 0,
+        selectedMutator: 0,
+        maxStartChapter: 2,
+        selectedStartChapter: 0,
+        dailyBest: null,
+        unlockedRelics: [
+          'thunder-emblem',
+          'bloodflame-heart',
+          'frost-crown',
+          'prism',
+          'feather',
+          'greed'
+        ],
+        unlockedAscensions: ['thunder-domain', 'flame-detonation', 'absolute-zero'],
+        seenRules: [],
+        ascendedRules: [],
+        achievements: []
+      })
+    );
+  });
   const startParam = START > 0 ? `&start=${START}` : '';
   await page.goto(`${BASE}/?arena=1&build=spread,burn,3,3${startParam}`, {
     waitUntil: 'networkidle0'
@@ -116,6 +121,7 @@ try {
   const started = Date.now();
   const chapters = [];
   const chapterRewards = [];
+  const rewardStates = [];
   let roomsCleared = 0;
   let picks = 0;
   let result = null;
@@ -145,6 +151,14 @@ try {
       }
       await pickBestCard(page);
       picks += 1;
+      const afterPick = await snapshot(page);
+      rewardStates.push({
+        label: view.rewardLabel,
+        relics: afterPick.relics ?? [],
+        ascensions: afterPick.ascensions ?? [],
+        lateUpgrades: afterPick.lateUpgrades ?? [],
+        build: afterPick.build ?? null
+      });
       continue;
     }
     if (view.chapter) {
@@ -181,6 +195,7 @@ try {
     result,
     chapters,
     chapterRewards,
+    rewardStates,
     chapterIndex: finalState.chapterIndex,
     chaptersTotal: finalState.chaptersTotal,
     startChapter: finalState.startChapter,

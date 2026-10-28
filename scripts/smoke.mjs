@@ -1715,6 +1715,43 @@ try {
   );
   await relicPage.close();
 
+  const stackPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await stackPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await waitReady(stackPage);
+  await stackPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(stackPage);
+  await sleep(500);
+  await stackPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_RELIC__?.('thunder-emblem');
+    window.__RT_SPAWN_AT__?.('sunder', 400, 300);
+    window.__RT_SPAWN_AT__?.('sunder', 450, 200);
+    window.__RT_SPAWN_AT__?.('sunder', 500, 100);
+  });
+  await sleep(200);
+  const stackTrace = [];
+  for (let volley = 0; volley < 4; volley += 1) {
+    const expected = volley === 3 ? 1 : volley + 1;
+    await stackPage.evaluate(() => window.__RT_VOLLEY__?.());
+    await stackPage
+      .waitForFunction(
+        (target) => window.__RT_SNAPSHOT__?.().thunderStacks === target,
+        { timeout: 2_500 },
+        expected
+      )
+      .catch(() => {});
+    stackTrace.push(Number((await snapshot(stackPage)).thunderStacks));
+  }
+  check(
+    'thunder emblem accumulates three layers before consuming',
+    stackTrace.join(',') === '1,2,3,1',
+    stackTrace.join(',')
+  );
+  await stackPage.close();
+
   const bloodPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await bloodPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(bloodPage);
@@ -2078,6 +2115,40 @@ try {
       thirdHud.count === '等级 9 / 9' &&
       thirdHud.slot === '冰霜',
     JSON.stringify({ thirdEnemy, thirdHud })
+  );
+
+  await thirdPage.evaluate(() => window.__RT_SWAP__?.());
+  await sleep(200);
+  const afterSwap = await snapshot(thirdPage);
+  check(
+    'forgotten idol swap preserves the third rule',
+    afterSwap.build?.secondary?.key === 'frost' &&
+      Number(afterSwap.build?.secondary?.level) === 3,
+    JSON.stringify(afterSwap.build)
+  );
+
+  await thirdPage.evaluate(() => {
+    window.__RT_SET_BUILD__?.('chain', 'burn', 3, 3);
+    window.__RT_SET_THIRD__?.('frost', 3);
+  });
+  const reforgeResults = await thirdPage.evaluate(() => [
+    window.__RT_REFORGE__?.('blast') ?? false,
+    window.__RT_REFORGE__?.('spread') ?? false,
+    window.__RT_REFORGE__?.('frost') ?? false,
+    window.__RT_SNAPSHOT__?.().reforgeLeft ?? -1,
+    window.__RT_SNAPSHOT__?.().build ?? null
+  ]);
+  check(
+    'full build can reforge twice but no more',
+    reforgeResults[0] === true &&
+      reforgeResults[1] === true &&
+      reforgeResults[2] === false &&
+      Number(reforgeResults[3]) === 0 &&
+      reforgeResults[4]?.trajectory?.key === 'chain' &&
+      reforgeResults[4]?.impact?.key === 'burn' &&
+      reforgeResults[4]?.secondary?.key === 'spread' &&
+      Number(reforgeResults[4]?.secondary?.level) === 1,
+    JSON.stringify(reforgeResults)
   );
 
   await thirdPage.evaluate(() => {

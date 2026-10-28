@@ -74,6 +74,7 @@ try {
   for (const [trajectory, impact] of COMBOS) {
     if (only && `${trajectory}+${impact}` !== only) continue;
     const page = await browser.newPage();
+    await page.bringToFront();
     await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
     await page.goto(`${BASE}/?arena=1&build=${trajectory},${impact},3,3`, { waitUntil: 'networkidle0' });
     await page.waitForFunction('window.__RT_READY__ === true', { timeout: 25_000 });
@@ -81,6 +82,8 @@ try {
     await sleep(350);
     await page.tap('#room-enter-btn');
     await sleep(450);
+    const third = impact === 'frost' ? 'blast' : 'frost';
+    await page.evaluate((key) => window.__RT_SET_THIRD__?.(key, 3), third);
 
     const started = Date.now();
     let cleared = false;
@@ -113,13 +116,14 @@ try {
     await setKeys(page, { KeyW: false, KeyA: false, KeyS: false, KeyD: false });
 
     const row = {
-      combo: `${trajectory}+${impact}`,
+      combo: `${trajectory}+${impact}+${third}`,
       cleared,
       died,
       seconds: Math.round((Date.now() - started) / 1000),
       hp: Math.round(Number(lastSnapshot?.hp ?? 0)),
       kills: Number(lastSnapshot?.kills ?? 0),
-      roomKills: Number(lastSnapshot?.roomKills ?? 0)
+      roomKills: Number(lastSnapshot?.roomKills ?? 0),
+      thirdVolleys: Number(lastSnapshot?.thirdVolleys ?? 0)
     };
     rows.push(row);
     console.log(

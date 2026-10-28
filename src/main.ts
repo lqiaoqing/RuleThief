@@ -80,6 +80,8 @@ declare global {
       impactLevel?: 1 | 2 | 3
     ) => void;
     __RT_SET_THIRD__?: (key: RuleKey, level?: 1 | 2 | 3) => void;
+    __RT_SWAP__?: () => boolean;
+    __RT_REFORGE__?: (key: RuleKey) => boolean;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
     __RT_VOLLEY__?: () => number;
@@ -789,6 +791,8 @@ function handleReady(): void {
   window.__RT_SET_BUILD__ = (trajectory, impact, trajectoryLevel = 1, impactLevel = 1) =>
     scene?.debugSetBuild(trajectory, impact, trajectoryLevel, impactLevel);
   window.__RT_SET_THIRD__ = (key, level = 3) => scene?.debugSetThird(key, level);
+  window.__RT_SWAP__ = () => scene?.debugSwapRule() ?? false;
+  window.__RT_REFORGE__ = (key) => scene?.debugReforge(key) ?? false;
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
   window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;

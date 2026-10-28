@@ -22,6 +22,7 @@ const rows = [];
 try {
   for (const rate of RATES) {
     const page = await browser.newPage();
+    await page.bringToFront();
     await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
     await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
     await page.waitForFunction('window.__RT_READY__ === true', { timeout: 25_000 });
@@ -34,6 +35,7 @@ try {
     await client.send('Emulation.setCPUThrottlingRate', { rate });
 
     await page.evaluate(() => window.__RT_SET_BUILD__?.('spread', 'burn', 3, 3));
+    await page.evaluate(() => window.__RT_SET_THIRD__?.('frost', 3));
     await page.evaluate(() => {
       for (let i = 0; i < 30; i += 1) {
         const kind = ['beetle', 'bat', 'spore', 'slime', 'wisp', 'bomber'][i % 6];

@@ -30,6 +30,8 @@ import {
   isTrajectoryKey,
   mergeBurn,
   mergeFrost,
+  reforgeRule,
+  reforgeSlot,
   selectChainTargets,
   TriggerBudget,
   type ChainCandidate,
@@ -39,6 +41,7 @@ import {
   type RuleKey,
   type RuleLevel,
   type RuleOffer,
+  type RuleSlot,
   type TrajectoryKey,
   type TrajectoryProfile
 } from './rules';
@@ -53,7 +56,18 @@ import {
 import { getMutator, clampMutator } from './mutators';
 import { getWorldTheme } from './worldTheme';
 import { updateArbiter as updateArbiterBoss, type ArbiterHost } from './bosses/arbiter';
-import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, type EnemyKind, type Reward, type RoomDef, type SupportId } from './rooms';
+import {
+  summonCoreAdds,
+  updateCore as updateCoreBoss,
+  type CoreBossEnemy,
+  type CoreHost
+} from './bosses/core';
+import {
+  summonSourceAdds,
+  updateSource as updateSourceBoss,
+  type SourceHost
+} from './bosses/source';
+import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, MAX_REFORGES, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
@@ -267,6 +281,8 @@ export class M0Scene extends Phaser.Scene {
   private brazierGlows: Phaser.GameObjects.Image[] = [];
   private dustEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
   private arbiterHost!: ArbiterHost;
+  private coreHost!: CoreHost;
+  private sourceHost!: SourceHost;
   private playerRoot!: Phaser.GameObjects.Container;
   private playerSprite!: Phaser.GameObjects.Image;
   private playerAura!: Phaser.GameObjects.Image;
@@ -322,6 +338,7 @@ export class M0Scene extends Phaser.Scene {
   private unlockedAscensions: AscensionId[] = [...ASCENSION_IDS];
   private chapterRewardOpen = false;
   private thunderStacks = 0;
+  private reforgesUsed = 0;
   private attackHits = new Set<EnemyUnit>();
   private attackThunderAwarded = false;
   private prismTime = 0;
@@ -469,6 +486,84 @@ export class M0Scene extends Phaser.Scene {
       bonusBolts: () => (this.mutatorLevel >= 3 ? 2 : 0),
       isPlaying: () => this.runState === 'playing'
     };
+    const bossHost = {
+      arena: ARENA,
+      playerRadius: PLAYER_RADIUS,
+      now: () => this.time.now,
+      playerX: () => this.playerRoot.x,
+      playerY: () => this.playerRoot.y,
+      isPlaying: () => this.runState === 'playing',
+      setBossRef: (enemy: CoreBossEnemy) => {
+        this.bossRef = enemy as unknown as EnemyUnit;
+      },
+      phase: () => this.bossPhase,
+      setPhase: (phase: number) => {
+        this.bossPhase = phase;
+      },
+      fireFan: (enemy: CoreBossEnemy, bolts: number, spread: number) =>
+        this.fireBossFan(enemy as unknown as EnemyUnit, bolts, spread),
+      distanceToPlayer: (enemy: CoreBossEnemy) =>
+        this.distanceToPlayer(enemy as unknown as EnemyUnit),
+      hurt: (amount: number, x: number, y: number, source: 'hazard' | 'melee') =>
+        this.hurtPlayer(amount, x, y, source),
+      bonusBolts: () => (this.mutatorLevel >= 3 ? 2 : 0)
+    };
+    this.coreHost = {
+      ...bossHost,
+      timers: () => ({
+        attackCd: this.bossAttackCd,
+        summonCd: this.bossSummonCd,
+        sealCd: this.bossSealCd,
+        laserCd: this.coreLaserCd,
+        laserTime: this.coreLaserTime,
+        laserAngle: this.coreLaserAngle
+      }),
+      setTimers: (timers) => {
+        this.bossAttackCd = timers.attackCd;
+        this.bossSummonCd = timers.summonCd;
+        this.bossSealCd = timers.sealCd;
+        this.coreLaserCd = timers.laserCd;
+        this.coreLaserTime = timers.laserTime;
+        this.coreLaserAngle = timers.laserAngle;
+      },
+      onPhase: (phase) => this.onCorePhase(phase),
+      summon: () => summonCoreAdds(this.coreHost),
+      spawnShockZone: (x, y, radius, delay) => this.spawnShockZone(x, y, radius, delay),
+      audio: (name) => audio.play(name),
+      aliveAdds: () => this.enemies.filter((item) => !item.dead && !item.elite).length,
+      spawnAdd: (kind, x, y) => this.spawnBossAdd(kind, x, y),
+      random: () => combatRandom(),
+      randomInt: (min, max) => combatInt(min, max),
+      startLaser: () => this.startCoreLaser(),
+      drawLaser: (enemy, angle) =>
+        this.drawCoreLaser(enemy as unknown as EnemyUnit, angle),
+      stopLaser: () => this.stopCoreLaser()
+    };
+    this.sourceHost = {
+      ...bossHost,
+      timers: () => ({
+        attackCd: this.bossAttackCd,
+        summonCd: this.bossSummonCd,
+        sealCd: this.bossSealCd,
+        chargeCd: this.bossChargeCd
+      }),
+      setTimers: (timers) => {
+        this.bossAttackCd = timers.attackCd;
+        this.bossSummonCd = timers.summonCd;
+        this.bossSealCd = timers.sealCd;
+        this.bossChargeCd = timers.chargeCd;
+      },
+      onPhase: (phase) => this.onSourcePhase(phase),
+      summon: () => summonSourceAdds(this.sourceHost),
+      castSeal: () => this.castRuleSeal(),
+      spawnVoidZone: (x, y, radius, delay) =>
+        this.spawnShockZone(x, y, radius, delay, COLORS.purple, 18),
+      shake: () => this.cameras.main.shake(80, 0.001),
+      randomInt: (min, max) => combatInt(min, max),
+      aliveAdds: () => this.enemies.filter((item) => !item.dead && !item.elite).length,
+      spawnAdd: (kind, x, y) => this.spawnBossAdd(kind, x, y),
+      audio: (name) => audio.play(name)
+    };
 
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
@@ -541,6 +636,7 @@ export class M0Scene extends Phaser.Scene {
     this.slowFields = [];
     this.chapterRewardOpen = false;
     this.thunderStacks = 0;
+    this.reforgesUsed = 0;
     this.prismTime = 0;
     this.bloodflameCd = 0;
     this.featherTime = 0;
@@ -898,7 +994,8 @@ export class M0Scene extends Phaser.Scene {
     const key = options[combatInt(0, options.length - 1)];
     const next: PlayerBuild = {
       trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-      impact: this.build.impact ? { ...this.build.impact } : null
+      impact: this.build.impact ? { ...this.build.impact } : null,
+      secondary: this.build.secondary ? { ...this.build.secondary } : undefined
     };
     if (slot === 'trajectory') {
       next.trajectory = { key: key as TrajectoryKey, level: 1 };
@@ -910,6 +1007,31 @@ export class M0Scene extends Phaser.Scene {
       title: '事件 · 规则更换',
       sub: `${getRuleDef(key).name} Lv.1`
     });
+    return true;
+  }
+
+  public debugSwapRule(): boolean {
+    return this.swapRandomRule();
+  }
+
+  public debugReforge(key: RuleKey): boolean {
+    if (this.reforgesUsed >= MAX_REFORGES) return false;
+    const slot = reforgeSlot(this.build);
+    if (!slot) return false;
+    const ref =
+      slot === 'trajectory'
+        ? this.build.trajectory
+        : slot === 'impact'
+          ? this.build.impact
+          : this.build.secondary;
+    if (!ref) return false;
+    const equipped = new Set(
+      [this.build.trajectory, this.build.impact, this.build.secondary]
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        .map((item) => item.key)
+    );
+    if (equipped.has(key)) return false;
+    this.applyReforge({ slot, from: { ...ref }, to: key });
     return true;
   }
 
@@ -974,7 +1096,8 @@ export class M0Scene extends Phaser.Scene {
       unlockedRelics: this.unlockedRelics,
       unlockedAscensions: this.unlockedAscensions,
       lateEligible: lateUpgradeEligible(this.build, this.relics.length),
-      lateUpgrades: this.lateUpgrades
+      lateUpgrades: this.lateUpgrades,
+      reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed)
     });
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
@@ -1180,7 +1303,8 @@ export class M0Scene extends Phaser.Scene {
       hasMutation: Boolean(this.mutation.id),
       bonusCards: this.roomBonusCards,
       lateEligible: lateUpgradeEligible(this.build, this.relics.length),
-      lateUpgrades: this.lateUpgrades
+      lateUpgrades: this.lateUpgrades,
+      reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed)
     });
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
@@ -1237,6 +1361,8 @@ export class M0Scene extends Phaser.Scene {
         audio.play('rule');
         showRuleToast('chain', `高阶强化 · ${reward.upgrade.name}`, reward.upgrade.description);
       }
+    } else if (reward.kind === 'reforge') {
+      this.applyReforge(reward.offer);
     } else {
       this.applySupport(reward.support.id);
     }
@@ -1710,10 +1836,9 @@ export class M0Scene extends Phaser.Scene {
       build: JSON.parse(JSON.stringify(this.build)) as PlayerBuild,
       acquired: [...this.acquired] as RuleKey[],
       relics: [...this.relics],
-      ascensions: [
-        this.build.trajectory?.ascended ? this.build.trajectory.key : null,
-        this.build.impact?.ascended ? this.build.impact.key : null
-      ].filter(Boolean),
+      ascensions: [this.build.trajectory, this.build.impact, this.build.secondary]
+        .map((ref) => (ref?.ascended ? ref.key : null))
+        .filter(Boolean),
       thunderStacks: this.thunderStacks,
       attackHits: this.attackHits.size,
       attackThunderAwarded: this.attackThunderAwarded,
@@ -1728,6 +1853,7 @@ export class M0Scene extends Phaser.Scene {
       riftEchoCasts: this.riftEchoCasts,
       thirdVolleys: this.thirdVolleys,
       lateUpgrades: [...this.lateUpgrades],
+      reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed),
       pierceMomentum: this.pierceMomentum,
       slowFields: this.slowFields.length,
       relicDamageMultiplier: this.relicDamageMultiplier(),
@@ -2427,7 +2553,7 @@ export class M0Scene extends Phaser.Scene {
     const power =
       getDamageMultiplier(this.mutation, this.hp, this.maxHp, overcharged) *
       this.relicDamageMultiplier();
-    this.thunderStacks = 0;
+    if (this.thunderStacks >= 3) this.thunderStacks = 0;
     const impact = sealedImpact ? null : this.build.impact;
     const third = this.build.secondary ?? null;
     const thirdTrajectory =
@@ -3190,6 +3316,16 @@ export class M0Scene extends Phaser.Scene {
     this.pickups.push({ root, age: 0, dead: false });
   }
 
+  private applyReforge(offer: ReforgeOffer): void {
+    if (this.reforgesUsed >= MAX_REFORGES) return;
+    this.reforgesUsed += 1;
+    this.applyBuildState(reforgeRule(this.build, offer.slot, offer.to), {
+      key: offer.to,
+      title: '规则重铸',
+      sub: `${getRuleDef(offer.from.key).name} → ${getRuleDef(offer.to).name} Lv.1`
+    });
+  }
+
   private applyBuildState(
     next: PlayerBuild,
     notice?: { key: RuleKey; title: string; sub: string }
@@ -3530,13 +3666,13 @@ export class M0Scene extends Phaser.Scene {
           this.updatePhase(enemy, dt);
           break;
         case 'core':
-          this.updateCore(enemy, dt);
+          updateCoreBoss(enemy, dt, this.coreHost);
           break;
         case 'seer':
           this.updateSeer(enemy, dt);
           break;
         case 'source':
-          this.updateSource(enemy, dt);
+          updateSourceBoss(enemy, dt, this.sourceHost);
           break;
         case 'warden':
           this.updateWarden(enemy, dt);
@@ -4156,97 +4292,34 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
-  private updateCore(enemy: EnemyUnit, dt: number): void {
-    this.bossRef = enemy;
-    const ratio = enemy.hp / enemy.maxHp;
-    const phase = ratio > 0.7 ? 1 : ratio > 0.35 ? 2 : 3;
-    if (phase !== this.bossPhase) {
-      this.bossPhase = phase;
-      this.onCorePhase(phase);
-    }
-
-    this.bossAttackCd -= dt;
-    this.bossSummonCd -= dt;
-    this.bossSealCd -= dt;
-
-    enemy.root.x = ARENA * 0.5 + Math.sin(this.time.now * 0.0006) * 190;
-    enemy.root.y = 235 + Math.sin(this.time.now * 0.0011) * 22;
-
-    if (this.bossAttackCd <= 0) {
-      this.bossAttackCd = phase >= 3 ? 1.7 : phase === 2 ? 2.05 : 2.5;
-      this.fireBossFan(
-        enemy,
-        (phase >= 3 ? 7 : 5) + (this.mutatorLevel >= 3 ? 2 : 0),
-        phase >= 3 ? 1.15 : 0.85
-      );
-    }
-    if (this.bossSummonCd <= 0) {
-      this.bossSummonCd = 8;
-      this.summonCoreAdds();
-    }
-    if (this.bossSealCd <= 0) {
-      this.bossSealCd = phase >= 3 ? 3.2 : 4.6;
-      this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 56, 0.9);
-      if (phase >= 2) {
-        this.spawnShockZone(combatInt(130, ARENA - 130), combatInt(150, ARENA - 130), 48, 1.2);
-        this.spawnShockZone(combatInt(130, ARENA - 130), combatInt(150, ARENA - 130), 48, 1.35);
-      }
-    }
-
-    this.updateCoreLaser(enemy, dt, phase);
-
-    if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
-      enemy.contactCd = 1.0;
-      this.hurtPlayer(8, enemy.root.x, enemy.root.y, 'melee');
+  private startCoreLaser(): void {
+    if (!this.coreLaserGfx) {
+      this.coreLaserGfx = this.add.graphics();
+      this.addFx(this.coreLaserGfx);
     }
   }
 
-  private updateCoreLaser(enemy: EnemyUnit, dt: number, phase: number): void {
-    if (this.coreLaserTime <= 0) {
-      this.coreLaserCd -= dt;
-      if (this.coreLaserCd > 0) return;
-      this.coreLaserTime = 2.2;
-      this.coreLaserAngle = combatRandom() * Math.PI * 2;
-      this.coreLaserCd = 999;
-      if (!this.coreLaserGfx) {
-        this.coreLaserGfx = this.add.graphics();
-        this.addFx(this.coreLaserGfx);
-      }
-      audio.play('spawn');
-    }
-
-    this.coreLaserTime -= dt;
-    this.coreLaserAngle += dt * (phase >= 3 ? 2.8 : 1.9);
-    const cos = Math.cos(this.coreLaserAngle);
-    const sin = Math.sin(this.coreLaserAngle);
+  private drawCoreLaser(enemy: EnemyUnit, angle: number): void {
     const g = this.coreLaserGfx;
-    if (g) {
-      g.clear();
-      g.lineStyle(12, COLORS.red, 0.08);
-      g.beginPath();
-      g.moveTo(enemy.root.x, enemy.root.y - 10);
-      g.lineTo(enemy.root.x + cos * 900, enemy.root.y - 10 + sin * 900);
-      g.strokePath();
-      g.lineStyle(3, COLORS.orange, 0.75);
-      g.beginPath();
-      g.moveTo(enemy.root.x, enemy.root.y - 10);
-      g.lineTo(enemy.root.x + cos * 900, enemy.root.y - 10 + sin * 900);
-      g.strokePath();
-    }
+    if (!g) return;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    g.clear();
+    g.lineStyle(12, COLORS.red, 0.08);
+    g.beginPath();
+    g.moveTo(enemy.root.x, enemy.root.y - 10);
+    g.lineTo(enemy.root.x + cos * 900, enemy.root.y - 10 + sin * 900);
+    g.strokePath();
+    g.lineStyle(3, COLORS.orange, 0.75);
+    g.beginPath();
+    g.moveTo(enemy.root.x, enemy.root.y - 10);
+    g.lineTo(enemy.root.x + cos * 900, enemy.root.y - 10 + sin * 900);
+    g.strokePath();
+  }
 
-    const dx = this.playerRoot.x - enemy.root.x;
-    const dy = this.playerRoot.y - (enemy.root.y - 10);
-    const along = dx * cos + dy * sin;
-    const perpendicular = Math.abs(-dx * sin + dy * cos);
-    if (along > 0 && perpendicular < PLAYER_RADIUS + 8) {
-      this.hurtPlayer(10, enemy.root.x, enemy.root.y, 'hazard');
-    }
-
-    if (this.coreLaserTime <= 0) {
-      g?.destroy();
-      this.coreLaserGfx = undefined;
-      this.coreLaserCd = phase >= 3 ? 3.5 : 5;
-    }
+  private stopCoreLaser(): void {
+    this.coreLaserGfx?.destroy();
+    this.coreLaserGfx = undefined;
   }
 
   private onCorePhase(phase: number): void {
@@ -4262,29 +4335,18 @@ export class M0Scene extends Phaser.Scene {
     this.refreshBossHud();
   }
 
-  private summonCoreAdds(): void {
-    const alive = this.enemies.filter((item) => !item.dead && !item.elite).length;
-    if (alive >= 4) return;
-    const kinds: EnemyKind[] = this.bossPhase >= 3 ? ['sentry', 'phase'] : ['sentry'];
-    const spots: [number, number][] = [
-      [150, 210],
-      [ARENA - 150, 210]
-    ];
-    kinds.forEach((kind, index) => {
-      this.spawnEnemy(kind, spots[index][0], spots[index][1], false);
-      const spawned = this.enemies[this.enemies.length - 1];
-      if (spawned) {
-        this.tweens.killTweensOf(spawned.root);
-        this.tweens.add({
-          targets: spawned.root,
-          scale: { from: 0.2, to: 1 },
-          alpha: { from: 0, to: 1 },
-          duration: 240,
-          ease: 'Back.easeOut'
-        });
-      }
+  private spawnBossAdd(kind: EnemyKind, x: number, y: number): void {
+    this.spawnEnemy(kind, x, y, false);
+    const spawned = this.enemies[this.enemies.length - 1];
+    if (!spawned) return;
+    this.tweens.killTweensOf(spawned.root);
+    this.tweens.add({
+      targets: spawned.root,
+      scale: { from: 0.2, to: 1 },
+      alpha: { from: 0, to: 1 },
+      duration: 240,
+      ease: 'Back.easeOut'
     });
-    audio.play('spawn');
   }
 
   private updateSeer(enemy: EnemyUnit, dt: number): void {
@@ -4367,67 +4429,6 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
-  private updateSource(enemy: EnemyUnit, dt: number): void {
-    this.bossRef = enemy;
-    const ratio = enemy.hp / enemy.maxHp;
-    const phase = ratio > 0.7 ? 1 : ratio > 0.35 ? 2 : 3;
-    if (phase !== this.bossPhase) {
-      this.bossPhase = phase;
-      this.onSourcePhase(phase);
-    }
-
-    this.bossAttackCd -= dt;
-    this.bossSummonCd -= dt;
-    this.bossSealCd -= dt;
-    this.bossChargeCd -= dt;
-
-    enemy.root.x = ARENA * 0.5 + Math.sin(this.time.now * 0.00055) * 210;
-    enemy.root.y = 225 + Math.sin(this.time.now * 0.001) * 20;
-
-    if (this.bossAttackCd <= 0) {
-      this.bossAttackCd = phase >= 3 ? 1.5 : phase === 2 ? 1.9 : 2.3;
-      this.fireBossFan(
-        enemy,
-        (phase >= 3 ? 13 : phase === 2 ? 9 : 7) + (this.mutatorLevel >= 3 ? 2 : 0),
-        phase >= 3 ? 1.2 : 1.0
-      );
-      this.cameras.main.shake(80, 0.001);
-    }
-    if (phase >= 2 && this.bossSummonCd <= 0) {
-      this.bossSummonCd = 8.5;
-      this.summonSourceAdds();
-    }
-    if (phase >= 2 && this.bossSealCd <= 0) {
-      this.bossSealCd = 7;
-      this.castRuleSeal();
-    }
-    if (phase >= 3 && this.bossChargeCd <= 0) {
-      this.bossChargeCd = 3.5;
-      this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 72, 0.95, COLORS.purple, 18);
-      this.spawnShockZone(
-        combatInt(130, ARENA - 130),
-        combatInt(140, ARENA - 130),
-        64,
-        1.15,
-        COLORS.purple,
-        18
-      );
-      this.spawnShockZone(
-        combatInt(130, ARENA - 130),
-        combatInt(140, ARENA - 130),
-        64,
-        1.3,
-        COLORS.purple,
-        18
-      );
-    }
-
-    if (enemy.contactCd <= 0 && this.distanceToPlayer(enemy) < enemy.radius + PLAYER_RADIUS) {
-      enemy.contactCd = 1.0;
-      this.hurtPlayer(10, enemy.root.x, enemy.root.y, 'melee');
-    }
-  }
-
   private onSourcePhase(phase: number): void {
     this.cameras.main.shake(480, 0.007);
     this.cameras.main.flash(240, 190, 120, 255);
@@ -4438,31 +4439,6 @@ export class M0Scene extends Phaser.Scene {
       phase === 1 ? '源律 · 扇形弹幕' : phase === 2 ? '规则风暴 · 封印与召唤' : '终焉 · 虚空裂隙全覆盖'
     );
     this.refreshBossHud();
-  }
-
-  private summonSourceAdds(): void {
-    const alive = this.enemies.filter((item) => !item.dead && !item.elite).length;
-    if (alive >= 4) return;
-    const kinds: EnemyKind[] = this.bossPhase >= 3 ? ['seer', 'phase'] : ['sentry', 'phase'];
-    const spots: [number, number][] = [
-      [150, 220],
-      [ARENA - 150, 220]
-    ];
-    kinds.forEach((kind, index) => {
-      this.spawnEnemy(kind, spots[index][0], spots[index][1], false);
-      const spawned = this.enemies[this.enemies.length - 1];
-      if (spawned) {
-        this.tweens.killTweensOf(spawned.root);
-        this.tweens.add({
-          targets: spawned.root,
-          scale: { from: 0.2, to: 1 },
-          alpha: { from: 0, to: 1 },
-          duration: 240,
-          ease: 'Back.easeOut'
-        });
-      }
-    });
-    audio.play('spawn');
   }
 
   private updateBomber(enemy: EnemyUnit, dt: number): void {

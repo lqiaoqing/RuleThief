@@ -28,6 +28,7 @@ const browser = await puppeteer.launch({
 
 try {
   const page = await browser.newPage();
+  await page.bringToFront();
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
   await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
@@ -38,6 +39,7 @@ try {
 
   const rows = [];
   for (const [trajectory, impact] of COMBOS) {
+    const third = impact === 'frost' ? 'blast' : 'frost';
     const samples = [];
     for (let sample = 0; sample < SAMPLES; sample += 1) {
       await page.evaluate(() => {
@@ -54,6 +56,7 @@ try {
       await page.evaluate(([t, i]) => window.__RT_SET_BUILD__?.(t, i, 3, 3), [trajectory, impact]);
       await page.evaluate(() => window.__RT_SET_BUILD__?.(null, null, 1, 1));
       await page.evaluate(([t, i]) => window.__RT_SET_BUILD__?.(t, i, 3, 3), [trajectory, impact]);
+      await page.evaluate((key) => window.__RT_SET_THIRD__?.(key, 3), third);
       await sleep(200);
       const before = await page.evaluate(() => window.__RT_SNAPSHOT__?.().damageDealt ?? 0);
       const ticks = Math.ceil(SAMPLE_MS / 500);
@@ -69,8 +72,8 @@ try {
       await page.evaluate(() => window.__RT_SET_ROOM_KILLS__?.(0));
     }
     const avg = Math.round(samples.reduce((sum, value) => sum + value, 0) / samples.length);
-    rows.push({ combo: `${trajectory}+${impact}`, samples, avgDps: avg });
-    console.log(`${trajectory}+${impact}: samples=[${samples.join(', ')}] avg=${avg} dps`);
+    rows.push({ combo: `${trajectory}+${impact}+${third}`, samples, avgDps: avg });
+    console.log(`${trajectory}+${impact}+${third}: samples=[${samples.join(', ')}] avg=${avg} dps`);
   }
 
   fs.writeFileSync('docs/combo-bench.json', JSON.stringify({ sampleMs: SAMPLE_MS, rows }, null, 2));

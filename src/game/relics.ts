@@ -24,7 +24,7 @@ export const RELICS: Record<RelicId, RelicDef> = {
     icon: '#i-chain',
     color: '#65dcf0',
     description: '单次攻击命中 2 个以上目标时，获得 1 层「雷鸣」，最多 3 层。',
-    detail: '下一轮攻击每层提高 12% 伤害，触发后清空。'
+    detail: '每层使下一轮攻击 +12% 伤害；达到 3 层后的下一轮攻击消耗全部层数。'
   },
   'bloodflame-heart': {
     id: 'bloodflame-heart',

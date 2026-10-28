@@ -1,4 +1,14 @@
-import { getRuleOffers, type PlayerBuild, type RuleKey, type RuleOffer } from './rules';
+import {
+  ALL_RULE_KEYS,
+  getRuleOffers,
+  isImpactKey,
+  isTrajectoryKey,
+  type PlayerBuild,
+  type RuleKey,
+  type RuleOffer,
+  type RuleRef,
+  type RuleSlot
+} from './rules';
 import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionDef, type AscensionId } from './ascensions';
 import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
@@ -925,13 +935,22 @@ export const SUPPORTS: Record<SupportId, SupportDef> = {
 
 const SUPPORT_IDS: SupportId[] = ['max-hp', 'heal', 'dash', 'speed'];
 
+export const MAX_REFORGES = 2;
+
+export interface ReforgeOffer {
+  slot: RuleSlot;
+  from: RuleRef;
+  to: RuleKey;
+}
+
 export type Reward =
   | { kind: 'rule'; offer: RuleOffer }
   | { kind: 'support'; support: SupportDef }
   | { kind: 'mutation'; mutation: MutationDef }
   | { kind: 'relic'; relic: RelicDef }
   | { kind: 'ascension'; ascension: AscensionDef }
-  | { kind: 'late'; upgrade: LateUpgradeDef };
+  | { kind: 'late'; upgrade: LateUpgradeDef }
+  | { kind: 'reforge'; offer: ReforgeOffer; remaining: number };
 
 export interface RoomPreview {
   index: number;
@@ -964,6 +983,53 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
   return copy;
 }
 
+const REFORGE_PRIORITY: Record<RuleSlot, number> = {
+  secondary: 0,
+  trajectory: 1,
+  impact: 2
+};
+
+function buildReforgeOffer(
+  build: PlayerBuild,
+  random: () => number,
+  pool?: readonly RuleKey[]
+): ReforgeOffer | null {
+  const refs: { slot: RuleSlot; ref: RuleRef }[] = [];
+  if (build.trajectory) refs.push({ slot: 'trajectory', ref: build.trajectory });
+  if (build.impact) refs.push({ slot: 'impact', ref: build.impact });
+  if (build.secondary) refs.push({ slot: 'secondary', ref: build.secondary });
+  if (refs.length < 3) return null;
+
+  const equipped = new Set(refs.map(({ ref }) => ref.key));
+  const keys = pool && pool.length
+    ? ALL_RULE_KEYS.filter((key) => pool.includes(key))
+    : [...ALL_RULE_KEYS];
+  const candidates = refs
+    .filter(({ ref }) => !ref.ascended)
+    .map(({ slot, ref }) => ({
+      slot,
+      ref,
+      keys: keys.filter(
+        (key) =>
+          !equipped.has(key) &&
+          (slot === 'secondary'
+            ? true
+            : slot === 'trajectory'
+              ? isTrajectoryKey(key)
+              : isImpactKey(key))
+      )
+    }))
+    .filter((entry) => entry.keys.length > 0)
+    .sort(
+      (a, b) =>
+        a.ref.level - b.ref.level || REFORGE_PRIORITY[a.slot] - REFORGE_PRIORITY[b.slot]
+    );
+  const chosen = candidates[0];
+  if (!chosen) return null;
+  const to = chosen.keys[Math.floor(random() * chosen.keys.length)];
+  return { slot: chosen.slot, from: { ...chosen.ref }, to };
+}
+
 export function buildRoomRewards(
   build: PlayerBuild,
   room: RoomDef,
@@ -973,6 +1039,7 @@ export function buildRoomRewards(
     bonusCards?: number;
     lateEligible?: boolean;
     lateUpgrades?: readonly LateUpgradeId[];
+    reforgeLeft?: number;
   } = {}
 ): Reward[] {
   const pool = getRoomRuleKeys(room);
@@ -1003,6 +1070,12 @@ export function buildRoomRewards(
     if (latePool[0]) rewards.push({ kind: 'late', upgrade: latePool[0] });
   }
 
+  const reforgeLeft = options.reforgeLeft ?? 0;
+  if (room.elite && reforgeLeft > 0 && rewards.length < count) {
+    const offer = buildReforgeOffer(build, random, pool);
+    if (offer) rewards.push({ kind: 'reforge', offer, remaining: reforgeLeft });
+  }
+
   const supports = shuffle(SUPPORT_IDS, random).map((id) => SUPPORTS[id]);
   let cursor = 0;
   while (rewards.length < count && cursor < supports.length) {
@@ -1021,6 +1094,7 @@ export function buildChapterRewards(
     unlockedAscensions?: readonly AscensionId[];
     lateEligible?: boolean;
     lateUpgrades?: readonly LateUpgradeId[];
+    reforgeLeft?: number;
   } = {}
 ): Reward[] {
   const rewards: Reward[] = [];
@@ -1066,6 +1140,12 @@ export function buildChapterRewards(
       random
     );
     if (latePool[0]) rewards.push({ kind: 'late', upgrade: latePool[0] });
+  }
+
+  const reforgeLeft = options.reforgeLeft ?? 0;
+  if (reforgeLeft > 0 && rewards.length < 3) {
+    const offer = buildReforgeOffer(build, random);
+    if (offer) rewards.push({ kind: 'reforge', offer, remaining: reforgeLeft });
   }
 
   const supports = shuffle(SUPPORT_IDS, random).map((id) => SUPPORTS[id]);

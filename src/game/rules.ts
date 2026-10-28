@@ -353,6 +353,39 @@ export function ascendRule(build: PlayerBuild, key: RuleKey): PlayerBuild {
   return next;
 }
 
+const REFORGE_PRIORITY: RuleSlot[] = ['secondary', 'trajectory', 'impact'];
+
+export function reforgeSlot(build: PlayerBuild): RuleSlot | null {
+  const refs: { slot: RuleSlot; ref: RuleRef }[] = [];
+  if (build.trajectory) refs.push({ slot: 'trajectory', ref: build.trajectory });
+  if (build.impact) refs.push({ slot: 'impact', ref: build.impact });
+  if (build.secondary) refs.push({ slot: 'secondary', ref: build.secondary });
+  const eligible = refs.filter(({ ref }) => !ref.ascended);
+  if (eligible.length === 0) return null;
+  eligible.sort(
+    (a, b) =>
+      a.ref.level - b.ref.level ||
+      REFORGE_PRIORITY.indexOf(a.slot) - REFORGE_PRIORITY.indexOf(b.slot)
+  );
+  return eligible[0].slot;
+}
+
+export function reforgeRule(
+  build: PlayerBuild,
+  slot: RuleSlot,
+  key: RuleKey
+): PlayerBuild {
+  const next = cloneBuild(build);
+  if (slot === 'trajectory' && isTrajectoryKey(key)) {
+    next.trajectory = { key, level: 1 };
+  } else if (slot === 'impact' && isImpactKey(key)) {
+    next.impact = { key, level: 1 };
+  } else if (slot === 'secondary') {
+    next.secondary = { key, level: 1 };
+  }
+  return next;
+}
+
 function buildOffer(build: PlayerBuild, key: RuleKey): RuleOffer | null {
   const def = RULE_DEFS[key];
   const main = def.slot === 'trajectory' ? build.trajectory : build.impact;
