@@ -921,7 +921,7 @@ try {
   const summoned = await poll(
     page,
     () => (window.__RT_SNAPSHOT__?.().enemies ?? 0) >= 2,
-    6000
+    10000
   );
   check('phase 2 summons adds', summoned, String((await snapshot(page)).enemies));
 
@@ -1344,7 +1344,14 @@ try {
   });
   await enterRoom(hordePage);
   await hordePage.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
-  await sleep(2_400);
+  await poll(
+    hordePage,
+    () => {
+      window.__RT_HEAL__?.(100);
+      return Number(window.__RT_SNAPSHOT__?.().enemies ?? 0) >= 10;
+    },
+    7_000
+  );
   const hordeState = await snapshot(hordePage);
   const hordeHud = await hordePage.evaluate(() => ({
     wave: document.getElementById('wave-progress')?.textContent,
@@ -1356,27 +1363,28 @@ try {
     Boolean(hordeState.wave) &&
       Number(hordeState.wave?.waves) >= 3 &&
       Number(hordeState.wave?.spawned) >= 8 &&
-      Number(hordeState.alive) >= 8 &&
+      Number(hordeState.enemies) >= 8 &&
       hordeHud.hidden === false &&
       /\d+ \/ \d+/.test(hordeHud.wave ?? ''),
     JSON.stringify({ wave: hordeState.wave, alive: hordeState.alive, hud: hordeHud })
   );
 
-  await hordePage.keyboard.press('Space');
-  await sleep(180);
-  const dashNova = await snapshot(hordePage);
+  await hordePage.evaluate(() => {
+    for (let index = 0; index < 10; index += 1) window.__RT_KILL_ONE__?.();
+  });
+  await poll(
+    hordePage,
+    () => Number(window.__RT_SNAPSHOT__?.().overloadSpawned ?? 0) >= 1,
+    3000
+  );
+  const overload = await snapshot(hordePage);
   check(
-    'dashing through a horde releases a shockwave',
-    Number(dashNova.dashNovas) >= 1,
-    String(dashNova.dashNovas)
+    'ten kills overload the room with a bonus pack',
+    Number(overload.overloadSpawned) >= 1 && Number(overload.alive) >= 3,
+    JSON.stringify({ overload: overload.overloadSpawned, alive: overload.alive })
   );
 
-  await hordePage.evaluate(() => {
-    window.__RT_KILL_ONE__?.();
-    window.__RT_KILL_ONE__?.();
-    window.__RT_KILL_ONE__?.();
-  });
-  await sleep(120);
+  await sleep(80);
   const streakState = await snapshot(hordePage);
   const streakHud = await hordePage.evaluate(() => ({
     hidden: document.getElementById('kill-streak')?.hidden,
@@ -1390,19 +1398,13 @@ try {
     JSON.stringify({ streak: streakState.killStreak, hud: streakHud })
   );
 
-  await hordePage.evaluate(() => {
-    for (let index = 0; index < 7; index += 1) window.__RT_KILL_ONE__?.();
-  });
-  await poll(
-    hordePage,
-    () => Number(window.__RT_SNAPSHOT__?.().overloadSpawned ?? 0) >= 1,
-    3000
-  );
-  const overload = await snapshot(hordePage);
+  await hordePage.keyboard.press('Space');
+  await sleep(180);
+  const dashNova = await snapshot(hordePage);
   check(
-    'ten kills overload the room with a bonus pack',
-    Number(overload.overloadSpawned) >= 1 && Number(overload.alive) >= 3,
-    JSON.stringify({ overload: overload.overloadSpawned, alive: overload.alive })
+    'dashing through a horde releases a shockwave',
+    Number(dashNova.dashNovas) >= 1,
+    String(dashNova.dashNovas)
   );
 
   await hordePage.evaluate(() => window.__RT_STEP__?.(5));

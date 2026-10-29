@@ -17,7 +17,7 @@ scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
 scripts/lowend.mjs             CPU ×1/×4/×6：119.3 / 76.0 / 61.3 fps（120Hz 显示器，min 53，含怪潮）
 scripts/soak.mjs               3 分钟（怪潮）：监听器 +0、堆 8–30MB 随 GC 波动、143.8fps（高刷显示器）
 scripts/combo-bench.mjs        9 组合 DPS：40–105（旧逐只模式木桩基准）
-scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房：6–13s、17 杀、峰值 11–13
+scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房：6–11s、17 杀、峰值 11–13
 ```
 
 性能与浸泡结果在 `docs/STATUS.md` 与脚本输出中维护；本轮 M9 构建的复测结果见 C 节末尾。
@@ -94,7 +94,7 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | 40 敌人压力 | 自动近似 | `stress.mjs`：40 敌人 / 45 发敌弹，avg 59.6 / min 59 fps |
 | CPU 节流 | 自动近似 | `lowend.mjs`（怪潮）：×1 119.3 / ×4 76.0 / ×6 61.3 fps（120Hz 显示器，min 53） |
 | 长时浸泡 | 自动近似 | `soak.mjs`（怪潮，3 分钟）：监听器 +0、节点 1.8k–2.6k 波动、堆 8–30MB 随 GC 波动、143.8fps（高刷显示器）；旧节奏 8 分钟基线仍保留 |
-| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs`（旧逐只木桩）40–105 DPS；`combo-run.mjs`（怪潮）6–13s、17 杀、峰值 11–13 |
+| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs`（旧逐只木桩）40–105 DPS；`combo-run.mjs`（怪潮）6–11s、17 杀、峰值 11–13 |
 
 ## E. 仅外部可完成的验收
 
