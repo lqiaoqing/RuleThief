@@ -1452,6 +1452,18 @@ try {
     Number(novaState.hordeNovas) >= 1,
     JSON.stringify({ novas: novaState.hordeNovas, streak: novaState.killStreak })
   );
+
+  await hordePage.evaluate(() => window.__RT_END__?.(true));
+  await sleep(250);
+  const hordeResult = await hordePage.evaluate(() => ({
+    visible: !document.getElementById('result-screen')?.hidden,
+    text: document.getElementById('result-horde')?.textContent
+  }));
+  check(
+    'result screen summarizes horde streak stats',
+    hordeResult.visible && /最高连杀/.test(hordeResult.text ?? ''),
+    JSON.stringify(hordeResult)
+  );
   await hordePage.close();
 
   const speedPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });

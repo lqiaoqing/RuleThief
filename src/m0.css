@@ -494,6 +494,19 @@
   text-align: center;
 }
 
+.result-horde {
+  margin: -8px 0 14px;
+  color: #86d9e3;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.result-horde[hidden] {
+  display: none;
+}
+
 .result-record {
   margin: -4px 0 12px;
   color: #5f748c;

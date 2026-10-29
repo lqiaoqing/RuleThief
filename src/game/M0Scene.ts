@@ -212,6 +212,9 @@ export interface RunEndPayload {
   stageOnly: boolean;
   time: number;
   kills: number;
+  killStreakBest: number;
+  overloads: number;
+  novas: number;
   rules: number;
   combo: string;
   levelSum: number;
@@ -5524,6 +5527,9 @@ export class M0Scene extends Phaser.Scene {
       stageOnly,
       time: this.elapsed,
       kills: this.kills,
+      killStreakBest: this.killStreakBest,
+      overloads: this.overloadSpawned,
+      novas: this.hordeNovas,
       rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
       combo: getBuildCombo(this.build).name,
       levelSum: buildLevelSum(this.build),

@@ -168,6 +168,7 @@ const resultSub = byId<HTMLElement>('result-sub');
 const resultTime = byId<HTMLElement>('result-time');
 const resultKills = byId<HTMLElement>('result-kills');
 const resultRooms = byId<HTMLElement>('result-rooms');
+const resultHorde = byId<HTMLElement>('result-horde');
 const resultCombo = byId<HTMLElement>('result-combo');
 const resultComboName = byId<HTMLElement>('result-combo-name');
 const resultComboLevel = byId<HTMLElement>('result-combo-level');
@@ -300,6 +301,8 @@ function showResult(payload: RunEndPayload): void {
       : '生命归零。先看懂预警，再决定什么时候闪避。';
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);
+  resultHorde.hidden = payload.killStreakBest < 2 && payload.novas === 0;
+  resultHorde.textContent = `最高连杀 ×${payload.killStreakBest} · 过载 ${payload.overloads} · 规则爆发 ${payload.novas}`;
   resultRooms.textContent = `${payload.roomsCleared} / ${payload.roomsTotal}`;
   resultComboName.textContent = payload.combo;
   resultComboLevel.textContent = `等级 ${payload.levelSum} / 9`;
