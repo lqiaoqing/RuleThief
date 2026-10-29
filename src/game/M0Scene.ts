@@ -71,7 +71,7 @@ import {
   updateSource as updateSourceBoss,
   type SourceHost
 } from './bosses/source';
-import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, MAX_REFORGES, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
+import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, MAX_REFORGES, type CoverDef, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
 import { WaveDirector, buildWavePlan } from './waves';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
@@ -286,6 +286,8 @@ export class M0Scene extends Phaser.Scene {
   private enemyLayer!: Phaser.GameObjects.Container;
   private fxLayer!: Phaser.GameObjects.Container;
   private frameLayer!: Phaser.GameObjects.Container;
+  private coverLayer!: Phaser.GameObjects.Container;
+  private covers: readonly CoverDef[] = [];
   private floorImage?: Phaser.GameObjects.Image;
   private themeWash?: Phaser.GameObjects.Rectangle;
   private arenaFrame?: Phaser.GameObjects.Graphics;
@@ -469,6 +471,9 @@ export class M0Scene extends Phaser.Scene {
     this.addBrazier(92, 680);
     this.addBrazier(708, 680);
     this.addAmbientDust();
+
+    this.coverLayer = this.add.container(0, 0);
+    this.world.add(this.coverLayer);
 
     this.enemyLayer = this.add.container(0, 0);
     this.world.add(this.enemyLayer);
@@ -1297,6 +1302,8 @@ export class M0Scene extends Phaser.Scene {
       room.modifier === 'conveyor' ? room.conveyor?.y ?? 0 : 0
     );
     this.drawConveyor();
+    this.covers = room.cover ?? [];
+    this.drawCovers();
     setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
     this.resumeScene();
@@ -2379,6 +2386,49 @@ export class M0Scene extends Phaser.Scene {
     this.dustEmitter = dust;
   }
 
+  private drawCovers(): void {
+    this.coverLayer.removeAll(true);
+    for (const cover of this.covers) {
+      const base = this.add
+        .ellipse(cover.x, cover.y + 16, cover.radius * 2.1, cover.radius * 0.8, 0x050a12, 0.6)
+        .setStrokeStyle(1, COLORS.gold, 0.16);
+      const body = this.add
+        .circle(cover.x, cover.y, cover.radius, 0x263b55, 1)
+        .setStrokeStyle(2, COLORS.gold, 0.5);
+      const top = this.add
+        .ellipse(cover.x, cover.y - cover.radius * 0.48, cover.radius * 1.3, cover.radius * 0.54, 0x3b5675, 0.9)
+        .setStrokeStyle(1, COLORS.cyan, 0.28);
+      const ring = this.add
+        .circle(cover.x, cover.y, cover.radius * 0.56, 0x000000, 0)
+        .setStrokeStyle(1, COLORS.cyan, 0.2);
+      this.coverLayer.add([base, body, top, ring]);
+    }
+  }
+
+  private coverAt(x: number, y: number, radius: number): boolean {
+    return this.covers.some(
+      (cover) =>
+        Phaser.Math.Distance.Between(x, y, cover.x, cover.y) <
+        cover.radius + radius
+    );
+  }
+
+  private resolveCover(
+    target: { x: number; y: number },
+    radius: number
+  ): void {
+    for (const cover of this.covers) {
+      const dx = target.x - cover.x;
+      const dy = target.y - cover.y;
+      const distance = Math.hypot(dx, dy);
+      const minDistance = cover.radius + radius;
+      if (distance > 0 && distance < minDistance) {
+        target.x = cover.x + (dx / distance) * minDistance;
+        target.y = cover.y + (dy / distance) * minDistance;
+      }
+    }
+  }
+
   private drawConveyor(): void {
     this.conveyorGfx?.destroy();
     this.conveyorGfx = undefined;
@@ -2659,6 +2709,7 @@ export class M0Scene extends Phaser.Scene {
     }
     this.playerRoot.x = Phaser.Math.Clamp(this.playerRoot.x, 54, ARENA - 54);
     this.playerRoot.y = Phaser.Math.Clamp(this.playerRoot.y, 74, ARENA - 54);
+    this.resolveCover(this.playerRoot, PLAYER_RADIUS);
 
     if (this.playerSprite) {
       if (input.x !== 0) this.playerSprite.setFlipX(input.x < 0);
@@ -2966,6 +3017,10 @@ export class M0Scene extends Phaser.Scene {
     bolt.root.x += bolt.direction.x * bolt.speed * dt;
     bolt.root.y += bolt.direction.y * bolt.speed * dt;
     bolt.distance += bolt.speed * dt;
+    if (this.coverAt(bolt.root.x, bolt.root.y, bolt.radius)) {
+      this.destroyBolt(bolt);
+      return;
+    }
     if (bolt.distance >= bolt.maxDistance) {
       this.destroyBolt(bolt);
       return;
@@ -2981,6 +3036,10 @@ export class M0Scene extends Phaser.Scene {
     bolt.root.x += bolt.direction.x * bolt.speed * dt;
     bolt.root.y += bolt.direction.y * bolt.speed * dt;
     bolt.distance += bolt.speed * dt;
+    if (this.coverAt(bolt.root.x, bolt.root.y, bolt.radius)) {
+      this.destroyBolt(bolt);
+      return;
+    }
     for (const enemy of [...this.enemies]) {
       if (enemy.dead || bolt.hitEnemies.has(enemy)) continue;
       const dist = Phaser.Math.Distance.Between(
@@ -4017,6 +4076,7 @@ export class M0Scene extends Phaser.Scene {
       }
       enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, ARENA - 58);
       enemy.root.y = Phaser.Math.Clamp(enemy.root.y, 78, ARENA - 58);
+      this.resolveCover(enemy.root, enemy.radius * 0.82);
     }
 
     for (let i = 0; i < current.length; i += 1) {
@@ -5139,6 +5199,11 @@ export class M0Scene extends Phaser.Scene {
       bolt.root.x += bolt.vx * dt;
       bolt.root.y += bolt.vy * dt;
       if (bolt.life <= 0 || bolt.root.x < -30 || bolt.root.x > ARENA + 30 || bolt.root.y < -30 || bolt.root.y > ARENA + 30) {
+        bolt.dead = true;
+        bolt.root.destroy(true);
+        continue;
+      }
+      if (this.coverAt(bolt.root.x, bolt.root.y, bolt.radius)) {
         bolt.dead = true;
         bolt.root.destroy(true);
         continue;

@@ -235,6 +235,12 @@ export const ENEMY_RULES: Record<EnemyKind, RuleKey> = Object.fromEntries(
 export type RoomHazard = 'shock-grid' | 'void-rift';
 export type RoomModifier = 'rule-null' | 'conveyor';
 
+export interface CoverDef {
+  x: number;
+  y: number;
+  radius: number;
+}
+
 export interface RoomDef {
   id: string;
   name: string;
@@ -244,6 +250,7 @@ export interface RoomDef {
   maxAlive: number;
   spawnInterval: number;
   mix: { kind: EnemyKind; weight: number }[];
+  cover?: readonly CoverDef[];
   leader?: EnemyKind;
   boss?: EnemyKind;
   rewardCount?: number;
@@ -353,6 +360,10 @@ export const ROOMS: readonly RoomDef[] = [
     mix: [
       { kind: 'beetle', weight: 4 },
       { kind: 'wisp', weight: 6 }
+    ],
+    cover: [
+      { x: 180, y: 230, radius: 36 },
+      { x: 620, y: 600, radius: 36 }
     ]
   },
   {
@@ -392,6 +403,10 @@ export const ROOMS: readonly RoomDef[] = [
     mix: [
       { kind: 'bat', weight: 6 },
       { kind: 'slime', weight: 4 }
+    ],
+    cover: [
+      { x: 210, y: 590, radius: 34 },
+      { x: 600, y: 240, radius: 34 }
     ]
   },
   {
@@ -418,6 +433,10 @@ export const ROOMS: readonly RoomDef[] = [
     mix: [
       { kind: 'bomber', weight: 6 },
       { kind: 'beetle', weight: 6 }
+    ],
+    cover: [
+      { x: 190, y: 590, radius: 34 },
+      { x: 610, y: 250, radius: 34 }
     ]
   },
   {
