@@ -1,20 +1,20 @@
 [
   {
     "cpuThrottle": 1,
-    "avgFps": 119.3,
-    "minFps": 112,
+    "avgFps": 121,
+    "minFps": 114,
     "enemies": 34
   },
   {
     "cpuThrottle": 4,
-    "avgFps": 76,
-    "minFps": 70,
+    "avgFps": 76.7,
+    "minFps": 72,
     "enemies": 34
   },
   {
     "cpuThrottle": 6,
-    "avgFps": 61.3,
-    "minFps": 53,
+    "avgFps": 58,
+    "minFps": 46,
     "enemies": 34
   }
 ]

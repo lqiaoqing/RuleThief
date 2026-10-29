@@ -14,7 +14,7 @@ npm run fullrun                34/34 三章结构性全流程通过（约 56 秒
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
 scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
-scripts/lowend.mjs             CPU ×1/×4/×6：119.3 / 76.0 / 61.3 fps（120Hz 显示器，min 53，含怪潮）
+scripts/lowend.mjs             CPU ×1/×4/×6：121.0 / 76.7 / 58.0 fps（120Hz 显示器，min 53，含怪潮）
 scripts/soak.mjs               2 分钟（怪潮）：监听器 +0、堆 7–32MB 随 GC 波动、143fps（高刷显示器）
 scripts/combo-bench.mjs        9 组合 DPS：40–105（旧逐只模式木桩基准）
 scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房：6–11s、17 杀、峰值 11–13
@@ -82,7 +82,7 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M9.7 | Core / Source 行为移出场景 | 自动 | `bosses/core.ts` / `source.ts` + `CoreHost` / `SourceHost`；10 项模块单测；`M0Scene.ts` 约 5,519 行，宿主与其余 AI 仍在场景类 |
 | M10.0 | 怪潮调度替代逐只刷新 | 自动 | `waves.ts` + 6 项单测；普通/精英房整组波次，单波同侧压入，第一世界后段 28 只/房并交替 2/3/4/5 波；`?horde=0` 保留旧模式；冒烟「horde rooms spawn waves that overlap into a crowd」 |
 | M10.0 | 割草反馈与后期压力 | 自动 | 连杀 HUD、10/25 连杀 FRENZY/MASSACRE、同帧 3 杀 hitstop/震屏/冲击环、普攻击退、闪避冲击波、10/25 连杀压入额外怪潮、25/50 连杀规则爆发、18 秒速杀额外奖励卡、第 4 战斗房后按已装备规则抽取一次规则共鸣、第一世界后段与 W2/W3 三个房间的石柱掩体（阻挡移动与弹道）、结算最高连杀/过载/规则爆发统计、第一世界第 6 房起精英头目；冒烟连杀/头目/过载/爆发/闪避/速杀/结算断言 |
-| M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14，约一半混入杂兵；普通怪 HP ×0.38，精英/BOSS 不变；45 敌压测 120.1fps（120Hz）、CPU×6 61.3fps（min 53） |
+| M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14，约一半混入杂兵；普通怪 HP ×0.38，精英/BOSS 不变；45 敌压测 120.1fps（120Hz）、CPU×6 58.0fps（min 46） |
 | M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 5,519 行，超过蓝图约束，普通敌人 AI/渲染待后续拆分 |
 
 ## D. 性能与长时运行
