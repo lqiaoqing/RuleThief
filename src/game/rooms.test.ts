@@ -50,7 +50,7 @@ describe('room definitions', () => {
   it('ships forty-four rooms with rising pressure', () => {
     expect(ROOMS).toHaveLength(44);
     expect(ROOMS.map((room) => room.quota)).toEqual([
-      13, 20, 22, 24, 22, 22, 22, 22, 22, 22, 22, 22, 22, 16, 16, 1, 18, 22, 24, 16, 22, 24, 24,
+      13, 20, 22, 24, 22, 28, 28, 28, 22, 28, 28, 28, 28, 16, 16, 1, 18, 22, 24, 16, 22, 24, 24,
       26, 22, 23, 23, 24, 24, 1, 20, 23, 24, 24, 25, 16, 24, 25, 25, 24, 27, 26, 27, 1
     ]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);

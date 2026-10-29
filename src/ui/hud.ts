@@ -95,6 +95,17 @@ const mobileComboName = byId<HTMLElement>('mobile-combo-name');
 const mobileComboSub = byId<HTMLElement>('mobile-combo-sub');
 
 const codexList = byId<HTMLElement>('codex-list');
+const objectiveWave = byId<HTMLElement>('objective-wave');
+const waveProgress = byId<HTMLElement>('wave-progress');
+const aliveCount = byId<HTMLElement>('alive-count');
+const killStreak = byId<HTMLElement>('kill-streak');
+const killStreakKicker = byId<HTMLElement>('kill-streak-kicker');
+const killStreakCount = byId<HTMLElement>('kill-streak-count');
+const killStreakBest = byId<HTMLElement>('kill-streak-best');
+const waveBanner = byId<HTMLElement>('wave-banner');
+const waveBannerText = byId<HTMLElement>('wave-banner-text');
+const waveBannerSub = byId<HTMLElement>('wave-banner-sub');
+let waveBannerTimeout: number | undefined;
 
 const bossBar = byId<HTMLElement>('boss-bar');
 const bossBarName = byId<HTMLElement>('boss-bar-name');
@@ -316,6 +327,46 @@ export function setKills(kills: number): void {
   killsText.textContent = String(kills);
   objectiveKills.textContent = String(kills);
   mobileKills.textContent = String(kills);
+}
+
+export function setWaveStatus(wave: number, total: number, alive: number): void {
+  objectiveWave.hidden = total <= 0;
+  waveProgress.textContent = total > 0 ? `${Math.max(1, wave)} / ${total}` : '—';
+  aliveCount.textContent = String(alive);
+}
+
+export function setKillStreak(count: number, best: number): void {
+  killStreak.hidden = count < 2;
+  if (count < 2) return;
+  killStreakCount.textContent = `×${count}`;
+  killStreakBest.textContent = `BEST ${Math.max(count, best)}`;
+  killStreakKicker.textContent =
+    count >= 25 ? 'MASSACRE' : count >= 10 ? 'FRENZY' : 'KILL STREAK';
+  killStreak.classList.toggle('is-hot', count >= 10);
+  killStreak.classList.toggle('is-blazing', count >= 25);
+  killStreak.classList.remove('is-pop');
+  void killStreak.offsetWidth;
+  killStreak.classList.add('is-pop');
+}
+
+export function showWaveBanner(wave: number, total: number): void {
+  waveBannerText.textContent = `${wave} / ${total}`;
+  waveBannerSub.textContent = wave === total ? 'FINAL WAVE' : 'HOSTILES INBOUND';
+  waveBanner.hidden = false;
+  waveBanner.classList.remove('is-in');
+  void waveBanner.offsetWidth;
+  waveBanner.classList.add('is-in');
+  window.clearTimeout(waveBannerTimeout);
+  waveBannerTimeout = window.setTimeout(() => {
+    waveBanner.hidden = true;
+  }, 1400);
+}
+
+export function resetHordeHud(): void {
+  window.clearTimeout(waveBannerTimeout);
+  killStreak.hidden = true;
+  waveBanner.hidden = true;
+  objectiveWave.hidden = true;
 }
 
 function updateSlot(
@@ -556,6 +607,7 @@ export function resetM0Hud(): void {
     maxHp: 100
   });
   setBuild(createEmptyBuild(), new Set());
+  resetHordeHud();
   setBossBar(null);
   setMutation(null);
   setSealedRule(null, false);

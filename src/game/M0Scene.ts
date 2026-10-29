@@ -9,11 +9,14 @@ import {
   setMutation,
   setLate,
   setRelics,
+  setKillStreak,
   setRoomEnemies,
   setRoomProgress,
   setRunClock,
   setSealedRule,
-  showRuleToast
+  setWaveStatus,
+  showRuleToast,
+  showWaveBanner
 } from '../ui/hud';
 import { audio } from './audio';
 import {
@@ -68,6 +71,7 @@ import {
   type SourceHost
 } from './bosses/source';
 import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, MAX_REFORGES, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
+import { WaveDirector, buildWavePlan } from './waves';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
@@ -130,6 +134,9 @@ interface EnemyUnit {
   chargesLeft: number;
   trailCd: number;
   countsTowardQuota: boolean;
+  knockX: number;
+  knockY: number;
+  knockTime: number;
 }
 
 interface PlayerBolt {
@@ -339,6 +346,15 @@ export class M0Scene extends Phaser.Scene {
   private chapterRewardOpen = false;
   private thunderStacks = 0;
   private reforgesUsed = 0;
+  private waveDirector: WaveDirector | null = null;
+  private hordeEnabled = true;
+  private waveCaptainSpawned = false;
+  private portalToken = 0;
+  private killStreak = 0;
+  private killStreakBest = 0;
+  private killStreakTimer = 0;
+  private killBurst = 0;
+  private hitStopMs = 0;
   private attackHits = new Set<EnemyUnit>();
   private attackThunderAwarded = false;
   private prismTime = 0;
@@ -637,6 +653,13 @@ export class M0Scene extends Phaser.Scene {
     this.chapterRewardOpen = false;
     this.thunderStacks = 0;
     this.reforgesUsed = 0;
+    this.waveDirector = null;
+    this.portalToken = 0;
+    this.killStreak = 0;
+    this.killStreakBest = 0;
+    this.killStreakTimer = 0;
+    this.killBurst = 0;
+    this.hitStopMs = 0;
     this.prismTime = 0;
     this.bloodflameCd = 0;
     this.featherTime = 0;
@@ -727,6 +750,10 @@ export class M0Scene extends Phaser.Scene {
     this.startChapter = Math.max(0, Math.min(2, Math.floor(index)));
   }
 
+  public setHordeEnabled(enabled: boolean): void {
+    this.hordeEnabled = enabled;
+  }
+
   public getRoom(): RoomDef {
     return this.encounter?.kind === 'room' ? this.encounter.room : ROOMS[ROOMS.length - 1];
   }
@@ -784,6 +811,7 @@ export class M0Scene extends Phaser.Scene {
         hp: this.hp,
         maxHp: this.maxHp
       });
+      setWaveStatus(0, 0, 0);
       return;
     }
     const room = this.getRoom();
@@ -1198,6 +1226,14 @@ export class M0Scene extends Phaser.Scene {
     this.roomKills = 0;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
+    this.waveDirector = null;
+    this.waveCaptainSpawned = false;
+    this.killStreak = 0;
+    this.killStreakTimer = 0;
+    this.killBurst = 0;
+    this.hitStopMs = 0;
+    setKillStreak(0, this.killStreakBest);
+    setWaveStatus(0, 0, 0);
     this.roomSpeedMult = this.pendingSpeedMult;
     this.roomBonusCards = this.pendingBonusCards;
     this.pendingSpeedMult = 1;
@@ -1263,6 +1299,16 @@ export class M0Scene extends Phaser.Scene {
       this.spawnEnemy(kind, ARENA - 160, 240, false);
       this.spawnLeaderBurst(ARENA - 160, 240);
       showRuleToast('blast', '异变 · 额外精英', `${ENEMY_SPECS[kind].name} 进入本房`);
+    }
+
+    if (this.hordeEnabled && !room.boss) {
+      const remaining = Math.max(0, room.quota - this.roomSpawned);
+      this.waveDirector =
+        remaining > 0
+          ? new WaveDirector(
+              buildWavePlan(remaining, this.chapterIndex, Boolean(room.elite))
+            )
+          : null;
     }
   }
 
@@ -1537,6 +1583,19 @@ export class M0Scene extends Phaser.Scene {
     this.castRuleSeal();
   }
 
+  public debugJumpToStep(index: number): boolean {
+    if (this.runState !== 'playing' || this.plan.length === 0) return false;
+    const target = Math.max(0, Math.min(this.plan.length - 1, Math.floor(index)));
+    this.stepIndex = target;
+    this.roomKills = 0;
+    this.roomSpawned = 0;
+    this.pendingSpawns = 0;
+    this.waveDirector = null;
+    this.waveCaptainSpawned = false;
+    this.loadStep(target);
+    return true;
+  }
+
   public debugJumpToBoss(withStarterBuild = true): void {
     if (this.runState !== 'playing') return;
     const last = this.plan[this.plan.length - 1];
@@ -1653,6 +1712,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugKillAll(): void {
+    this.waveDirector?.complete();
     for (const enemy of [...this.enemies]) {
       this.killEnemy(enemy);
     }
@@ -1664,11 +1724,14 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugPurgeEnemies(): void {
+    this.waveDirector?.complete();
+    this.portalToken += 1;
     for (const enemy of this.enemies) {
       this.destroyEnemy(enemy);
     }
     this.enemies = [];
     this.pendingSpawns = 0;
+    setWaveStatus(0, 0, 0);
   }
 
   public debugSetStats(elapsed: number, kills: number): void {
@@ -1679,6 +1742,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugSetRoomKills(kills: number): void {
+    this.waveDirector?.complete();
     this.roomKills = Math.max(0, Math.min(this.getRoom().quota, kills));
     this.roomSpawned = Math.max(this.roomSpawned, this.roomKills);
     this.refreshRoomHud();
@@ -1824,6 +1888,11 @@ export class M0Scene extends Phaser.Scene {
       roomKills: this.roomKills,
       roomQuota: this.getRoom().quota,
       roomId: this.getRoom().id,
+      wave: this.waveDirector?.snapshot() ?? null,
+      alive: this.enemies.length + this.pendingSpawns,
+      killStreak: this.killStreak,
+      killStreakBest: this.killStreakBest,
+      hitStopMs: this.hitStopMs,
       roomElite: Boolean(this.getRoom().elite),
       roomBoss: Boolean(this.getRoom().boss),
       rewardOpen: this.rewardOpen,
@@ -2512,7 +2581,10 @@ export class M0Scene extends Phaser.Scene {
       const target = this.findNearestEnemy(this.playerRoot.x, this.playerRoot.y);
       if (target) {
         this.fireAttack(target);
-        this.attackCd = ATTACK_INTERVAL * getAttackIntervalMultiplier(this.mutation);
+        this.attackCd =
+          ATTACK_INTERVAL *
+          getAttackIntervalMultiplier(this.mutation) *
+          this.hordeFrenzyMultiplier();
       } else {
         this.attackCd = 0;
       }
@@ -3212,6 +3284,15 @@ export class M0Scene extends Phaser.Scene {
     enemy.hpFill.setScale(Math.max(0, enemy.hp / enemy.maxHp), 1);
     const x = enemy.root.x + Phaser.Math.Between(-8, 8);
     const y = enemy.root.y - (enemy.kind === 'bat' ? 44 : 58);
+    if (this.hordeEnabled && visual !== 'dot' && !ENEMY_SPECS[enemy.kind].boss) {
+      const dx = enemy.root.x - this.playerRoot.x;
+      const dy = enemy.root.y - this.playerRoot.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const force = enemy.elite ? 65 : 185;
+      enemy.knockX = (dx / length) * force;
+      enemy.knockY = (dy / length) * force;
+      enemy.knockTime = 0.14;
+    }
     if (visual === 'hit') {
       enemy.sprite.setTintFill(0xffe6c8);
       this.time.delayedCall(44, () => {
@@ -3250,6 +3331,7 @@ export class M0Scene extends Phaser.Scene {
     audio.play('death');
     this.kills += 1;
     if (enemy.countsTowardQuota) this.roomKills += 1;
+    this.registerKillStreak();
     this.refreshRoomHud();
 
     if (enemy.burnTime > 0 && this.hasLate('ember-spread')) {
@@ -3301,6 +3383,47 @@ export class M0Scene extends Phaser.Scene {
     ) {
       this.clearRoom();
     }
+  }
+
+  private registerKillStreak(): void {
+    this.killStreak += 1;
+    this.killStreakTimer = 2.4;
+    this.killStreakBest = Math.max(this.killStreakBest, this.killStreak);
+    setKillStreak(this.killStreak, this.killStreakBest);
+    this.killBurst += 1;
+    if (this.hordeEnabled && this.killBurst === 3) {
+      this.hitStopMs = 45;
+      this.cameras.main.shake(80, 0.0028);
+      this.spawnHordeBurst();
+    }
+    if (
+      this.hordeEnabled &&
+      (this.killStreak === 10 || this.killStreak === 25 || this.killStreak === 50)
+    ) {
+      showRuleToast('blast', `连杀 ×${this.killStreak}`, '清场节奏已经起来');
+      this.cameras.main.shake(140, 0.003);
+    }
+  }
+
+  private hordeFrenzyMultiplier(): number {
+    if (!this.hordeEnabled) return 1;
+    return Math.max(0.72, 1 - Math.min(0.28, this.killStreak * 0.012));
+  }
+
+  private spawnHordeBurst(): void {
+    const ring = this.add
+      .circle(this.playerRoot.x, this.playerRoot.y, 30, 0x000000, 0)
+      .setStrokeStyle(2.5, COLORS.orange, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 2.8,
+      alpha: 0,
+      duration: 300,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy()
+    });
   }
 
   private dropHeal(x: number, y: number): void {
@@ -3408,8 +3531,9 @@ export class M0Scene extends Phaser.Scene {
     this.pickups = this.pickups.filter((pickup) => !pickup.dead);
   }
 
-  private spawnPortal(kind: EnemyKind, x: number, y: number): void {
+  private spawnPortal(kind: EnemyKind, x: number, y: number, quiet = false): void {
     const token = this.runToken;
+    const portal = this.portalToken;
     const color = RULE_TINTS[ENEMY_SPECS[kind].rule];
     const glow = this.add
       .image(x, y, 'glow')
@@ -3438,11 +3562,15 @@ export class M0Scene extends Phaser.Scene {
         glow.destroy();
       }
     });
-    audio.play('spawn');
+    if (!quiet) audio.play('spawn');
     this.pendingSpawns += 1;
     this.time.delayedCall(550, () => {
       this.pendingSpawns = Math.max(0, this.pendingSpawns - 1);
-      const active = token === this.runToken && this.runState === 'playing' && !this.victoryLocked;
+      const active =
+        token === this.runToken &&
+        portal === this.portalToken &&
+        this.runState === 'playing' &&
+        !this.victoryLocked;
       if (!active) return;
       this.spawnEnemy(kind, x, y);
       if (
@@ -3462,11 +3590,13 @@ export class M0Scene extends Phaser.Scene {
     const mutator = getMutator(this.mutatorLevel);
     const chapterHpScale = this.chapterIndex >= 1 ? 1.15 : 1;
     const thirdHpScale = this.build.secondary ? 1.05 : 1;
+    const hordeHpScale = this.hordeEnabled && !elite && !spec.boss ? 0.45 : 1;
     const baseHp =
       spec.hp *
       (spec.boss ? mutator.bossHp : mutator.enemyHp) *
       chapterHpScale *
-      thirdHpScale;
+      thirdHpScale *
+      hordeHpScale;
     const baseSpeed = spec.speed * mutator.enemySpeed;
     const hover =
       kind === 'bat' ||
@@ -3591,7 +3721,10 @@ export class M0Scene extends Phaser.Scene {
       elite,
       chargesLeft: 0,
       trailCd: 1.2,
-      countsTowardQuota
+      countsTowardQuota,
+      knockX: 0,
+      knockY: 0,
+      knockTime: 0
     };
 
     this.enemies.push(enemy);
@@ -3627,6 +3760,21 @@ export class M0Scene extends Phaser.Scene {
     for (const enemy of current) {
       this.updateEnemyStatuses(enemy, dt);
       if (enemy.dead) continue;
+      if (enemy.knockTime > 0 && !ENEMY_SPECS[enemy.kind].boss) {
+        enemy.knockTime = Math.max(0, enemy.knockTime - dt);
+        enemy.root.x = Phaser.Math.Clamp(
+          enemy.root.x + enemy.knockX * dt,
+          70,
+          ARENA - 70
+        );
+        enemy.root.y = Phaser.Math.Clamp(
+          enemy.root.y + enemy.knockY * dt,
+          90,
+          ARENA - 70
+        );
+        enemy.knockX *= 0.82;
+        enemy.knockY *= 0.82;
+      }
       enemy.contactCd = Math.max(0, enemy.contactCd - dt);
       if (enemy.elite && this.mutatorLevel > 0) {
         enemy.attackCd -= dt * 0.12 * this.mutatorLevel;
@@ -5150,6 +5298,35 @@ export class M0Scene extends Phaser.Scene {
 
   private updateSpawns(dt: number): void {
     const room = this.getRoom();
+    if (this.waveDirector) {
+      if (this.roomKills >= room.quota) {
+        this.waveDirector.complete();
+        return;
+      }
+      const before = this.waveDirector.snapshot().wave;
+      this.waveDirector.update(
+        dt,
+        this.enemies.length + this.pendingSpawns,
+        () => this.spawnWaveEnemy()
+      );
+      const snapshot = this.waveDirector.snapshot();
+      if (snapshot.wave !== before && snapshot.wave > 0) {
+        showWaveBanner(snapshot.wave, snapshot.waves);
+        audio.play('spawn');
+      }
+      if (
+        this.chapterIndex === 0 &&
+        !this.waveCaptainSpawned &&
+        !room.elite &&
+        this.stepIndex >= 5 &&
+        room.quota >= 20 &&
+        snapshot.wave >= 3
+      ) {
+        this.waveCaptainSpawned = true;
+        this.spawnWaveCaptain();
+      }
+      return;
+    }
     if (this.roomSpawned >= room.quota) return;
     this.spawnCd -= dt;
     if (this.spawnCd > 0 || this.enemies.length + this.pendingSpawns >= room.maxAlive) return;
@@ -5160,11 +5337,31 @@ export class M0Scene extends Phaser.Scene {
     this.spawnCd = room.spawnInterval;
   }
 
+  private spawnWaveEnemy(): void {
+    const room = this.getRoom();
+    const kind = pickSpawnKind(room, combatRandom);
+    const pos = this.chooseSpawnPosition();
+    this.spawnPortal(kind, pos.x, pos.y, true);
+    this.roomSpawned += 1;
+  }
+
+  private spawnWaveCaptain(): void {
+    const kind: EnemyKind = combatRandom() < 0.5 ? 'sunder' : 'thunder';
+    const pos = this.chooseSpawnPosition();
+    this.spawnEnemy(kind, pos.x, pos.y, false);
+    this.spawnLeaderBurst(pos.x, pos.y);
+    showRuleToast('chain', '怪潮头目', '精英混入怪潮 · 不计入清场配额');
+  }
+
   private updateHud(dt: number): void {
     this.hudTick += dt;
     if (this.hudTick >= 0.1) {
       this.hudTick = 0;
       setRunClock(this.elapsed);
+      if (this.waveDirector) {
+        const wave = this.waveDirector.snapshot();
+        setWaveStatus(wave.wave, wave.waves, this.enemies.length + this.pendingSpawns);
+      }
       if (this.bossRef) this.refreshBossHud();
     }
   }
@@ -5488,6 +5685,18 @@ export class M0Scene extends Phaser.Scene {
 
   update(_time: number, deltaMs: number): void {
     if (this.runState !== 'playing' || this.roomState !== 'fighting') return;
+    if (this.hitStopMs > 0) {
+      this.hitStopMs = Math.max(0, this.hitStopMs - deltaMs);
+      return;
+    }
+    this.killBurst = 0;
+    if (this.killStreakTimer > 0) {
+      this.killStreakTimer = Math.max(0, this.killStreakTimer - deltaMs / 1000);
+      if (this.killStreakTimer === 0) {
+        this.killStreak = 0;
+        setKillStreak(0, this.killStreakBest);
+      }
+    }
     const dt = Math.min(deltaMs, 50) / 1000;
     this.elapsed += dt;
     this.updateRelicTimers(dt);

@@ -145,7 +145,7 @@ const browser = await puppeteer.launch({
 try {
   const page = await newPage(browser, { width: 1440, height: 900, deviceScaleFactor: 1 });
   // seed 5 always rolls cursed-chest + unstable-lab, so both event assertions run
-  await page.goto(`${BASE}/?seed=5`, { waitUntil: 'networkidle0' });
+  await page.goto(`${BASE}/?seed=5&horde=0`, { waitUntil: 'networkidle0' });
   await waitReady(page);
   await sleep(350);
 
@@ -221,7 +221,7 @@ try {
       })
     );
   });
-  await modePage.goto(`${BASE}/?arena=1&mutator=3`, { waitUntil: 'networkidle0' });
+  await modePage.goto(`${BASE}/?arena=1&horde=0&mutator=3`, { waitUntil: 'networkidle0' });
   await waitReady(modePage);
   await modePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -246,7 +246,7 @@ try {
   await modePage.close();
 
   const dailyPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await dailyPage.goto(`${BASE}/?arena=1&daily=1`, { waitUntil: 'networkidle0' });
+  await dailyPage.goto(`${BASE}/?arena=1&horde=0&daily=1`, { waitUntil: 'networkidle0' });
   await waitReady(dailyPage);
   await dailyPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -295,7 +295,7 @@ try {
       })
     );
   });
-  await startPage.goto(`${BASE}/?arena=1&start=2`, { waitUntil: 'networkidle0' });
+  await startPage.goto(`${BASE}/?arena=1&horde=0&start=2`, { waitUntil: 'networkidle0' });
   await waitReady(startPage);
   await startPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -460,10 +460,18 @@ try {
     JSON.stringify(afterReplace.build)
   );
 
-  await page.evaluate(() => window.__RT_SET_BUILD__?.('chain', 'burn', 2, 2));
+  await page.evaluate(() => {
+    window.__RT_SET_BUILD__?.('chain', 'burn', 2, 2);
+    const snap = window.__RT_SNAPSHOT__?.() ?? {};
+    window.__RT_SPAWN_AT__?.('beetle', Number(snap.playerX) + 200, Number(snap.playerY));
+  });
   await sleep(150);
   await page.evaluate(() => window.__RT_VOLLEY__?.());
-  await sleep(900);
+  await poll(
+    page,
+    () => (window.__RT_SNAPSHOT__?.().enemyList ?? []).some((enemy) => enemy.burning),
+    3000
+  );
   const beforeStatus = await snapshot(page);
   const burningBefore = (beforeStatus.enemyList ?? []).filter((enemy) => enemy.burning).length;
 
@@ -1260,7 +1268,7 @@ try {
 
   const planForSeed = async (seed) => {
     const seeded = await newPage(browser, { width: 1024, height: 768, deviceScaleFactor: 1 });
-    await seeded.goto(`${BASE}/?arena=1&seed=${seed}`, { waitUntil: 'networkidle0' });
+    await seeded.goto(`${BASE}/?arena=1&horde=0&seed=${seed}`, { waitUntil: 'networkidle0' });
     await waitReady(seeded);
     await seeded.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
     const plan = (await snapshot(seeded)).plan;
@@ -1284,7 +1292,7 @@ try {
     isMobile: true,
     hasTouch: true
   });
-  await mobileBoss.goto(`${BASE}/?arena=1&boss=1`, { waitUntil: 'networkidle0' });
+  await mobileBoss.goto(`${BASE}/?arena=1&horde=0&boss=1`, { waitUntil: 'networkidle0' });
   await waitReady(mobileBoss);
   await mobileBoss.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);
@@ -1310,7 +1318,7 @@ try {
   await mobileBoss.close();
 
   const buildPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await buildPreset.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await buildPreset.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(buildPreset);
   await buildPreset.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(300);
@@ -1326,8 +1334,84 @@ try {
   );
   await buildPreset.close();
 
+  const hordePage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await hordePage.goto(`${BASE}/?arena=1&horde=1&build=spread,burn,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(hordePage);
+  await hordePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(hordePage);
+  await hordePage.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
+  await sleep(2_400);
+  const hordeState = await snapshot(hordePage);
+  const hordeHud = await hordePage.evaluate(() => ({
+    wave: document.getElementById('wave-progress')?.textContent,
+    hidden: document.getElementById('objective-wave')?.hidden,
+    banner: document.getElementById('wave-banner-text')?.textContent
+  }));
+  check(
+    'horde rooms spawn waves that overlap into a crowd',
+    Boolean(hordeState.wave) &&
+      Number(hordeState.wave?.waves) >= 3 &&
+      Number(hordeState.wave?.spawned) >= 8 &&
+      Number(hordeState.alive) >= 8 &&
+      hordeHud.hidden === false &&
+      /\d+ \/ \d+/.test(hordeHud.wave ?? ''),
+    JSON.stringify({ wave: hordeState.wave, alive: hordeState.alive, hud: hordeHud })
+  );
+
+  await hordePage.evaluate(() => {
+    window.__RT_KILL_ONE__?.();
+    window.__RT_KILL_ONE__?.();
+    window.__RT_KILL_ONE__?.();
+  });
+  await sleep(120);
+  const streakState = await snapshot(hordePage);
+  const streakHud = await hordePage.evaluate(() => ({
+    hidden: document.getElementById('kill-streak')?.hidden,
+    count: document.getElementById('kill-streak-count')?.textContent
+  }));
+  check(
+    'multi-kills raise the kill streak HUD',
+    Number(streakState.killStreak) >= 2 &&
+      streakHud.hidden === false &&
+      /×\d+/.test(streakHud.count ?? ''),
+    JSON.stringify({ streak: streakState.killStreak, hud: streakHud })
+  );
+
+  await hordePage.evaluate(() => window.__RT_STEP__?.(5));
+  await hordePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await hordePage.tap('#room-enter-btn');
+  await hordePage.evaluate(() => window.__RT_FREEZE_ATTACK__?.());
+  await poll(
+    hordePage,
+    () => {
+      const snap = window.__RT_SNAPSHOT__?.() ?? {};
+      return Number(snap.eliteAlive) >= 1 && Number(snap.alive) >= 20;
+    },
+    7000
+  );
+  const lateHorde = await snapshot(hordePage);
+  check(
+    'late first-world rooms add a horde captain',
+    Number(lateHorde.roomQuota) >= 28 &&
+      Number(lateHorde.alive) >= 20 &&
+      Number(lateHorde.eliteAlive) >= 1,
+    JSON.stringify({
+      room: lateHorde.roomId,
+      quota: lateHorde.roomQuota,
+      alive: lateHorde.alive,
+      elites: lateHorde.eliteAlive
+    })
+  );
+  await hordePage.close();
+
   const bossPractice = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await bossPractice.goto(`${BASE}/?arena=1&boss=1`, { waitUntil: 'networkidle0' });
+  await bossPractice.goto(`${BASE}/?arena=1&horde=0&boss=1`, { waitUntil: 'networkidle0' });
   await waitReady(bossPractice);
   await bossPractice.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);
@@ -1411,7 +1495,7 @@ try {
   await bossPractice.close();
 
   const bossPreset = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await bossPreset.goto(`${BASE}/?arena=1&boss=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await bossPreset.goto(`${BASE}/?arena=1&horde=0&boss=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(bossPreset);
   await bossPreset.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(300);
@@ -1426,7 +1510,7 @@ try {
   await bossPreset.close();
 
   const workshop = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await workshop.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await workshop.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(workshop);
   await workshop.evaluate(() => window.__RT_CHAPTER_START__?.(1));
   await workshop.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
@@ -1489,7 +1573,14 @@ try {
     window.__RT_SPAWN__?.('phase');
     window.__RT_SPAWN__?.('warden');
   });
-  await sleep(2200);
+  await poll(
+    workshop,
+    () =>
+      (window.__RT_SNAPSHOT__?.().enemyList ?? []).some(
+        (enemy) => enemy.kind === 'warden' && enemy.shielded
+      ),
+    5000
+  );
   const workshopEnemies = await snapshot(workshop);
   const warden = (workshopEnemies.enemyList ?? []).find((enemy) => enemy.kind === 'warden');
   check(
@@ -1596,12 +1687,16 @@ try {
   );
 
   await workshop.tap('#room-enter-btn');
-  await sleep(2100);
+  const voidSeen = await poll(
+    workshop,
+    () => Number(window.__RT_SNAPSHOT__?.().hazards ?? 0) >= 3,
+    6000
+  );
   const abyssHazards = await snapshot(workshop);
   check(
     'void-rift spawns larger telegraph zones',
-    Number(abyssHazards.hazards) >= 3,
-    String(abyssHazards.hazards)
+    voidSeen && Number(abyssHazards.hazards) >= 3,
+    JSON.stringify({ seen: voidSeen, hazards: abyssHazards.hazards })
   );
   const ruleNullSeen = await poll(
     workshop,
@@ -1665,7 +1760,7 @@ try {
   await workshop.close();
 
   const relicPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await relicPage.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await relicPage.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(relicPage);
   await relicPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1716,7 +1811,7 @@ try {
   await relicPage.close();
 
   const stackPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await stackPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await stackPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(stackPage);
   await stackPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1753,7 +1848,7 @@ try {
   await stackPage.close();
 
   const bloodPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await bloodPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await bloodPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(bloodPage);
   await bloodPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1788,7 +1883,7 @@ try {
   await bloodPage.close();
 
   const prismPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await prismPage.goto(`${BASE}/?arena=1&build=chain,blast,3,3`, { waitUntil: 'networkidle0' });
+  await prismPage.goto(`${BASE}/?arena=1&horde=0&build=chain,blast,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(prismPage);
   await prismPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1819,7 +1914,7 @@ try {
   await prismPage.close();
 
   const flamePage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await flamePage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await flamePage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(flamePage);
   await flamePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1850,7 +1945,7 @@ try {
   await flamePage.close();
 
   const frostPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await frostPage.goto(`${BASE}/?arena=1&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
+  await frostPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(frostPage);
   await frostPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1880,7 +1975,7 @@ try {
   await frostPage.close();
 
   const greedPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await greedPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await greedPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(greedPage);
   await greedPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1908,7 +2003,7 @@ try {
   await greedPage.close();
 
   const crownPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await crownPage.goto(`${BASE}/?arena=1&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
+  await crownPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(crownPage);
   await crownPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1938,7 +2033,7 @@ try {
   await crownPage.close();
 
   const domainPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await domainPage.goto(`${BASE}/?arena=1&build=chain,burn,3,1`, { waitUntil: 'networkidle0' });
+  await domainPage.goto(`${BASE}/?arena=1&horde=0&build=chain,burn,3,1`, { waitUntil: 'networkidle0' });
   await waitReady(domainPage);
   await domainPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1977,7 +2072,7 @@ try {
   await domainPage.close();
 
   const emberPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await emberPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await emberPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(emberPage);
   await emberPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1993,10 +2088,10 @@ try {
   });
   await sleep(150);
   await emberPage.evaluate(() => window.__RT_VOLLEY__?.());
-  await sleep(500);
+  await sleep(800);
   const emberBurning = await snapshot(emberPage);
   await emberPage.evaluate(() => window.__RT_KILL_ONE__?.(0));
-  await sleep(250);
+  await sleep(350);
   const emberAfter = await snapshot(emberPage);
   const emberTarget = (emberAfter.enemyList ?? []).find((enemy) => enemy.kind === 'sunder');
   check(
@@ -2009,7 +2104,7 @@ try {
   await emberPage.close();
 
   const echoPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await echoPage.goto(`${BASE}/?arena=1&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });
+  await echoPage.goto(`${BASE}/?arena=1&horde=0&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(echoPage);
   await echoPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -2025,7 +2120,7 @@ try {
   });
   await sleep(150);
   await echoPage.evaluate(() => window.__RT_VOLLEY__?.());
-  await sleep(700);
+  await sleep(950);
   const echoState = await snapshot(echoPage);
   check(
     'rift echo fires a secondary impact after the chain',
@@ -2035,7 +2130,7 @@ try {
   await echoPage.close();
 
   const ringPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await ringPage.goto(`${BASE}/?arena=1&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
+  await ringPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,frost,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(ringPage);
   await ringPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -2060,7 +2155,7 @@ try {
   await ringPage.close();
 
   const momentumPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await momentumPage.goto(`${BASE}/?arena=1&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
+  await momentumPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(momentumPage);
   await momentumPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -2077,7 +2172,7 @@ try {
   });
   await sleep(150);
   await momentumPage.evaluate(() => window.__RT_VOLLEY__?.());
-  await sleep(800);
+  await sleep(1000);
   const momentumState = await snapshot(momentumPage);
   check(
     'pierce momentum banks extra penetration for the next attack',
@@ -2087,7 +2182,7 @@ try {
   await momentumPage.close();
 
   const thirdPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await thirdPage.goto(`${BASE}/?arena=1&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });
+  await thirdPage.goto(`${BASE}/?arena=1&horde=0&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(thirdPage);
   await thirdPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -2173,7 +2268,7 @@ try {
     isMobile: true,
     hasTouch: true
   });
-  await compact.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await compact.goto(`${BASE}/?arena=1&horde=0`, { waitUntil: 'networkidle0' });
   await waitReady(compact);
   await compact.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(450);
@@ -2201,7 +2296,7 @@ try {
     isMobile: true,
     hasTouch: true
   });
-  await landscape.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await landscape.goto(`${BASE}/?arena=1&horde=0`, { waitUntil: 'networkidle0' });
   await waitReady(landscape);
   await landscape.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(500);
@@ -2248,7 +2343,7 @@ try {
   await landscape.close();
 
   const maxed = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await maxed.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await maxed.goto(`${BASE}/?arena=1&horde=0`, { waitUntil: 'networkidle0' });
   await waitReady(maxed);
   await maxed.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);
@@ -2269,7 +2364,7 @@ try {
   await maxed.close();
 
   const maxedEvent = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
-  await maxedEvent.goto(`${BASE}/?arena=1&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
+  await maxedEvent.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
   await waitReady(maxedEvent);
   await maxedEvent.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(300);
@@ -2308,7 +2403,7 @@ try {
     isMobile: true,
     hasTouch: true
   });
-  await mobile.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await mobile.goto(`${BASE}/?arena=1&horde=0`, { waitUntil: 'networkidle0' });
   await waitReady(mobile);
   await sleep(900);
 

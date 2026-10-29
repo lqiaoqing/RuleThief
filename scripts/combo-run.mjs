@@ -89,6 +89,7 @@ try {
     let cleared = false;
     let died = false;
     let lastSnapshot = null;
+    let peakAlive = 0;
     for (let tick = 0; tick < 700; tick += 1) {
       const state = await page.evaluate(() => ({
         snapshot: window.__RT_SNAPSHOT__?.() ?? {},
@@ -96,6 +97,7 @@ try {
         result: !document.getElementById('result-screen')?.hidden
       }));
       lastSnapshot = state.snapshot;
+      peakAlive = Math.max(peakAlive, Number(state.snapshot.alive ?? 0));
       if (state.reward) {
         cleared = true;
         break;
@@ -123,6 +125,7 @@ try {
       hp: Math.round(Number(lastSnapshot?.hp ?? 0)),
       kills: Number(lastSnapshot?.kills ?? 0),
       roomKills: Number(lastSnapshot?.roomKills ?? 0),
+      peakAlive,
       thirdVolleys: Number(lastSnapshot?.thirdVolleys ?? 0)
     };
     rows.push(row);

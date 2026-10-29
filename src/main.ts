@@ -82,6 +82,7 @@ declare global {
     __RT_SET_THIRD__?: (key: RuleKey, level?: 1 | 2 | 3) => void;
     __RT_SWAP__?: () => boolean;
     __RT_REFORGE__?: (key: RuleKey) => boolean;
+    __RT_STEP__?: (index: number) => boolean;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
     __RT_VOLLEY__?: () => number;
@@ -510,6 +511,7 @@ function applyMetaToScene(): void {
   scene?.setMetaUnlocks(meta.unlockedRelics, meta.unlockedAscensions);
   scene?.setMutator(dailyMode ? dailyModifierLevel() : meta.selectedMutator);
   scene?.setStartChapter(meta.selectedStartChapter);
+  scene?.setHordeEnabled(params.get('horde') !== '0');
 }
 
 function openMeta(): void {
@@ -793,6 +795,7 @@ function handleReady(): void {
   window.__RT_SET_THIRD__ = (key, level = 3) => scene?.debugSetThird(key, level);
   window.__RT_SWAP__ = () => scene?.debugSwapRule() ?? false;
   window.__RT_REFORGE__ = (key) => scene?.debugReforge(key) ?? false;
+  window.__RT_STEP__ = (index) => scene?.debugJumpToStep(index) ?? false;
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
   window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;

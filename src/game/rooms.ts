@@ -321,7 +321,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '灼热裂隙',
     en: 'EMBER RIFT',
     subtitle: '地面在缓慢燃烧，站得越久越危险。',
-    quota: 22,
+    quota: 28,
     maxAlive: 7,
     spawnInterval: 2.5,
     mix: [
@@ -334,7 +334,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '菌毯回廊',
     en: 'MYCELIUM HALL',
     subtitle: '孢子与霜冻一起飘，正面推进会付出代价。',
-    quota: 22,
+    quota: 28,
     maxAlive: 8,
     spawnInterval: 2.5,
     mix: [
@@ -347,7 +347,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '焦土庭院',
     en: 'CINDER COURT',
     subtitle: '霜灵在焦土上徘徊，甲虫在等你露出破绽。',
-    quota: 22,
+    quota: 28,
     maxAlive: 7,
     spawnInterval: 2.4,
     mix: [
@@ -373,7 +373,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '熔渣庭院',
     en: 'SLAG YARD',
     subtitle: '熔渣没过脚踝，史莱姆与甲虫都不打算让你停下。',
-    quota: 22,
+    quota: 28,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [
@@ -386,7 +386,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '残响回廊',
     en: 'ECHO VAULT',
     subtitle: '雷光在穹顶反弹，史莱姆在下方慢慢逼近。',
-    quota: 22,
+    quota: 28,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [
@@ -399,7 +399,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '凛冬庭院',
     en: 'FROST COURT',
     subtitle: '霜灵与史莱姆共享这片冻土，减速之后就是灼烧。',
-    quota: 22,
+    quota: 28,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [
@@ -412,7 +412,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '灰烬回廊',
     en: 'ASH GALLERY',
     subtitle: '焦黑的梁柱下，爆裂甲虫与铁刺甲虫轮番逼近。',
-    quota: 22,
+    quota: 28,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [

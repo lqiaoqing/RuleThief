@@ -1619,3 +1619,140 @@ body.boss-active .rule-toast {
     font-size: 19px;
   }
 }
+
+/* M10 horde HUD */
+.objective-wave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: #5e8da0;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.objective-wave b {
+  margin-left: 4px;
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.kill-streak {
+  position: absolute;
+  top: 19%;
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+  text-shadow: 0 0 24px rgba(255, 172, 104, 0.32);
+}
+
+.kill-streak[hidden] {
+  display: none;
+}
+
+.kill-streak b {
+  color: var(--orange);
+  font-family: "Bahnschrift", "DIN Alternate", sans-serif;
+  font-size: 58px;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kill-streak.is-hot b {
+  color: var(--cyan);
+  text-shadow: 0 0 34px rgba(101, 220, 240, 0.55);
+}
+
+.kill-streak.is-blazing b {
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(255, 203, 118, 0.7);
+}
+
+.ks-kicker,
+.ks-best {
+  color: #9fb6c9;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.3em;
+}
+
+.ks-best {
+  margin-top: 3px;
+  color: #66839a;
+  letter-spacing: 0.18em;
+}
+
+.kill-streak.is-pop b {
+  animation: kill-pop 180ms ease-out;
+}
+
+@keyframes kill-pop {
+  0% { transform: scale(1.32); }
+  100% { transform: scale(1); }
+}
+
+.wave-banner {
+  position: absolute;
+  top: 11%;
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  min-width: 168px;
+  padding: 7px 18px 8px;
+  pointer-events: none;
+  border: 1px solid rgba(101, 220, 240, 0.28);
+  border-radius: 8px;
+  background: rgba(8, 18, 30, 0.76);
+  box-shadow: 0 0 28px rgba(101, 220, 240, 0.12);
+  transform: translateX(-50%);
+}
+
+.wave-banner[hidden] {
+  display: none;
+}
+
+.wave-banner small,
+.wave-banner span {
+  color: #6f9aaa;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 7px;
+  letter-spacing: 0.26em;
+}
+
+.wave-banner b {
+  color: #d7fbff;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.wave-banner.is-in {
+  animation: wave-in 220ms ease-out;
+}
+
+@keyframes wave-in {
+  from { opacity: 0; transform: translate(-50%, -7px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (max-width: 760px) {
+  .kill-streak {
+    top: 24%;
+  }
+
+  .kill-streak b {
+    font-size: 40px;
+  }
+
+  .wave-banner {
+    top: 8%;
+  }
+}

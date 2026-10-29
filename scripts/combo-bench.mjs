@@ -30,7 +30,7 @@ try {
   const page = await browser.newPage();
   await page.bringToFront();
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
-  await page.goto(`${BASE}/?arena=1`, { waitUntil: 'networkidle0' });
+  await page.goto(`${BASE}/?arena=1&horde=0`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__RT_READY__ === true', { timeout: 20_000 });
   await page.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);

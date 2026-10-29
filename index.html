@@ -206,6 +206,18 @@
               FULL RUN <b>13 步行动</b>
             </div>
 
+            <div class="kill-streak" id="kill-streak" hidden>
+              <span class="ks-kicker" id="kill-streak-kicker">KILL STREAK</span>
+              <b id="kill-streak-count">×0</b>
+              <span class="ks-best" id="kill-streak-best">BEST 0</span>
+            </div>
+
+            <div class="wave-banner" id="wave-banner" hidden>
+              <small>WAVE INBOUND</small>
+              <b id="wave-banner-text">1 / 4</b>
+              <span id="wave-banner-sub">HOSTILES</span>
+            </div>
+
             <div class="rule-toast" id="rule-toast" hidden>
               <span class="rule-toast-icon" id="rule-toast-icon"><svg><use href="#i-shard" /></svg></span>
               <div class="rule-toast-copy">
@@ -310,8 +322,12 @@
               <span>累计击杀 <b id="objective-kills">0</b></span>
               <span>房间 <b id="threat-level">I</b></span>
             </div>
+            <div class="objective-wave" id="objective-wave" hidden>
+              <span>WAVE <b id="wave-progress">—</b></span>
+              <span>同屏 <b id="alive-count">0</b></span>
+            </div>
             <div class="codex-list" id="codex-list"></div>
-            <p class="objective-note">清空本房配额后暂停战斗，三选一奖励：本房敌人的规则 + 基础强化。</p>
+            <p class="objective-note">怪潮成组出现，清空后三选一；连续击杀会加快攻击，后期混入头目。</p>
           </section>
 
           <section class="panel notes-panel">

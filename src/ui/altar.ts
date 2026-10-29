@@ -361,8 +361,8 @@ export function renderRoomPreview(payload: RoomPreview): void {
   const foot = roomScreen.querySelector<HTMLElement>('.room-foot span');
   if (foot) {
     foot.textContent = elite
-      ? '精英房：清场后四选一，规则奖励 + 基础强化。构筑与生命保留到下一房。'
-      : '清空配额后进入三选一奖励，构筑与生命保留到下一房。';
+      ? '精英房：怪潮与领袖一起压上，清场后四选一。连杀会加快攻击。'
+      : '怪潮成组压上，清空后三选一；连杀会加快攻击，后期怪潮会混入头目。';
   }
 }
 
