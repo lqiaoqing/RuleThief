@@ -329,6 +329,7 @@ export class M0Scene extends Phaser.Scene {
   private chapterTransitionOpen = false;
   private encounter: Encounter | null = null;
   private roomKills = 0;
+  private roomStartedAt = 0;
   private roomSpawned = 0;
   private pendingSpawns = 0;
   private rewardOpen = false;
@@ -686,6 +687,7 @@ export class M0Scene extends Phaser.Scene {
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
+    this.roomStartedAt = 0;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.rewardOpen = false;
@@ -1188,6 +1190,7 @@ export class M0Scene extends Phaser.Scene {
     this.stepIndex = 0;
     this.encounter = null;
     this.roomKills = 0;
+    this.roomStartedAt = 0;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.rewardOpen = false;
@@ -1227,6 +1230,7 @@ export class M0Scene extends Phaser.Scene {
     this.rewardOpen = false;
     this.playEnabled = true;
     this.roomKills = 0;
+    this.roomStartedAt = this.elapsed;
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.waveDirector = null;
@@ -1356,9 +1360,15 @@ export class M0Scene extends Phaser.Scene {
     setHp(this.hp, this.maxHp);
     this.pauseScene();
     audio.play('rule');
+    const clearSeconds = this.elapsed - this.roomStartedAt;
+    const speedBonus =
+      this.hordeEnabled && !this.getRoom().boss && clearSeconds <= 18 ? 1 : 0;
+    if (speedBonus) {
+      showRuleToast('blast', '速杀奖励', `清房 ${clearSeconds.toFixed(1)} 秒 · 额外一张奖励`);
+    }
     const rewards = buildRoomRewards(this.build, this.getRoom(), random, {
       hasMutation: Boolean(this.mutation.id),
-      bonusCards: this.roomBonusCards,
+      bonusCards: this.roomBonusCards + speedBonus,
       lateEligible: lateUpgradeEligible(this.build, this.relics.length),
       lateUpgrades: this.lateUpgrades,
       reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed)

@@ -1454,6 +1454,24 @@ try {
   );
   await hordePage.close();
 
+  const speedPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await speedPage.goto(`${BASE}/?arena=1&horde=1&build=chain,blast,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(speedPage);
+  await speedPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(speedPage);
+  await finishRoom(speedPage, 13);
+  const speedReward = await overlayState(speedPage);
+  check(
+    'a fast horde clear grants a bonus reward card',
+    speedReward.rewardVisible && speedReward.cards.length >= 4,
+    JSON.stringify({ cards: speedReward.cards })
+  );
+  await speedPage.close();
+
   const bossPractice = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await bossPractice.goto(`${BASE}/?arena=1&horde=0&boss=1`, { waitUntil: 'networkidle0' });
   await waitReady(bossPractice);
