@@ -16,6 +16,7 @@ npm run fullrun-start2         35/35 从第三世界起点跑到终点（含 W4�
 npm run fullrun-start3         22/22 从第四世界起点跑到终点
 scripts/stress.mjs             45 敌：avg 59.3 / min 59 fps
 W4 headless                    55 敌同屏：avg 59.4 / min 59 fps（2400×2400 + 小地图）
+W4 CPU×6 headless              49 敌：avg 40.9 / min 34 fps
 W4 节奏探测                     首房 95 秒 / 418 杀（含追加）→ 18 房约 28 分钟 + W1–W3 约 10 分钟（docs/raid-probe.json）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.2 / 56.7 / 44.0 fps（60Hz headful，34 敌，min 40；与旧 120Hz 数据不可直接横比）
 scripts/soak.mjs               2 分钟（怪潮）：监听器 +0、堆 7–32MB 随 GC 波动、143fps（高刷显示器）
@@ -96,7 +97,7 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M11 | 新怪物与 BOSS | 自动 | 8 种新敌人 + 8 个精英词缀 + 巢母女王/壁垒巨像/荒原吞世者；冒烟「boundless waste fills the screen with a large horde and new enemies」「clearing the boundless waste completes the four-world campaign」 |
 | M11 | 更高阶升级 | 自动 | 第 4 槽律核 9×3、后期强化 18×3，内容池 90（5×）；冒烟「law core and generic late upgrades equip in the run」；fullrun 律核 Lv.3 |
 | M11 | 事件扩容 | 自动 | 事件 6→12；W1/W2/W3 抽 2、W4 抽 3；`run.test.ts` 12 事件与冒烟事件分支 |
-| M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 6,298 行，超过蓝图约束，普通敌人 AI/渲染与高压房宿主待后续拆分 |
+| M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 7,094 行，超过蓝图约束，普通敌人 AI/渲染与高压房宿主待后续拆分 |
 
 ## D. 性能与长时运行
 
