@@ -9,12 +9,12 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -30,13 +30,13 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -52,13 +52,13 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -78,13 +78,13 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -104,13 +104,13 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -130,18 +130,18 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 1
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -156,18 +156,18 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 2
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -175,24 +175,24 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -201,24 +201,24 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "prism",
-        "bloodflame-heart"
+        "frost-crown",
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -227,7 +227,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         }
       }
     }
@@ -238,15 +238,15 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 21,
+  "seconds": 18,
   "relics": [
-    "prism",
-    "bloodflame-heart"
+    "frost-crown",
+    "thunder-emblem"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "ember-spread",
-    "pierce-momentum"
+    "frost-ring",
+    "ember-spread"
   ],
   "errors": []
 }

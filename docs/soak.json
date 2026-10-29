@@ -1,485 +1,195 @@
 {
   "summary": {
-    "minutes": 8,
-    "samples": 47,
-    "heapStartMB": 10.5,
-    "heapMidMB": 33.6,
-    "heapEndMB": 58.5,
-    "heapGrowthMB": 48,
-    "nodeGrowth": -334,
+    "minutes": 3,
+    "samples": 18,
+    "heapStartMB": 14.1,
+    "heapMidMB": 24.1,
+    "heapEndMB": 36.4,
+    "heapGrowthMB": 22.3,
+    "nodeGrowth": -64,
     "listenerGrowth": 0,
-    "minFps": 34,
-    "avgFps": 55.1
+    "minFps": 140,
+    "avgFps": 143.6
   },
   "samples": [
     {
       "atSeconds": 10,
-      "heapMB": 10.5,
-      "nodes": 2190,
+      "heapMB": 14.1,
+      "nodes": 2000,
       "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
+      "fps": 140,
+      "enemies": 5,
       "hazards": 2,
-      "damagePool": 8
+      "damagePool": 5
     },
     {
       "atSeconds": 20,
-      "heapMB": 13.8,
-      "nodes": 1698,
+      "heapMB": 16.2,
+      "nodes": 1989,
       "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
+      "fps": 144,
+      "enemies": 5,
       "hazards": 2,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 30,
-      "heapMB": 17.8,
-      "nodes": 2496,
+      "heapMB": 22.5,
+      "nodes": 2012,
       "listeners": 118,
-      "fps": 61,
-      "enemies": 6,
+      "fps": 144,
+      "enemies": 5,
       "hazards": 2,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 40,
-      "heapMB": 15.4,
-      "nodes": 2361,
+      "heapMB": 9.1,
+      "nodes": 2041,
       "listeners": 118,
-      "fps": 61,
-      "enemies": 6,
-      "hazards": 2,
-      "damagePool": 8
+      "fps": 144,
+      "enemies": 5,
+      "hazards": 1,
+      "damagePool": 7
     },
     {
       "atSeconds": 50,
-      "heapMB": 11,
-      "nodes": 2241,
+      "heapMB": 17.3,
+      "nodes": 1993,
       "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
+      "fps": 144,
+      "enemies": 5,
       "hazards": 1,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 60,
-      "heapMB": 10.6,
-      "nodes": 2146,
+      "heapMB": 28,
+      "nodes": 1763,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
       "hazards": 1,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 70,
-      "heapMB": 8.2,
-      "nodes": 1875,
+      "heapMB": 30.1,
+      "nodes": 2184,
       "listeners": 118,
-      "fps": 60,
+      "fps": 143,
       "enemies": 6,
       "hazards": 1,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
-      "atSeconds": 80,
-      "heapMB": 11.2,
-      "nodes": 2332,
+      "atSeconds": 81,
+      "heapMB": 25.8,
+      "nodes": 1993,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
-      "hazards": 2,
-      "damagePool": 8
+      "hazards": 1,
+      "damagePool": 7
     },
     {
       "atSeconds": 91,
-      "heapMB": 16.9,
-      "nodes": 2195,
+      "heapMB": 11,
+      "nodes": 1783,
       "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
+      "fps": 144,
+      "enemies": 5,
       "hazards": 2,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 101,
-      "heapMB": 12.7,
-      "nodes": 2043,
+      "heapMB": 24.1,
+      "nodes": 1747,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
       "hazards": 1,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 111,
-      "heapMB": 9.4,
-      "nodes": 1867,
+      "heapMB": 29.1,
+      "nodes": 2184,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
       "hazards": 1,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 121,
-      "heapMB": 12.3,
-      "nodes": 1728,
+      "heapMB": 29.7,
+      "nodes": 1993,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
       "hazards": 1,
-      "damagePool": 8
+      "damagePool": 7
     },
     {
       "atSeconds": 131,
-      "heapMB": 11.7,
-      "nodes": 2539,
+      "heapMB": 12.2,
+      "nodes": 1784,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
-      "hazards": 2,
+      "hazards": 1,
       "damagePool": 8
     },
     {
       "atSeconds": 141,
-      "heapMB": 15.4,
-      "nodes": 2342,
+      "heapMB": 25.7,
+      "nodes": 2194,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
-      "hazards": 1,
+      "hazards": 2,
       "damagePool": 8
     },
     {
       "atSeconds": 151,
-      "heapMB": 19,
-      "nodes": 2115,
+      "heapMB": 24.8,
+      "nodes": 1966,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
       "hazards": 1,
       "damagePool": 8
     },
     {
       "atSeconds": 161,
-      "heapMB": 10.3,
-      "nodes": 1835,
+      "heapMB": 29.4,
+      "nodes": 1764,
       "listeners": 118,
-      "fps": 60,
+      "fps": 144,
       "enemies": 6,
       "hazards": 1,
       "damagePool": 8
     },
     {
       "atSeconds": 171,
-      "heapMB": 34.3,
-      "nodes": 2623,
+      "heapMB": 27.6,
+      "nodes": 2164,
       "listeners": 118,
-      "fps": 60,
+      "fps": 143,
       "enemies": 6,
       "hazards": 1,
       "damagePool": 8
     },
     {
       "atSeconds": 181,
-      "heapMB": 15.4,
-      "nodes": 2278,
+      "heapMB": 36.4,
+      "nodes": 1936,
       "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
+      "fps": 143,
+      "enemies": 5,
       "hazards": 1,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 191,
-      "heapMB": 21.2,
-      "nodes": 1985,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 1,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 201,
-      "heapMB": 11.8,
-      "nodes": 1683,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 1,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 211,
-      "heapMB": 15.2,
-      "nodes": 2494,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 1,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 221,
-      "heapMB": 27.8,
-      "nodes": 1973,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 3,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 231,
-      "heapMB": 10.8,
-      "nodes": 2458,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 8,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 241,
-      "heapMB": 33.6,
-      "nodes": 1963,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 13,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 251,
-      "heapMB": 37.2,
-      "nodes": 2448,
-      "listeners": 118,
-      "fps": 61,
-      "enemies": 6,
-      "hazards": 18,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 262,
-      "heapMB": 27.1,
-      "nodes": 2050,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 23,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 272,
-      "heapMB": 37.8,
-      "nodes": 2535,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 28,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 282,
-      "heapMB": 22.4,
-      "nodes": 2050,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 33,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 292,
-      "heapMB": 15.9,
-      "nodes": 1662,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 38,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 302,
-      "heapMB": 22.2,
-      "nodes": 2147,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 43,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 312,
-      "heapMB": 24.2,
-      "nodes": 1662,
-      "listeners": 118,
-      "fps": 60,
-      "enemies": 6,
-      "hazards": 48,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 322,
-      "heapMB": 35.6,
-      "nodes": 2147,
-      "listeners": 118,
-      "fps": 58,
-      "enemies": 6,
-      "hazards": 53,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 332,
-      "heapMB": 24.8,
-      "nodes": 1662,
-      "listeners": 118,
-      "fps": 55,
-      "enemies": 6,
-      "hazards": 58,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 342,
-      "heapMB": 33.6,
-      "nodes": 2147,
-      "listeners": 118,
-      "fps": 52,
-      "enemies": 6,
-      "hazards": 63,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 352,
-      "heapMB": 42.7,
-      "nodes": 1662,
-      "listeners": 118,
-      "fps": 50,
-      "enemies": 6,
-      "hazards": 68,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 363,
-      "heapMB": 48.5,
-      "nodes": 2147,
-      "listeners": 118,
-      "fps": 48,
-      "enemies": 6,
-      "hazards": 73,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 373,
-      "heapMB": 33,
-      "nodes": 2632,
-      "listeners": 118,
-      "fps": 45,
-      "enemies": 6,
-      "hazards": 78,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 383,
-      "heapMB": 45,
-      "nodes": 2050,
-      "listeners": 118,
-      "fps": 42,
-      "enemies": 6,
-      "hazards": 83,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 393,
-      "heapMB": 52.1,
-      "nodes": 2535,
-      "listeners": 118,
-      "fps": 39,
-      "enemies": 6,
-      "hazards": 88,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 403,
-      "heapMB": 50.5,
-      "nodes": 1856,
-      "listeners": 118,
-      "fps": 39,
-      "enemies": 6,
-      "hazards": 93,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 413,
-      "heapMB": 35.1,
-      "nodes": 2341,
-      "listeners": 118,
-      "fps": 36,
-      "enemies": 6,
-      "hazards": 98,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 423,
-      "heapMB": 50.5,
-      "nodes": 2826,
-      "listeners": 118,
-      "fps": 34,
-      "enemies": 6,
-      "hazards": 103,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 434,
-      "heapMB": 62.4,
-      "nodes": 2050,
-      "listeners": 118,
-      "fps": 41,
-      "enemies": 6,
-      "hazards": 108,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 444,
-      "heapMB": 62.7,
-      "nodes": 2535,
-      "listeners": 118,
-      "fps": 52,
-      "enemies": 6,
-      "hazards": 113,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 454,
-      "heapMB": 37,
-      "nodes": 1953,
-      "listeners": 118,
-      "fps": 50,
-      "enemies": 6,
-      "hazards": 118,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 464,
-      "heapMB": 43.6,
-      "nodes": 2438,
-      "listeners": 118,
-      "fps": 44,
-      "enemies": 6,
-      "hazards": 123,
-      "damagePool": 8
-    },
-    {
-      "atSeconds": 474,
-      "heapMB": 58.5,
-      "nodes": 1856,
-      "listeners": 118,
-      "fps": 43,
-      "enemies": 6,
-      "hazards": 128,
       "damagePool": 8
     }
   ]
