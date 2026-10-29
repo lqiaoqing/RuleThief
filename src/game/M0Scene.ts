@@ -3427,7 +3427,7 @@ export class M0Scene extends Phaser.Scene {
     if (room.boss || room.mix.length === 0 || this.overloadSpawned >= 2) return;
     this.overloadSpawned += 1;
     for (let index = 0; index < count; index += 1) {
-      const kind = pickSpawnKind(room, combatRandom);
+      const kind = this.pickWaveKind(room);
       const pos = this.chooseSpawnPosition();
       this.spawnPortal(kind, pos.x, pos.y, true);
     }
@@ -5404,10 +5404,21 @@ export class M0Scene extends Phaser.Scene {
 
   private spawnWaveEnemy(): void {
     const room = this.getRoom();
-    const kind = pickSpawnKind(room, combatRandom);
+    const kind = this.pickWaveKind(room);
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y, true);
     this.roomSpawned += 1;
+  }
+
+  private pickWaveKind(room: RoomDef): EnemyKind {
+    if (this.chapterIndex > 0 && combatRandom() < 0.5) {
+      const fodder: EnemyKind[] =
+        this.chapterIndex === 1
+          ? ['beetle', 'slime', 'bomber']
+          : ['bat', 'spore', 'wisp'];
+      return fodder[combatInt(0, fodder.length - 1)];
+    }
+    return pickSpawnKind(room, combatRandom);
   }
 
   private spawnWaveCaptain(): void {

@@ -82,7 +82,7 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M9.7 | Core / Source 行为移出场景 | 自动 | `bosses/core.ts` / `source.ts` + `CoreHost` / `SourceHost`；10 项模块单测；`M0Scene.ts` 约 5,519 行，宿主与其余 AI 仍在场景类 |
 | M10.0 | 怪潮调度替代逐只刷新 | 自动 | `waves.ts` + 5 项单测；普通/精英房整组波次，第一世界后段 28 只/房；`?horde=0` 保留旧模式；冒烟「horde rooms spawn waves that overlap into a crowd」 |
 | M10.0 | 割草反馈与后期压力 | 自动 | 连杀 HUD、10/25 连杀 FRENZY/MASSACRE、同帧 3 杀 hitstop/震屏/冲击环、普攻击退、10/25 连杀压入额外怪潮、25/50 连杀规则爆发、第一世界第 6 房起精英头目；冒烟连杀/头目/过载/爆发断言 |
-| M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14；普通怪 HP ×0.38，精英/BOSS 不变；45 敌压测 120.1fps（120Hz）、CPU×6 61.3fps（min 53） |
+| M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14，约一半混入杂兵；普通怪 HP ×0.38，精英/BOSS 不变；45 敌压测 120.1fps（120Hz）、CPU×6 61.3fps（min 53） |
 | M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 5,519 行，超过蓝图约束，普通敌人 AI/渲染待后续拆分 |
 
 ## D. 性能与长时运行
