@@ -19,10 +19,14 @@ describe('wave director', () => {
     expect(stream.groups.reduce((sum, count) => sum + count, 0)).toBe(28);
   });
 
-  it('keeps later-world crowds readable with a lower cap', () => {
-    const plan = buildWavePlan(18, 1);
-    expect(plan.maxAlive).toBeLessThanOrEqual(14);
-    expect(plan.gap).toBeGreaterThanOrEqual(0.8);
+  it('keeps later-world crowds readable with more waves', () => {
+    const plan = buildWavePlan(24, 1);
+    expect(plan.maxAlive).toBeLessThanOrEqual(16);
+    expect(plan.gap).toBeGreaterThanOrEqual(0.7);
+    expect(plan.groups).toHaveLength(6);
+    const late = buildWavePlan(34, 1);
+    expect(late.groups).toHaveLength(7);
+    expect(late.maxAlive).toBe(16);
   });
 
   it('spawns a whole wave without waiting for kills and keeps a capacity cap', () => {

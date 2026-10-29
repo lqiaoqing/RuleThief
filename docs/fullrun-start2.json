@@ -1,16 +1,16 @@
 {
   "result": {
     "title": "规则终结",
-    "rooms": "12 / 12"
+    "rooms": "13 / 13"
   },
   "chapters": [],
   "chapterRewards": [],
   "rewardStates": [
     {
-      "label": "ROOM 1 / 12 已清空",
+      "label": "ROOM 1 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -30,10 +30,10 @@
       }
     },
     {
-      "label": "ROOM 2 / 12 已清空",
+      "label": "ROOM 2 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -53,40 +53,17 @@
       }
     },
     {
-      "label": "ROOM 4 / 12 已清空",
+      "label": "ROOM 4 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
         "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 2
-        }
-      }
-    },
-    {
-      "label": "ROOM 5 / 12 已清空",
-      "relics": [
-        "thunder-emblem",
-        "frost-crown"
-      ],
-      "ascensions": [],
-      "lateUpgrades": [],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -94,21 +71,44 @@
         },
         "secondary": {
           "key": "chain",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 13 已清空",
+      "relics": [
+        "bloodflame-heart",
+        "feather"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
           "level": 2
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 1
         }
       }
     },
     {
-      "label": "ROOM 6 / 12 已清空",
+      "label": "ROOM 6 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
@@ -117,21 +117,21 @@
         },
         "secondary": {
           "key": "chain",
-          "level": 2
+          "level": 1
         }
       }
     },
     {
-      "label": "ROOM 8 / 12 已清空",
+      "label": "ROOM 8 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
@@ -145,18 +145,18 @@
       }
     },
     {
-      "label": "ROOM 9 / 12 已清空",
+      "label": "ROOM 9 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "rift-echo"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
@@ -170,18 +170,18 @@
       }
     },
     {
-      "label": "ROOM 10 / 12 已清空",
+      "label": "ROOM 10 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "rift-echo"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
@@ -195,18 +195,43 @@
       }
     },
     {
-      "label": "ROOM 11 / 12 已清空",
+      "label": "ROOM 11 / 13 已清空",
       "relics": [
-        "thunder-emblem",
-        "frost-crown"
+        "bloodflame-heart",
+        "feather"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "rift-echo"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 12 / 13 已清空",
+      "relics": [
+        "bloodflame-heart",
+        "feather"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
           "level": 3
         },
         "impact": {
@@ -223,17 +248,17 @@
   "chapterIndex": 2,
   "chaptersTotal": 3,
   "startChapter": 2,
-  "expectedSteps": 12,
-  "roomsCleared": 10,
-  "picks": 9,
-  "seconds": 19,
+  "expectedSteps": 13,
+  "roomsCleared": 11,
+  "picks": 10,
+  "seconds": 20,
   "relics": [
-    "thunder-emblem",
-    "frost-crown"
+    "bloodflame-heart",
+    "feather"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "rift-echo"
+    "ember-spread"
   ],
   "errors": []
 }

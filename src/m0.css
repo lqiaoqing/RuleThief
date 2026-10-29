@@ -1150,6 +1150,15 @@
   transition: width 0.2s linear;
 }
 
+.boss-bar.is-enraged .boss-bar-phase {
+  color: #ff9aac;
+}
+
+.boss-bar.is-enraged .boss-bar-track i {
+  background: linear-gradient(90deg, #ff4f6b, #ff9aac 60%, #ffd9a8);
+  box-shadow: 0 0 16px rgba(255, 79, 107, 0.6);
+}
+
 .boss-pips {
   display: flex;
   gap: 5px;
@@ -1295,6 +1304,20 @@ body.boss-active .rule-toast {
 
 .route-option.is-elite:hover {
   border-color: rgba(233, 189, 107, 0.6);
+}
+
+.route-option.is-surge {
+  border-color: rgba(255, 113, 134, 0.4);
+  background: linear-gradient(150deg, rgba(62, 24, 32, 0.62), rgba(10, 12, 20, 0.86));
+}
+
+.route-option.is-surge:hover {
+  border-color: rgba(255, 113, 134, 0.7);
+}
+
+.route-option.is-surge .route-option-tag {
+  border-color: rgba(255, 113, 134, 0.5);
+  color: #ff9aac;
 }
 
 .route-option.is-event {

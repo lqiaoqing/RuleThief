@@ -341,6 +341,7 @@ export const CHAPTERS: readonly ChapterDef[] = [
         { kind: 'choice', options: [room('coolant-vault'), room('boiler-room')] },
         { kind: 'encounter', encounter: room('control-deck') },
         { kind: 'encounter', encounter: room('core-approach') },
+        { kind: 'encounter', encounter: room('overload-furnace') },
         { kind: 'encounter', encounter: room('core-chamber') }
       ];
     }
@@ -367,6 +368,7 @@ export const CHAPTERS: readonly ChapterDef[] = [
         { kind: 'encounter', encounter: room('shadow-vault') },
         { kind: 'choice', options: [room('last-approach'), room('lawless-span')] },
         { kind: 'encounter', encounter: room('final-gate') },
+        { kind: 'encounter', encounter: room('inverse-storm') },
         { kind: 'encounter', encounter: room('source-chamber') }
       ];
     }

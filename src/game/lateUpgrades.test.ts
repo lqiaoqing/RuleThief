@@ -6,6 +6,7 @@ import {
   MAX_LATE_UPGRADES,
   lateLevel,
   lateUpgradeEligible,
+  lateUpgradeForRule,
   lateUpgradePool,
   pickResonance,
   type LateUpgradeId
@@ -33,6 +34,15 @@ describe('late upgrades', () => {
     expect(
       lateUpgradeEligible({ trajectory: { level: 2 }, impact: { level: 3 } }, 2)
     ).toBe(false);
+  });
+
+  it('maps each rule to its matching late upgrade', () => {
+    expect(lateUpgradeForRule('pierce')).toBe('pierce-momentum');
+    expect(lateUpgradeForRule('chain')).toBe('rift-echo');
+    expect(lateUpgradeForRule('spread')).toBe('spread-resonance');
+    expect(lateUpgradeForRule('burn')).toBe('ember-spread');
+    expect(lateUpgradeForRule('frost')).toBe('frost-ring');
+    expect(lateUpgradeForRule('blast')).toBe('blast-resonance');
   });
 
   it('pools only upgrades that match the equipped rules', () => {

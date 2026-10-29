@@ -14,6 +14,7 @@ import {
   setRoomProgress,
   setRunClock,
   setSealedRule,
+  setSurgeStatus,
   setWaveStatus,
   showRuleToast,
   showWaveBanner
@@ -56,6 +57,7 @@ import {
   MAX_LATE_UPGRADES,
   lateLevel,
   lateUpgradeEligible,
+  lateUpgradeForRule,
   pickResonance,
   type LateUpgradeDef,
   type LateUpgradeId
@@ -347,6 +349,7 @@ export class M0Scene extends Phaser.Scene {
   private acquired = new Set<RuleKey>();
   private relics: RelicId[] = [];
   private lateUpgrades: LateUpgradeId[] = [];
+  private orphanLateLevels = 0;
   private pierceMomentum = 0;
   private frostRingCd = 0;
   private slowFields: SlowField[] = [];
@@ -362,6 +365,15 @@ export class M0Scene extends Phaser.Scene {
   private waveSide = 0;
   private hordeEnabled = true;
   private waveCaptainSpawned = false;
+  private surgeActive = false;
+  private surgeEnding = false;
+  private surgeRemaining = 0;
+  private surgeSpawnCd = 0;
+  private surgeEliteTimer = 0;
+  private surgePackIndex = 0;
+  private sourceBerserkTriggered = false;
+  private sourceBerserkTime = 0;
+  private sourceBerserkCd = 0;
   private overloadSpawned = 0;
   private hordeNovas = 0;
   private dashNovas = 0;
@@ -669,6 +681,7 @@ export class M0Scene extends Phaser.Scene {
     this.acquired.clear();
     this.relics = [];
     this.lateUpgrades = [];
+    this.orphanLateLevels = 0;
     this.pierceMomentum = 0;
     this.frostRingCd = 0;
     this.slowFields = [];
@@ -680,6 +693,15 @@ export class M0Scene extends Phaser.Scene {
     this.totalOverloads = 0;
     this.totalNovas = 0;
     this.waveDirector = null;
+    this.surgeActive = false;
+    this.surgeEnding = false;
+    this.surgeRemaining = 0;
+    this.surgeSpawnCd = 0;
+    this.surgeEliteTimer = 0;
+    this.surgePackIndex = 0;
+    this.sourceBerserkTriggered = false;
+    this.sourceBerserkTime = 0;
+    this.sourceBerserkCd = 0;
     this.portalToken = 0;
     this.killStreak = 0;
     this.killStreakBest = 0;
@@ -1283,6 +1305,15 @@ export class M0Scene extends Phaser.Scene {
     this.waveDirector = null;
     this.waveSide = 0;
     this.waveCaptainSpawned = false;
+    this.surgeActive = false;
+    this.surgeEnding = false;
+    this.surgeRemaining = 0;
+    this.surgeSpawnCd = 0;
+    this.surgeEliteTimer = 0;
+    this.surgePackIndex = 0;
+    this.sourceBerserkTriggered = false;
+    this.sourceBerserkTime = 0;
+    this.sourceBerserkCd = 0;
     this.overloadSpawned = 0;
     this.hordeNovas = 0;
     this.dashNovas = 0;
@@ -1361,7 +1392,23 @@ export class M0Scene extends Phaser.Scene {
       showRuleToast('blast', '异变 · 额外精英', `${ENEMY_SPECS[kind].name} 进入本房`);
     }
 
-    if (this.hordeEnabled && !room.boss) {
+    if (room.surge) {
+      this.surgeActive = true;
+      this.surgeRemaining = room.surgeDuration ?? 38;
+      this.surgeSpawnCd = 0.4;
+      this.surgeEliteTimer = 14;
+      this.surgePackIndex = 0;
+      setSurgeStatus(this.surgeRemaining, this.enemies.length);
+      showRuleToast(
+        'blast',
+        '高压遭遇',
+        `坚持 ${Math.ceil(this.surgeRemaining)} 秒 · 精英混入怪潮 · 清场后额外奖励`
+      );
+      this.spawnSurgeElite();
+      this.spawnSurgePack();
+    }
+
+    if (this.hordeEnabled && !room.boss && !room.surge) {
       const remaining = Math.max(0, room.quota - this.roomSpawned);
       this.waveDirector =
         remaining > 0
@@ -1432,7 +1479,8 @@ export class M0Scene extends Phaser.Scene {
       if (upgrade) {
         const card: Reward = { kind: 'resonance', upgrade };
         const supportIndex = rewards.findIndex((reward) => reward.kind === 'support');
-        if (rewards.length < 4) {
+        const maxRewards = this.getRoom().surge ? 5 : 4;
+        if (rewards.length < maxRewards) {
           rewards.push(card);
         } else if (supportIndex >= 0) {
           rewards[supportIndex] = card;
@@ -1757,6 +1805,18 @@ export class M0Scene extends Phaser.Scene {
     this.refreshBossHud();
   }
 
+  public debugEndSurge(): void {
+    if (!this.surgeActive) return;
+    this.surgeRemaining = 0;
+    this.finishSurge();
+  }
+
+  public debugEndBerserk(): void {
+    if (!this.sourceBerserkTriggered) return;
+    this.sourceBerserkTime = 0;
+    this.refreshBossHud();
+  }
+
   public debugOpenEvent(id: EventId): void {
     if (this.runState !== 'playing') return;
     this.encounter = { kind: 'event', event: EVENTS[id] };
@@ -1982,6 +2042,11 @@ export class M0Scene extends Phaser.Scene {
       dashNovas: this.dashNovas,
       roomElite: Boolean(this.getRoom().elite),
       roomBoss: Boolean(this.getRoom().boss),
+      roomSurge: Boolean(this.getRoom().surge),
+      surgeActive: this.surgeActive,
+      surgeRemaining: this.surgeRemaining,
+      bossBerserk: this.sourceBerserkTime,
+      bossInvulnerable: this.sourceBerserkTime > 0,
       rewardOpen: this.rewardOpen,
       hp: this.hp,
       maxHp: this.maxHp,
@@ -3323,16 +3388,21 @@ export class M0Scene extends Phaser.Scene {
     for (const id of this.lateUpgrades) {
       counts.set(id, (counts.get(id) ?? 0) + 1);
     }
-    return [...counts.entries()].map(([id, level]) =>
+    const summary = [...counts.entries()].map(([id, level]) =>
       level > 1 ? `${LATE_UPGRADES[id].name} Lv.${level}` : LATE_UPGRADES[id].name
     );
+    if (this.orphanLateLevels > 0) {
+      summary.push(`规则余响 ×${this.orphanLateLevels}`);
+    }
+    return summary;
   }
 
   private relicDamageMultiplier(): number {
     const thunder = this.relics.includes('thunder-emblem') ? this.thunderStacks * 0.12 : 0;
     const prism = this.relics.includes('prism') && this.prismTime > 0 ? 0.2 : 0;
     const greed = this.relics.includes('greed') ? 0.2 : 0;
-    return 1 + thunder + prism + greed;
+    const orphan = this.orphanLateLevels * 0.06;
+    return 1 + thunder + prism + greed + orphan;
   }
 
   private updateRelicTimers(dt: number): void {
@@ -3466,7 +3536,32 @@ export class M0Scene extends Phaser.Scene {
     visual: 'hit' | 'blast' | 'dot'
   ): void {
     if (enemy.dead) return;
+    if (enemy === this.bossRef && this.sourceBerserkTime > 0) {
+      this.spawnDamageNumber(
+        enemy.root.x,
+        enemy.root.y - 64,
+        '免伤',
+        '#ff9aac',
+        16
+      );
+      return;
+    }
     const dealt = enemy.shieldTime > 0 ? amount * 0.6 : amount;
+    if (
+      enemy === this.bossRef &&
+      enemy.kind === 'source' &&
+      !this.sourceBerserkTriggered
+    ) {
+      const threshold = enemy.maxHp * 0.15;
+      if (enemy.hp - dealt <= threshold) {
+        const actual = Math.max(0, enemy.hp - threshold);
+        this.damageDealt += actual;
+        enemy.hp = threshold;
+        enemy.hpFill.setScale(threshold / enemy.maxHp, 1);
+        this.triggerSourceBerserk();
+        return;
+      }
+    }
     this.damageDealt += Math.max(0, dealt);
     if (visual === 'blast') this.blastDamageEvents += 1;
     enemy.hp -= dealt;
@@ -3567,6 +3662,7 @@ export class M0Scene extends Phaser.Scene {
     }
     if (
       !this.victoryLocked &&
+      !this.surgeEnding &&
       this.roomKills >= this.getRoom().quota &&
       this.enemies.length === 0 &&
       this.pendingSpawns === 0
@@ -3742,6 +3838,49 @@ export class M0Scene extends Phaser.Scene {
       audio.play('rule');
       showRuleToast(notice.key, notice.title, notice.sub);
     }
+    this.reconcileLateUpgrades(previous);
+  }
+
+  private reconcileLateUpgrades(previous: PlayerBuild): void {
+    const slots: ('trajectory' | 'impact' | 'secondary')[] = [
+      'trajectory',
+      'impact',
+      'secondary'
+    ];
+    const notes: string[] = [];
+    for (const slot of slots) {
+      const oldRule = previous[slot]?.key;
+      const newRule = this.build[slot]?.key;
+      if (!oldRule || oldRule === newRule) continue;
+      const fromId = lateUpgradeForRule(oldRule);
+      const levels = lateLevel(this.lateUpgrades, fromId);
+      if (!levels) continue;
+      this.lateUpgrades = this.lateUpgrades.filter((id) => id !== fromId);
+      if (!newRule) {
+        this.orphanLateLevels += levels;
+        notes.push(`${LATE_UPGRADES[fromId].name} → 规则余响 ×${levels}`);
+        continue;
+      }
+      const toId = lateUpgradeForRule(newRule);
+      const room = Math.max(
+        0,
+        MAX_LATE_LEVEL - lateLevel(this.lateUpgrades, toId)
+      );
+      const moved = Math.min(levels, room);
+      for (let index = 0; index < moved; index += 1) {
+        this.lateUpgrades.push(toId);
+      }
+      const overflow = levels - moved;
+      if (overflow > 0) this.orphanLateLevels += overflow;
+      notes.push(
+        overflow > 0
+          ? `${LATE_UPGRADES[fromId].name} → ${LATE_UPGRADES[toId].name} Lv.${moved} · 溢出 ${overflow} 级转规则余响`
+          : `${LATE_UPGRADES[fromId].name} → ${LATE_UPGRADES[toId].name} Lv.${moved}`
+      );
+    }
+    if (!notes.length) return;
+    setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
+    showRuleToast('chain', '后期强化转移', notes.join(' / '));
   }
 
   private clearPlayerBolts(): void {
@@ -3846,6 +3985,7 @@ export class M0Scene extends Phaser.Scene {
       if (!active) return;
       this.spawnEnemy(kind, x, y);
       if (
+        !this.surgeEnding &&
         this.enemies.length === 0 &&
         this.pendingSpawns === 0 &&
         this.roomKills >= this.getRoom().quota
@@ -4096,6 +4236,7 @@ export class M0Scene extends Phaser.Scene {
           break;
         case 'source':
           updateSourceBoss(enemy, dt, this.sourceHost);
+          this.updateSourceBerserk(enemy, dt);
           break;
         case 'warden':
           this.updateWarden(enemy, dt);
@@ -4853,6 +4994,54 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  private triggerSourceBerserk(): void {
+    if (this.sourceBerserkTriggered) return;
+    this.sourceBerserkTriggered = true;
+    this.sourceBerserkTime = 6;
+    this.sourceBerserkCd = 0.2;
+    this.cameras.main.shake(520, 0.008);
+    this.cameras.main.flash(260, 255, 80, 90);
+    audio.play('victory');
+    showRuleToast('blast', '规则之源 · 暴走', '核心免伤 6 秒 · 躲开弹幕与召唤');
+    this.refreshBossHud();
+  }
+
+  private updateSourceBerserk(enemy: EnemyUnit, dt: number): void {
+    if (!this.sourceBerserkTriggered) {
+      if (enemy.hp / enemy.maxHp <= 0.15) this.triggerSourceBerserk();
+      return;
+    }
+    if (this.sourceBerserkTime <= 0) return;
+    this.sourceBerserkTime -= dt;
+    this.sourceBerserkCd -= dt;
+    if (this.sourceBerserkCd <= 0) {
+      this.sourceBerserkCd = 0.8;
+      this.fireBossFan(enemy, 17, Math.PI * 2);
+      summonSourceAdds(this.sourceHost);
+      this.spawnShockZone(
+        this.playerRoot.x,
+        this.playerRoot.y,
+        70,
+        0.95,
+        COLORS.purple,
+        18
+      );
+      this.spawnShockZone(
+        combatInt(130, ARENA - 130),
+        combatInt(140, ARENA - 130),
+        64,
+        1.15,
+        COLORS.purple,
+        18
+      );
+    }
+    if (this.sourceBerserkTime <= 0) {
+      this.sourceBerserkTime = 0;
+      showRuleToast('chain', '暴走结束', '核心暴露 · 继续输出');
+      this.refreshBossHud();
+    }
+  }
+
   private onSourcePhase(phase: number): void {
     this.cameras.main.shake(480, 0.007);
     this.cameras.main.flash(240, 190, 120, 255);
@@ -4902,6 +5091,7 @@ export class M0Scene extends Phaser.Scene {
 
   private onBossDefeated(boss: EnemyUnit): void {
     this.victoryLocked = true;
+    this.sourceBerserkTime = 0;
     this.invuln = Math.max(this.invuln, 3);
     this.slowTime = 0;
     this.slowFactor = 0;
@@ -4962,7 +5152,8 @@ export class M0Scene extends Phaser.Scene {
       name: ENEMY_SPECS[boss.kind].name,
       hp: boss.hp,
       maxHp: boss.maxHp,
-      phase: this.bossPhase
+      phase: this.bossPhase,
+      enraged: this.sourceBerserkTime > 0
     });
   }
 
@@ -5584,6 +5775,10 @@ export class M0Scene extends Phaser.Scene {
 
   private updateSpawns(dt: number): void {
     const room = this.getRoom();
+    if (this.surgeActive) {
+      this.updateSurge(dt);
+      return;
+    }
     if (this.waveDirector) {
       if (this.roomKills >= room.quota) {
         this.waveDirector.complete();
@@ -5649,6 +5844,72 @@ export class M0Scene extends Phaser.Scene {
     return [2, 3, 5, 4][this.stepIndex % 4];
   }
 
+  private updateSurge(dt: number): void {
+    this.surgeRemaining -= dt;
+    if (this.surgeRemaining <= 0) {
+      this.finishSurge();
+      return;
+    }
+    this.surgeSpawnCd -= dt;
+    if (
+      this.surgeSpawnCd <= 0 &&
+      this.enemies.length + this.pendingSpawns < this.getRoom().maxAlive
+    ) {
+      this.surgeSpawnCd = 0.55;
+      this.spawnSurgePack();
+    }
+    this.surgeEliteTimer -= dt;
+    if (this.surgeEliteTimer <= 0 && this.surgeRemaining > 10) {
+      this.surgeEliteTimer = 15;
+      this.spawnSurgeElite();
+    }
+  }
+
+  private spawnSurgePack(): void {
+    const room = this.getRoom();
+    const side = this.surgePackIndex % 4;
+    this.waveSide = side;
+    this.surgePackIndex += 1;
+    const pack = combatInt(4, 6);
+    for (let index = 0; index < pack; index += 1) {
+      const kind = this.pickWaveKind(room);
+      const pos = this.chooseSpawnPosition(side);
+      this.spawnPortal(kind, pos.x, pos.y, true);
+      this.roomSpawned += 1;
+    }
+  }
+
+  private spawnSurgeElite(): void {
+    const kind: EnemyKind =
+      this.chapterIndex >= 2
+        ? 'seer'
+        : combatRandom() < 0.5
+          ? 'sunder'
+          : 'thunder';
+    const pos = this.chooseSpawnPosition(combatInt(0, 3));
+    this.spawnEnemy(kind, pos.x, pos.y, false);
+    this.spawnLeaderBurst(pos.x, pos.y);
+    showRuleToast('chain', '高压头目', `${ENEMY_SPECS[kind].name} 进入高压区`);
+  }
+
+  private finishSurge(): void {
+    if (!this.surgeActive) return;
+    this.surgeActive = false;
+    this.surgeEnding = true;
+    this.surgeRemaining = 0;
+    this.invuln = Math.max(this.invuln, 1.5);
+    this.portalToken += 1;
+    this.pendingSpawns = 0;
+    setWaveStatus(0, 0, 0);
+    this.spawnExplosion(this.playerRoot.x, this.playerRoot.y - 10, 260);
+    this.cameras.main.shake(320, 0.006);
+    audio.play('explosion');
+    for (const enemy of [...this.enemies]) {
+      if (!enemy.dead) this.killEnemy(enemy);
+    }
+    this.clearRoom();
+  }
+
   private spawnWaveCaptain(): void {
     const kind: EnemyKind = combatRandom() < 0.5 ? 'sunder' : 'thunder';
     const pos = this.chooseSpawnPosition();
@@ -5662,7 +5923,9 @@ export class M0Scene extends Phaser.Scene {
     if (this.hudTick >= 0.1) {
       this.hudTick = 0;
       setRunClock(this.elapsed);
-      if (this.waveDirector) {
+      if (this.surgeActive) {
+        setSurgeStatus(this.surgeRemaining, this.enemies.length + this.pendingSpawns);
+      } else if (this.waveDirector) {
         const wave = this.waveDirector.snapshot();
         setWaveStatus(wave.wave, wave.waves, this.enemies.length + this.pendingSpawns);
       }

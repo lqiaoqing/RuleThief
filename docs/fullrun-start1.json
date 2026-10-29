@@ -1,7 +1,7 @@
 {
   "result": {
     "title": "规则终结",
-    "rooms": "24 / 24"
+    "rooms": "26 / 26"
   },
   "chapters": [
     "失序工坊 · 已完成"
@@ -10,23 +10,23 @@
     [
       {
         "kind": "ascension",
-        "name": "雷霆领域"
+        "name": "烈焰引爆"
       },
       {
         "kind": "relic",
-        "name": "破裂棱镜"
+        "name": "疾行之羽"
       },
       {
         "kind": "reforge",
-        "name": "冰霜 → 爆裂"
+        "name": "贯穿 → 爆裂"
       }
     ]
   ],
   "rewardStates": [
     {
-      "label": "ROOM 1 / 12 已清空",
+      "label": "ROOM 1 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -40,15 +40,15 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 1
         }
       }
     },
     {
-      "label": "ROOM 2 / 12 已清空",
+      "label": "ROOM 2 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -62,15 +62,15 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 2
         }
       }
     },
     {
-      "label": "ROOM 4 / 12 已清空",
+      "label": "ROOM 4 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -84,15 +84,81 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 13 已清空",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
-      "label": "ROOM 5 / 12 已清空",
+      "label": "ROOM 6 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 13 已清空",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 13 已清空",
+      "relics": [
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [
@@ -108,15 +174,15 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
-      "label": "ROOM 6 / 12 已清空",
+      "label": "ROOM 10 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [
@@ -132,15 +198,15 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
-      "label": "ROOM 8 / 12 已清空",
+      "label": "ROOM 11 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [
@@ -152,19 +218,19 @@
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 1
+          "key": "burn",
+          "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
-      "label": "ROOM 9 / 12 已清空",
+      "label": "ROOM 12 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [
@@ -176,59 +242,11 @@
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 2
+          "key": "burn",
+          "level": 3
         },
         "secondary": {
-          "key": "chain",
-          "level": 3
-        }
-      }
-    },
-    {
-      "label": "ROOM 10 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [],
-      "lateUpgrades": [
-        "spread-resonance"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "frost",
-          "level": 2
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3
-        }
-      }
-    },
-    {
-      "label": "ROOM 11 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [],
-      "lateUpgrades": [
-        "spread-resonance"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "frost",
-          "level": 2
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
@@ -236,10 +254,10 @@
     {
       "label": "失序工坊 · 章节奖励",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
         "spread-resonance"
@@ -250,268 +268,303 @@
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 2
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
-        }
-      }
-    },
-    {
-      "label": "ROOM 1 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [
-        "chain"
-      ],
-      "lateUpgrades": [
-        "spread-resonance",
-        "rift-echo"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "frost",
-          "level": 2
         },
         "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
-        }
-      }
-    },
-    {
-      "label": "ROOM 2 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [
-        "chain"
-      ],
-      "lateUpgrades": [
-        "spread-resonance",
-        "rift-echo"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
-        }
-      }
-    },
-    {
-      "label": "ROOM 4 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [
-        "chain"
-      ],
-      "lateUpgrades": [
-        "spread-resonance",
-        "rift-echo"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
-        }
-      }
-    },
-    {
-      "label": "ROOM 5 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [
-        "chain"
-      ],
-      "lateUpgrades": [
-        "spread-resonance",
-        "rift-echo"
-      ],
-      "build": {
-        "trajectory": {
           "key": "pierce",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 1 / 13 已清空",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "spread-resonance"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 2 / 13 已清空",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "spread-resonance"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 13 已清空",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "spread-resonance",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 13 已清空",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
           "level": 1
-        },
-        "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
         }
       }
     },
     {
-      "label": "ROOM 6 / 12 已清空",
+      "label": "ROOM 6 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
         "spread-resonance",
-        "rift-echo"
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 13 已清空",
+      "relics": [
+        "greed",
+        "prism"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring",
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 13 已清空",
+      "relics": [
+        "greed",
+        "prism"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring",
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
           "level": 2
-        },
-        "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
         }
       }
     },
     {
-      "label": "ROOM 8 / 12 已清空",
+      "label": "ROOM 10 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed",
+        "prism"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
         "spread-resonance",
-        "rift-echo"
+        "frost-ring",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 2
         }
       }
     },
     {
-      "label": "ROOM 9 / 12 已清空",
+      "label": "ROOM 11 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed",
+        "prism"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
         "spread-resonance",
-        "rift-echo",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 2
         }
       }
     },
     {
-      "label": "ROOM 10 / 12 已清空",
+      "label": "ROOM 12 / 13 已清空",
       "relics": [
-        "bloodflame-heart"
+        "greed",
+        "prism"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
         "spread-resonance",
-        "rift-echo",
-        "pierce-momentum"
+        "frost-ring",
+        "ember-spread",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
-        }
-      }
-    },
-    {
-      "label": "ROOM 11 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
-      "ascensions": [
-        "chain"
-      ],
-      "lateUpgrades": [
-        "spread-resonance",
-        "rift-echo",
-        "pierce-momentum"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "pierce",
-          "level": 3
-        },
-        "impact": {
-          "key": "frost",
-          "level": 3
         },
         "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 2
         }
       }
     }
@@ -519,20 +572,22 @@
   "chapterIndex": 2,
   "chaptersTotal": 3,
   "startChapter": 1,
-  "expectedSteps": 24,
-  "roomsCleared": 20,
-  "picks": 19,
-  "seconds": 37,
+  "expectedSteps": 26,
+  "roomsCleared": 22,
+  "picks": 21,
+  "seconds": 40,
   "relics": [
-    "bloodflame-heart"
+    "greed",
+    "prism"
   ],
   "ascensions": [
-    "chain"
+    "burn"
   ],
   "lateUpgrades": [
     "spread-resonance",
-    "rift-echo",
-    "pierce-momentum"
+    "frost-ring",
+    "ember-spread",
+    "spread-resonance"
   ],
   "errors": []
 }

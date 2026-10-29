@@ -257,6 +257,8 @@ export interface RoomDef {
   hazard?: RoomHazard;
   modifier?: RoomModifier;
   conveyor?: { x: number; y: number };
+  surge?: boolean;
+  surgeDuration?: number;
 }
 
 export const ROOMS: readonly RoomDef[] = [
@@ -487,7 +489,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '装配门厅',
     en: 'ASSEMBLY GATE',
     subtitle: '炮台已经校准完毕，它们不会追你，但会封死直线。',
-    quota: 18,
+    quota: 24,
     maxAlive: 6,
     spawnInterval: 2.8,
     mix: [
@@ -508,7 +510,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '传送带大厅',
     en: 'CONVEYOR HALL',
     subtitle: '地面会周期性放电，安全站位每隔几秒就会消失一次。',
-    quota: 22,
+    quota: 29,
     maxAlive: 7,
     spawnInterval: 2.6,
     mix: [
@@ -525,7 +527,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '熔炉流水线',
     en: 'FURNACE LINE',
     subtitle: '相位机兵会绕过你的射程，熔炉地面却不允许你停下。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.5,
     mix: [
@@ -539,7 +541,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '护盾舱',
     en: 'SHIELD BAY',
     subtitle: '世律守卫守着旧工坊的最后一层护盾，炮台会替它争取时间。',
-    quota: 16,
+    quota: 21,
     maxAlive: 6,
     spawnInterval: 2.6,
     mix: [
@@ -555,7 +557,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '废弃档案库',
     en: 'ABANDONED ARCHIVE',
     subtitle: '孢子与炮台共享同一条供能线路，先拆哪一个都会改变弹幕密度。',
-    quota: 22,
+    quota: 29,
     maxAlive: 8,
     spawnInterval: 2.5,
     mix: [
@@ -568,7 +570,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '总装线',
     en: 'ASSEMBLY LINE',
     subtitle: '传送带、炮台与自爆机械同时运转，安全区只会越来越窄。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -586,7 +588,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '废料场',
     en: 'SCRAP YARD',
     subtitle: '自爆机械从废料堆里爬出来，相位机兵负责把你赶回它们中间。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -603,7 +605,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '核心回廊',
     en: 'CORE APPROACH',
     subtitle: '失序核心的供能脉冲已经开始泄漏，地面没有一块是真正安全的。',
-    quota: 26,
+    quota: 34,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [
@@ -613,11 +615,34 @@ export const ROOMS: readonly RoomDef[] = [
     hazard: 'shock-grid'
   },
   {
+    id: 'overload-furnace',
+    name: '过载熔炉',
+    en: 'OVERLOAD FURNACE',
+    subtitle: '核心过载前的最后一道闸门：连续波次、熔炉放电，精英会混在怪潮里。',
+    quota: 45,
+    maxAlive: 16,
+    spawnInterval: 0.7,
+    mix: [
+      { kind: 'sentry', weight: 4 },
+      { kind: 'phase', weight: 4 },
+      { kind: 'warden', weight: 2 },
+      { kind: 'bomber', weight: 2 }
+    ],
+    hazard: 'shock-grid',
+    cover: [
+      { x: 200, y: 560, radius: 34 },
+      { x: 600, y: 240, radius: 34 }
+    ],
+    rewardCount: 4,
+    surge: true,
+    surgeDuration: 38
+  },
+  {
     id: 'relay-tower',
     name: '中继塔',
     en: 'RELAY TOWER',
     subtitle: '炮台通过中继塔共享射界，先拆塔还是先躲线由你决定。',
-    quota: 22,
+    quota: 29,
     maxAlive: 7,
     spawnInterval: 2.5,
     mix: [
@@ -630,7 +655,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '活塞场',
     en: 'PISTON YARD',
     subtitle: '相位机兵在活塞之间穿梭，冲锋预警只给你半秒。',
-    quota: 23,
+    quota: 30,
     maxAlive: 8,
     spawnInterval: 2.45,
     mix: [
@@ -643,7 +668,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '冷却库',
     en: 'COOLANT VAULT',
     subtitle: '冷却液导电，霜灵会让你的撤离路线变得更慢。',
-    quota: 23,
+    quota: 30,
     maxAlive: 8,
     spawnInterval: 2.45,
     mix: [
@@ -657,7 +682,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '锅炉房',
     en: 'BOILER ROOM',
     subtitle: '熔炉与相位机兵轮流逼近，地面放电从不停工。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -671,7 +696,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '控制甲板',
     en: 'CONTROL DECK',
     subtitle: '炮台与相位机兵共用一套指挥链，清场顺序决定火力密度。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.35,
     mix: [
@@ -696,7 +721,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '深渊入口',
     en: 'ABYSS GATE',
     subtitle: '规则在这里开始反向生效，先确认你还能用哪一条。',
-    quota: 20,
+    quota: 26,
     maxAlive: 7,
     spawnInterval: 2.7,
     mix: [
@@ -715,7 +740,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '镜像回廊',
     en: 'MIRROR HALL',
     subtitle: '相位机兵复制你的走位，逆律会短暂让一条规则离线。',
-    quota: 23,
+    quota: 30,
     maxAlive: 8,
     spawnInterval: 2.5,
     mix: [
@@ -729,7 +754,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '虚无法坛',
     en: 'NULL CHAPEL',
     subtitle: '虚空裂隙会吞掉安全地面，炮台只需要逼你走进去。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.45,
     mix: [
@@ -743,7 +768,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '逆序庭院',
     en: 'INVERTED YARD',
     subtitle: '规则逆流时，自爆机械的逼近会比你的闪避更快。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.45,
     mix: [
@@ -757,7 +782,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '裂隙走廊',
     en: 'RIFT CORRIDOR',
     subtitle: '脚下随时会出现虚空裂隙，炮台负责封住唯一的安全路线。',
-    quota: 25,
+    quota: 33,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -771,7 +796,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '先知竞技场',
     en: 'SEER ARENA',
     subtitle: '逆律先知会瞬移、召唤虚空领域，并让一条规则短暂失效。',
-    quota: 16,
+    quota: 21,
     maxAlive: 6,
     spawnInterval: 2.6,
     mix: [
@@ -788,7 +813,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '回声深渊',
     en: 'ECHO ABYSS',
     subtitle: '深渊会重复你上一次的攻击节奏，相位机兵在回声里换位。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -801,7 +826,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '破碎王座',
     en: 'BROKEN THRONE',
     subtitle: '王座周围没有规则，只有不断逼近的自爆机械。',
-    quota: 25,
+    quota: 33,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -815,7 +840,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '虚空工坊',
     en: 'VOID WORKS',
     subtitle: '虚空裂隙与相位机兵共享同一片地面，停下就会失去站位。',
-    quota: 25,
+    quota: 33,
     maxAlive: 8,
     spawnInterval: 2.35,
     mix: [
@@ -829,7 +854,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '暗影库',
     en: 'SHADOW VAULT',
     subtitle: '暗影库里的规则会被短暂抽离，先想好失去哪一条还能打。',
-    quota: 24,
+    quota: 31,
     maxAlive: 8,
     spawnInterval: 2.4,
     mix: [
@@ -843,7 +868,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '最终回廊',
     en: 'LAST APPROACH',
     subtitle: '规则之源就在前方，虚空裂隙开始覆盖整条回廊。',
-    quota: 27,
+    quota: 35,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [
@@ -857,7 +882,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '无法之桥',
     en: 'LAWLESS SPAN',
     subtitle: '桥上没有任何规则保护你，只有虚空裂隙和自爆机械。',
-    quota: 26,
+    quota: 34,
     maxAlive: 8,
     spawnInterval: 2.35,
     mix: [
@@ -871,7 +896,7 @@ export const ROOMS: readonly RoomDef[] = [
     name: '终局之门',
     en: 'FINAL GATE',
     subtitle: '最后一层逆律：地面、规则与敌人都不会再保持稳定。',
-    quota: 27,
+    quota: 35,
     maxAlive: 8,
     spawnInterval: 2.3,
     mix: [
@@ -881,6 +906,29 @@ export const ROOMS: readonly RoomDef[] = [
     ],
     hazard: 'void-rift',
     modifier: 'rule-null'
+  },
+  {
+    id: 'inverse-storm',
+    name: '逆律风暴',
+    en: 'INVERSE STORM',
+    subtitle: '规则之源前的逆律风暴：地面塌陷、规则短暂失效，坚持到风暴结束。',
+    quota: 50,
+    maxAlive: 16,
+    spawnInterval: 0.7,
+    mix: [
+      { kind: 'phase', weight: 4 },
+      { kind: 'sentry', weight: 4 },
+      { kind: 'bomber', weight: 3 }
+    ],
+    hazard: 'void-rift',
+    modifier: 'rule-null',
+    cover: [
+      { x: 190, y: 570, radius: 34 },
+      { x: 610, y: 230, radius: 34 }
+    ],
+    rewardCount: 4,
+    surge: true,
+    surgeDuration: 40
   },
   {
     id: 'source-chamber',

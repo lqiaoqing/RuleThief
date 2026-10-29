@@ -122,7 +122,7 @@ describe('run plan', () => {
 
   it('builds a workshop chapter that ends at the disorder core', () => {
     const plan = buildChapterPlan(1, random);
-    expect(planStepCount(plan)).toBe(12);
+    expect(planStepCount(plan)).toBe(13);
     const last = plan[plan.length - 1];
     expect(last.kind).toBe('encounter');
     if (last.kind === 'encounter' && last.encounter.kind === 'room') {
@@ -141,7 +141,7 @@ describe('run plan', () => {
 
   it('builds an abyss chapter that ends at the source of rules', () => {
     const plan = buildChapterPlan(2, random);
-    expect(planStepCount(plan)).toBe(12);
+    expect(planStepCount(plan)).toBe(13);
     const last = plan[plan.length - 1];
     expect(last.kind).toBe('encounter');
     if (last.kind === 'encounter' && last.encounter.kind === 'room') {

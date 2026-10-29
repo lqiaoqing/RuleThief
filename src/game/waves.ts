@@ -91,10 +91,19 @@ export function buildWavePlan(
 ): WavePlan {
   const count = Math.max(0, Math.floor(total));
   if (count === 0) return { groups: [], maxAlive: 0, gap: 0 };
-  const defaultWaves = count <= 12 ? 3 : count <= 20 ? 4 : chapterIndex >= 1 ? 5 : 4;
+  const defaultWaves =
+    count <= 12
+      ? 3
+      : count <= 20
+        ? 4
+        : chapterIndex >= 1
+          ? count <= 28
+            ? 6
+            : 7
+          : 4;
   const waveCount = Math.max(
     2,
-    Math.min(6, Math.floor(waveCountOverride ?? defaultWaves))
+    Math.min(10, Math.floor(waveCountOverride ?? defaultWaves))
   );
   const base = Math.floor(count / waveCount);
   const remainder = count % waveCount;
@@ -103,10 +112,10 @@ export function buildWavePlan(
     groups.push(base + (index >= waveCount - remainder ? 1 : 0));
   }
   const gap =
-    chapterIndex === 0 ? Math.max(0.4, 0.5 - (elite ? 0.05 : 0)) : 0.8;
+    chapterIndex === 0 ? Math.max(0.4, 0.5 - (elite ? 0.05 : 0)) : 0.7;
   const maxAlive =
     chapterIndex === 0
       ? Math.min(30, Math.max(10, count))
-      : Math.min(14, Math.max(8, Math.ceil(count * 0.7)));
+      : Math.min(16, Math.max(8, Math.ceil(count * 0.6)));
   return { groups, maxAlive, gap };
 }

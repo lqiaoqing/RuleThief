@@ -47,13 +47,23 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships forty-four rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(44);
+  it('ships forty-six rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(46);
     expect(ROOMS.map((room) => room.quota)).toEqual([
-      13, 20, 22, 24, 22, 28, 28, 28, 22, 28, 28, 28, 28, 16, 16, 1, 18, 22, 24, 16, 22, 24, 24,
-      26, 22, 23, 23, 24, 24, 1, 20, 23, 24, 24, 25, 16, 24, 25, 25, 24, 27, 26, 27, 1
+      13, 20, 22, 24, 22, 28, 28, 28, 22, 28, 28, 28, 28, 16, 16, 1, 24, 29, 31, 21, 29, 31, 31,
+      34, 45, 29, 30, 30, 31, 31, 1, 26, 30, 31, 31, 33, 21, 31, 33, 33, 31, 35, 34, 35, 50, 1
     ]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
+  });
+
+  it('places one high-pressure surge before each late-world boss', () => {
+    const surges = ROOMS.filter((room) => room.surge);
+    expect(surges.map((room) => room.id)).toEqual(['overload-furnace', 'inverse-storm']);
+    for (const room of surges) {
+      expect(room.surgeDuration).toBeGreaterThanOrEqual(35);
+      expect(room.rewardCount).toBe(4);
+      expect(room.boss).toBeUndefined();
+    }
   });
 
   it('ends with the source of rules boss room', () => {
@@ -108,6 +118,7 @@ describe('room definitions', () => {
       'furnace-line',
       'assembly-line',
       'core-approach',
+      'overload-furnace',
       'coolant-vault',
       'boiler-room'
     ]);
@@ -126,7 +137,8 @@ describe('room definitions', () => {
       'void-works',
       'last-approach',
       'lawless-span',
-      'final-gate'
+      'final-gate',
+      'inverse-storm'
     ]);
     const nullRooms = ROOMS.filter((room) => room.modifier === 'rule-null');
     expect(nullRooms.map((room) => room.id)).toEqual([
@@ -136,12 +148,13 @@ describe('room definitions', () => {
       'seer-arena',
       'broken-throne',
       'shadow-vault',
-      'final-gate'
+      'final-gate',
+      'inverse-storm'
     ]);
   });
 
   it('non-elite rooms keep the standard three choices', () => {
-    for (const room of ROOMS.filter((item) => !item.elite && !item.boss)) {
+    for (const room of ROOMS.filter((item) => !item.elite && !item.boss && !item.surge)) {
       expect(room.leader).toBeUndefined();
       expect(room.rewardCount).toBeUndefined();
     }

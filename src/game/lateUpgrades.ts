@@ -105,6 +105,14 @@ const RESONANCE_RULES: { id: LateUpgradeId; rules: RuleKey[] }[] = [
   { id: 'blast-resonance', rules: ['blast'] }
 ];
 
+const RULE_TO_LATE = Object.fromEntries(
+  RESONANCE_RULES.flatMap((entry) => entry.rules.map((rule) => [rule, entry.id]))
+) as Record<RuleKey, LateUpgradeId>;
+
+export function lateUpgradeForRule(rule: RuleKey): LateUpgradeId {
+  return RULE_TO_LATE[rule];
+}
+
 export function lateUpgradePool(
   build: PlayerBuild,
   owned: readonly LateUpgradeId[]

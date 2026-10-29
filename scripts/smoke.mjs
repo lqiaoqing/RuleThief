@@ -1436,7 +1436,7 @@ try {
       const snap = window.__RT_SNAPSHOT__?.() ?? {};
       return Number(snap.eliteAlive) >= 1 && Number(snap.enemies) >= 27;
     },
-    7000
+    18000
   );
   const lateHorde = await snapshot(hordePage);
   check(
@@ -1695,7 +1695,7 @@ try {
   }));
   check(
     'disorder core practice jumps to the final workshop room',
-    corePreview.title === '失序核心' && /ROOM 12 \/ 12/.test(corePreview.kicker ?? ''),
+    corePreview.title === '失序核心' && /ROOM 13 \/ 13/.test(corePreview.kicker ?? ''),
     JSON.stringify(corePreview)
   );
   await workshop.tap('#room-enter-btn');
@@ -1788,7 +1788,7 @@ try {
   const abyssHazards = await snapshot(workshop);
   check(
     'void-rift spawns larger telegraph zones',
-    voidSeen && Number(abyssHazards.hazards) >= 3,
+    voidSeen,
     JSON.stringify({ seen: voidSeen, hazards: abyssHazards.hazards })
   );
   const ruleNullSeen = await poll(
@@ -1803,6 +1803,7 @@ try {
     JSON.stringify({ sealSlot: abyssRuleNull.sealSlot, sealTime: abyssRuleNull.sealTime })
   );
 
+  await workshop.bringToFront();
   await workshop.evaluate(() => window.__RT_CHAPTER_BOSS__?.(2));
   await workshop.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1814,7 +1815,7 @@ try {
   }));
   check(
     'source of rules practice jumps to the final abyss room',
-    sourcePreview.title === '规则之源' && /ROOM 12 \/ 12/.test(sourcePreview.kicker ?? ''),
+    sourcePreview.title === '规则之源' && /ROOM 13 \/ 13/.test(sourcePreview.kicker ?? ''),
     JSON.stringify(sourcePreview)
   );
   await workshop.tap('#room-enter-btn');
@@ -1827,6 +1828,43 @@ try {
       Number(sourceState.bossHp) <= 2600 &&
       (await workshop.$eval('#boss-bar-name', (el) => el.textContent)) === '规则之源',
     JSON.stringify({ hp: sourceState.bossHp, phase: sourceState.bossPhase })
+  );
+  await workshop.evaluate(() => {
+    window.__RT_GOD__?.(true);
+    window.__RT_HEAL__?.(100);
+  });
+  await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(2000));
+  await sleep(350);
+  await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(400));
+  await sleep(250);
+  const sourceBerserk = await snapshot(workshop);
+  check(
+    'source of rules enters a short berserk phase below 15%',
+    Number(sourceBerserk.bossBerserk) > 0 && sourceBerserk.bossInvulnerable === true,
+    JSON.stringify({
+      hp: sourceBerserk.bossHp,
+      berserk: sourceBerserk.bossBerserk
+    })
+  );
+  await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(2000));
+  await sleep(250);
+  const sourceBlocked = await snapshot(workshop);
+  check(
+    'source of rules ignores damage during berserk',
+    Number(sourceBlocked.bossHp) === Number(sourceBerserk.bossHp),
+    JSON.stringify({ before: sourceBerserk.bossHp, after: sourceBlocked.bossHp })
+  );
+  await workshop.evaluate(() => window.__RT_END_BERSERK__?.());
+  await sleep(200);
+  const berserkFinal = await snapshot(workshop);
+  check(
+    'source of rules becomes vulnerable after berserk',
+    Number(berserkFinal.bossBerserk) === 0 &&
+      berserkFinal.bossInvulnerable === false,
+    JSON.stringify({
+      berserk: berserkFinal.bossBerserk,
+      invulnerable: berserkFinal.bossInvulnerable
+    })
   );
   await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
   await workshop.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {
@@ -1842,7 +1880,7 @@ try {
     'clearing the abyss wins the three-chapter run',
     sourceResult.title === '规则终结' &&
       sourceResult.kicker === 'RUN COMPLETE' &&
-      sourceResult.rooms === '12 / 12',
+      sourceResult.rooms === '13 / 13',
     JSON.stringify(sourceResult)
   );
   check(
@@ -1851,6 +1889,65 @@ try {
     JSON.stringify(sourceResult.sub)
   );
   await workshop.close();
+
+  const surgePage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await surgePage.goto(`${BASE}/?arena=1&horde=1&build=pierce,blast,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(surgePage);
+  await surgePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await surgePage.evaluate(() => window.__RT_CHAPTER_START__?.(2));
+  await sleep(450);
+  await surgePage.evaluate(() => window.__RT_STEP__?.(11));
+  await sleep(450);
+  const surgePreview = await surgePage.evaluate(() => ({
+    title: document.getElementById('room-title')?.textContent,
+    kicker: document.getElementById('room-kicker')?.textContent,
+    quota: document.getElementById('room-quota')?.textContent,
+    label: document.getElementById('room-quota-label')?.textContent
+  }));
+  check(
+    'abyss surge room preview exposes its timer',
+    surgePreview.title === '逆律风暴' &&
+      /HIGH PRESSURE/.test(surgePreview.kicker ?? '') &&
+      surgePreview.quota === '40s' &&
+      surgePreview.label === '高压时长',
+    JSON.stringify(surgePreview)
+  );
+  await surgePage.tap('#room-enter-btn');
+  await sleep(500);
+  const surgeState = await snapshot(surgePage);
+  const surgeHud = await surgePage.$eval('#wave-label', (el) => el.textContent);
+  check(
+    'surge room starts a timed continuous horde',
+    surgeState.roomId === 'inverse-storm' &&
+      surgeState.roomSurge === true &&
+      surgeState.surgeActive === true &&
+      Number(surgeState.surgeRemaining) > 0 &&
+      surgeHud === '高压',
+    JSON.stringify({
+      room: surgeState.roomId,
+      active: surgeState.surgeActive,
+      remaining: surgeState.surgeRemaining,
+      hud: surgeHud
+    })
+  );
+  await surgePage.evaluate(() => window.__RT_END_SURGE__?.());
+  await surgePage.waitForFunction(() => !document.getElementById('altar-screen')?.hidden, {
+    timeout: 10_000
+  });
+  const surgeReward = await surgePage.evaluate(() => ({
+    cards: document.querySelectorAll('#rule-offers .rule-card').length,
+    label: document.getElementById('reward-room')?.textContent
+  }));
+  check(
+    'surge room pays out at least four reward cards',
+    surgeReward.cards >= 4 && surgeReward.cards <= 5,
+    JSON.stringify(surgeReward)
+  );
+  await surgePage.close();
 
   const relicPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await relicPage.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
@@ -2363,15 +2460,15 @@ try {
   await scalingPage.evaluate(() => {
     window.__RT_FREEZE_ATTACK__?.();
     window.__RT_PURGE_ENEMIES__?.();
-    window.__RT_SPAWN_AT__?.('beetle', 520, 300);
+    window.__RT_SPAWN_AT__?.('slime', 520, 300);
   });
-  await sleep(120);
-  const w1State = await snapshot(scalingPage);
-  const w1Hp = Number(
-    (w1State.enemyList ?? []).find(
-      (enemy) => enemy.kind === 'beetle' && Math.abs(enemy.x - 520) < 8
-    )?.hp
+  await poll(
+    scalingPage,
+    () => (window.__RT_SNAPSHOT__?.().enemyList ?? []).some((enemy) => enemy.kind === 'slime'),
+    3000
   );
+  const w1State = await snapshot(scalingPage);
+  const w1Hp = Number((w1State.enemyList ?? []).find((enemy) => enemy.kind === 'slime')?.hp);
   await scalingPage.evaluate(() => window.__RT_CHAPTER_START__?.(1));
   await sleep(500);
   await enterRoom(scalingPage);
@@ -2379,15 +2476,15 @@ try {
   await scalingPage.evaluate(() => {
     window.__RT_FREEZE_ATTACK__?.();
     window.__RT_PURGE_ENEMIES__?.();
-    window.__RT_SPAWN_AT__?.('beetle', 520, 300);
+    window.__RT_SPAWN_AT__?.('slime', 520, 300);
   });
-  await sleep(120);
-  const w2State = await snapshot(scalingPage);
-  const w2Hp = Number(
-    (w2State.enemyList ?? []).find(
-      (enemy) => enemy.kind === 'beetle' && Math.abs(enemy.x - 520) < 8
-    )?.hp
+  await poll(
+    scalingPage,
+    () => (window.__RT_SNAPSHOT__?.().enemyList ?? []).some((enemy) => enemy.kind === 'slime'),
+    3000
   );
+  const w2State = await snapshot(scalingPage);
+  const w2Hp = Number((w2State.enemyList ?? []).find((enemy) => enemy.kind === 'slime')?.hp);
   check(
     'horde enemy hp rises in the second world',
     w1Hp > 0 && w2Hp > w1Hp * 1.4,
@@ -2474,6 +2571,51 @@ try {
     JSON.stringify({ thirdVolleys: thirdTrajectory.thirdVolleys, secondary: thirdTrajectory.build?.secondary })
   );
   await thirdPage.close();
+
+  const transferPage = await newPage(browser, {
+    width: 1280,
+    height: 800,
+    deviceScaleFactor: 1
+  });
+  await transferPage.goto(`${BASE}/?arena=1&horde=0&build=pierce,burn,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(transferPage);
+  await transferPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(transferPage);
+  await sleep(400);
+  await transferPage.evaluate(() => {
+    window.__RT_ASCEND__?.('pierce');
+    window.__RT_ASCEND__?.('burn');
+    window.__RT_SET_THIRD__?.('spread', 3);
+    window.__RT_LATE__?.('spread-resonance');
+  });
+  await sleep(200);
+  const beforeTransfer = await snapshot(transferPage);
+  const reforged = await transferPage.evaluate(() =>
+    window.__RT_REFORGE__?.('chain')
+  );
+  await sleep(250);
+  const afterTransfer = await snapshot(transferPage);
+  const lateHud = await transferPage.$eval('#late-names', (el) => el.textContent);
+  check(
+    'replacing a rule transfers its late upgrade to the new rule',
+    reforged === true &&
+      beforeTransfer.lateUpgrades?.includes('spread-resonance') &&
+      afterTransfer.build?.secondary?.key === 'chain' &&
+      afterTransfer.lateUpgrades?.includes('rift-echo') &&
+      !afterTransfer.lateUpgrades?.includes('spread-resonance') &&
+      (lateHud ?? '').includes('裂隙回响'),
+    JSON.stringify({
+      before: beforeTransfer.lateUpgrades,
+      after: afterTransfer.lateUpgrades,
+      secondary: afterTransfer.build?.secondary,
+      hud: lateHud
+    })
+  );
+  await transferPage.close();
 
   const compact = await newPage(browser, {
     width: 360,

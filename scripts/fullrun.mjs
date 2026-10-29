@@ -10,7 +10,7 @@ if (!executablePath) throw new Error('No Chrome or Edge executable found.');
 
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:4177';
 const START = Math.max(0, Math.min(2, Number(process.argv[2] ?? process.env.START ?? 0)));
-const EXPECTED_STEPS = START === 0 ? 34 : START === 1 ? 24 : 12;
+const EXPECTED_STEPS = START === 0 ? 36 : START === 1 ? 26 : 13;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function snapshot(page) {
@@ -33,6 +33,7 @@ async function overlay(page) {
 
 async function finishRoom(page, quota) {
   await page.evaluate((value) => window.__RT_SET_ROOM_KILLS__?.(Math.max(0, value - 1)), quota);
+  await page.evaluate(() => window.__RT_END_SURGE__?.());
   await sleep(100);
   for (let attempt = 0; attempt < 16; attempt += 1) {
     const state = await snapshot(page);

@@ -1,20 +1,20 @@
 # 验收矩阵（设计文档 → 证据）
 
-日期：2026-10-29（M10.1 满级后成长版）
+日期：2026-10-29（M10.2 章节峰值与加量版）
 用途：把 M0–M9 的功能条款逐条映射到可复现的命令与结果。标记为「自动」的项由脚本验证；标记为「人工」的项需要真人或真机。
 
 ## A. 当前自动化结果
 
 ```text
-npm test                       172/172 通过（16 个测试文件）
-npm run build                  tsc + vite build 通过（dist 1.91MB）
+npm test                       174/174 通过（16 个测试文件）
+npm run build                  tsc + vite build 通过（dist 1.96MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  223/223 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 6 项后期强化等级池 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目/过载 + 规则共鸣投放/散华弹体/爆裂半径/W2 血量 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
-npm run fullrun                34/34 三章结构性全流程通过（约 52 秒，非真实时长；升阶规则跨三章保留，后期强化实拿 7 级）
-npm run fullrun-start1         24/24 从第二世界起点跑到终点
-npm run fullrun-start2         12/12 从第三世界起点跑到终点
-scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
-scripts/lowend.mjs             CPU ×1/×4/×6：121.0 / 76.7 / 58.0 fps（120Hz 显示器，min 53，含怪潮）
+npm run smoke                  230/230 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 6 项后期强化等级池 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目/过载 + 规则共鸣/散华/爆裂/W2 血量 + 高压房计时与奖励 + 后期强化转移 + 规则之源暴走 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
+npm run fullrun                36/36 三章结构性全流程通过（约 54 秒，非真实时长；升阶规则跨三章保留，后期强化实拿 6 级）
+npm run fullrun-start1         26/26 从第二世界起点跑到终点
+npm run fullrun-start2         13/13 从第三世界起点跑到终点
+scripts/stress.mjs             45 敌：avg 59.3 / min 59 fps
+scripts/lowend.mjs             CPU ×1/×4/×6：59.2 / 56.7 / 44.0 fps（60Hz headful，34 敌，min 40；与旧 120Hz 数据不可直接横比）
 scripts/soak.mjs               2 分钟（怪潮）：监听器 +0、堆 7–32MB 随 GC 波动、143fps（高刷显示器）
 scripts/combo-bench.mjs        9 组合 DPS：40–105（旧逐只模式木桩基准）
 scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房：6–11s、17 杀、峰值 11–13
@@ -83,9 +83,13 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M10.0 | 怪潮调度替代逐只刷新 | 自动 | `waves.ts` + 6 项单测；普通/精英房整组波次，单波同侧压入，第一世界后段 28 只/房并交替 2/3/4/5 波；`?horde=0` 保留旧模式；冒烟「horde rooms spawn waves that overlap into a crowd」 |
 | M10.0 | 割草反馈与后期压力 | 自动 | 连杀 HUD、10/25 连杀 FRENZY/MASSACRE、同帧 3 杀 hitstop/震屏/冲击环、普攻击退、闪避冲击波、10/25 连杀压入额外怪潮、25/50 连杀规则爆发、18 秒速杀额外奖励卡、第 4 战斗房后按已装备规则抽取一次规则共鸣、第一世界后段与 W2/W3 三个房间的石柱掩体（阻挡移动与弹道）、结算最高连杀/过载/规则爆发统计、第一世界第 6 房起精英头目；冒烟连杀/头目/过载/爆发/闪避/速杀/结算断言 |
 | M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14，约一半混入杂兵；精英/BOSS 不变；45 敌压测 120.1fps（120Hz）、CPU×6 58.0fps（min 46） |
-| M10.1 | 满级后持续成长 | 自动 | 6 项后期强化按已装备规则筛选，可叠加至 Lv.3、全局上限 9；普通房不直接给后期强化，第 4 战斗房后每 3 房注入规则共鸣，优先补最低等级；冒烟「mid-run rule resonance is offered」「spread resonance adds a bolt per level」「blast resonance enlarges the explosion」；fullrun 三章实拿 7 级（穿透蓄势/裂隙回响/爆裂共鸣） |
+| M10.1 | 满级后持续成长 | 自动 | 6 项后期强化按已装备规则筛选，可叠加至 Lv.3、全局上限 9；普通房不直接给后期强化，第 4 战斗房后每 3 房注入规则共鸣，优先补最低等级；冒烟「mid-run rule resonance is offered」「spread resonance adds a bolt per level」「blast resonance enlarges the explosion」；fullrun 三章实拿 6 级（穿透蓄势/裂隙回响/余烬蔓延） |
 | M10.1 | 后两章耐久 | 自动 | 普通怪 HP 按世界 ×0.38 / ×0.55 / ×0.70；冒烟「horde enemy hp rises in the second world」断言 W2 同种怪血量 > W1 ×1.4 |
-| M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 5,519 行，超过蓝图约束，普通敌人 AI/渲染待后续拆分 |
+| M10.2 | W2/W3 加量与波次 | 自动 | W2/W3 非 BOSS 房配额 24–35、普通房 6–7 波、同屏上限 16；W1 保持 28 只/房；`waves.test.ts` + `rooms.test.ts`；fullrun 36/36 |
+| M10.2 | BOSS 前高压遭遇 | 自动 | 过载熔炉（38s）/ 逆律风暴（40s）连续波次、保底精英、倒计时清场、四选一奖励；预览显示 `高压`/时长；冒烟「abyss surge room preview exposes its timer」「surge room starts a timed continuous horde」「surge room pays out at least four reward cards」 |
+| M10.2 | 规则之源暴走 | 自动 | 15% 血量进入 6 秒免伤暴走：17 发环形弹幕 + 召唤 + 虚空裂隙，结束后可击杀；BOSS 条显示 `PHASE III · 暴走`；冒烟暴走触发/免伤/结束断言 |
+| M10.2 | 换规则不产生死卡 | 自动 | 重铸/事件换规则时，旧规则后期强化自动转移到新规则同类，溢出转「规则余响」每级全伤害 +6%；冒烟「replacing a rule transfers its late upgrade to the new rule」 |
+| M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 6,298 行，超过蓝图约束，普通敌人 AI/渲染与高压房宿主待后续拆分 |
 
 ## D. 性能与长时运行
 
@@ -109,12 +113,14 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 
 ## F. 已知偏差
 
-- `M0Scene.ts` 约 6,006 行，仍超过蓝图「不扩大巨型场景类」的工程约束。WaveDirector、Arbiter / Core / Source 已独立成模块，但怪潮宿主、连杀/掩体反馈、普通敌人 AI 与渲染仍在场景类内；彻底拆分需要单独里程碑，不能靠一次补丁完成。
+- `M0Scene.ts` 约 6,298 行，仍超过蓝图「不扩大巨型场景类」的工程约束。WaveDirector、Arbiter / Core / Source 已独立成模块，但怪潮/高压房宿主、连杀/掩体反馈、普通敌人 AI 与渲染仍在场景类内；彻底拆分需要单独里程碑，不能靠一次补丁完成。
 - 遗物与升阶的 9 项战斗效果均已有定向战斗断言；真人手感、效果强度与组合强弱仍需外部试玩。
 - 自动试玩机器人在 +10% 配额下止步第 2 房（2/13），不作为难度或时长结论。
-- M10.0 已压缩第一世界为 10 步（7 战斗 + 2 事件 + BOSS），但 800×800 地图、规则数值曲线仍未重做；地图走位属于后续 M10.2。
-- 怪潮密度按“第一世界后段 28 只、第二/三世界同屏 14”实现；真人可能在 W2 机械怪潮中感到更拥挤或更硬，需要试玩确认。
-- M10.1 的「规则共鸣每 3 房一次、每项最高 Lv.3」和 W2/W3 血量 ×0.55/×0.70 尚未经过真人节奏验收；自动断言只能证明机制生效，不能证明成长曲线不腻。
+- M10.2 将 W2/W3 扩为各 13 步、全程 36 步，但仍使用 800×800 地图；可滚动大地图与商店仍未做。
+- 怪潮密度按“W1 后段 28 只、W2/W3 同屏 16”实现；真人可能在 W2 机械怪潮或 38–40 秒高压房中感到过挤/过肉，需要试玩确认。
+- M10.2 的「9–10 分钟单局」是设计目标，自动 fullrun 仅 54 秒（脚本直接清房），不能证明真人节奏。
+- 本轮 lowend 在 60Hz headful 环境测得 CPU×6 44.0fps（min 40）；旧 120Hz 的 58fps 数据不可直接对比。W1 45 敌压力仍为 59.3fps，W2/W3 同屏上限 16，实际压力低于 lowend 的 34 敌。
+- M10.1/M10.2 的规则共鸣、血量曲线、高压房时长与 BOSS 暴走尚未经过真人节奏验收；自动断言只能证明机制生效，不能证明手感不腻。
 
 ## G. 复现步骤
 

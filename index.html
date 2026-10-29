@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05080f" />
-    <meta name="description" content="规则掠夺者 RULE THIEF · 单人肉鸽动作：三世界 34 步、14 种敌人、3 名精英、6 种随机事件、6 件遗物、3 种升阶与 I–V 异变难度。" />
+    <meta name="description" content="规则掠夺者 RULE THIEF · 单人肉鸽动作：三世界 36 步、14 种敌人、3 名精英、6 种随机事件、6 件遗物、3 种升阶与 I–V 异变难度。" />
     <title>规则掠夺者 RULE THIEF · 三世界肉鸽行动</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="preload" as="image" href="./assets/art/menu-key.webp" />
@@ -203,7 +203,7 @@
 
             <div class="boss-watch">
               <span class="boss-dot"></span>
-              FULL RUN <b>34 步行动</b>
+              FULL RUN <b>36 步行动</b>
             </div>
 
             <div class="kill-streak" id="kill-streak" hidden>
@@ -323,7 +323,7 @@
               <span>房间 <b id="threat-level">I</b></span>
             </div>
             <div class="objective-wave" id="objective-wave" hidden>
-              <span>WAVE <b id="wave-progress">—</b></span>
+              <span><b id="wave-label">WAVE</b> <b id="wave-progress">—</b></span>
               <span>同屏 <b id="alive-count">0</b></span>
             </div>
             <div class="codex-list" id="codex-list"></div>
@@ -355,7 +355,7 @@
           <p class="altar-sub" id="room-sub">规则在这里第一次被教导，也第一次被夺走。</p>
           <div class="room-enemies" id="room-enemies"></div>
           <div class="room-stats">
-            <div><b id="room-quota">8</b><span>清场配额</span></div>
+            <div><b id="room-quota">8</b><span id="room-quota-label">清场配额</span></div>
             <div><b id="room-hp">100 / 100</b><span>当前生命</span></div>
             <div><b id="room-kills">0</b><span>累计击杀</span></div>
           </div>
@@ -393,6 +393,10 @@
             <div class="intro-row">
               <b>5</b>
               <div><strong>满级后继续共鸣</strong><span>第 4 房后每 3 房出现规则共鸣；重复获得可升到 Lv.3，不占新槽位。</span></div>
+            </div>
+            <div class="intro-row">
+              <b>6</b>
+              <div><strong>后期有峰值</strong><span>W2/W3 BOSS 前各有 38–40 秒高压房；规则之源低血量会进入 6 秒免伤暴走。</span></div>
             </div>
           </div>
           <button class="primary compact" id="intro-start-btn">

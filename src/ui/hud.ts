@@ -96,6 +96,7 @@ const mobileComboSub = byId<HTMLElement>('mobile-combo-sub');
 
 const codexList = byId<HTMLElement>('codex-list');
 const objectiveWave = byId<HTMLElement>('objective-wave');
+const waveLabel = byId<HTMLElement>('wave-label');
 const waveProgress = byId<HTMLElement>('wave-progress');
 const aliveCount = byId<HTMLElement>('alive-count');
 const killStreak = byId<HTMLElement>('kill-streak');
@@ -179,7 +180,13 @@ const PHASE_LABELS = ['秩序', '混乱', '规则剥夺'];
 const PHASE_NUMERALS = ['I', 'II', 'III'];
 
 export function setBossBar(
-  state: { name: string; hp: number; maxHp: number; phase: number } | null
+  state: {
+    name: string;
+    hp: number;
+    maxHp: number;
+    phase: number;
+    enraged?: boolean;
+  } | null
 ): void {
   document.body.classList.toggle('boss-active', Boolean(state));
   if (!state) {
@@ -189,8 +196,11 @@ export function setBossBar(
   bossBar.hidden = false;
   bossBarName.textContent = state.name;
   const index = Math.max(0, Math.min(2, state.phase - 1));
-  bossBarPhase.textContent = `PHASE ${PHASE_NUMERALS[index]} · ${PHASE_LABELS[index]}`;
+  bossBarPhase.textContent = state.enraged
+    ? 'PHASE III · 暴走'
+    : `PHASE ${PHASE_NUMERALS[index]} · ${PHASE_LABELS[index]}`;
   bossBarPhase.dataset.phase = String(state.phase);
+  bossBar.classList.toggle('is-enraged', Boolean(state.enraged));
   bossBarFill.style.width = `${Math.max(0, Math.min(100, (state.hp / state.maxHp) * 100))}%`;
   bossPips.forEach((pip, pipIndex) => pip.classList.toggle('active', pipIndex < state.phase));
 }
@@ -343,7 +353,15 @@ export function setKills(kills: number): void {
 
 export function setWaveStatus(wave: number, total: number, alive: number): void {
   objectiveWave.hidden = total <= 0;
+  waveLabel.textContent = 'WAVE';
   waveProgress.textContent = total > 0 ? `${Math.max(1, wave)} / ${total}` : '—';
+  aliveCount.textContent = String(alive);
+}
+
+export function setSurgeStatus(remaining: number, alive: number): void {
+  objectiveWave.hidden = false;
+  waveLabel.textContent = '高压';
+  waveProgress.textContent = `${Math.max(0, Math.ceil(remaining))}s`;
   aliveCount.textContent = String(alive);
 }
 

@@ -20,6 +20,7 @@ const roomEn = requireId<HTMLElement>('room-en');
 const roomSub = requireId<HTMLElement>('room-sub');
 const roomEnemies = requireId<HTMLElement>('room-enemies');
 const roomQuota = requireId<HTMLElement>('room-quota');
+const roomQuotaLabel = requireId<HTMLElement>('room-quota-label');
 const roomHp = requireId<HTMLElement>('room-hp');
 const roomKills = requireId<HTMLElement>('room-kills');
 
@@ -363,11 +364,14 @@ export function pickReward(index: number): boolean {
 export function renderRoomPreview(payload: RoomPreview): void {
   const pad = (value: number) => String(value).padStart(2, '0');
   const elite = Boolean(payload.room.elite);
-  roomKicker.textContent = `ROOM ${pad(payload.index + 1)} / ${pad(payload.total)}${elite ? ' · ELITE' : ''}`;
+  const surge = Boolean(payload.room.surge);
+  const tag = elite ? ' · ELITE' : surge ? ' · HIGH PRESSURE' : '';
+  roomKicker.textContent = `ROOM ${pad(payload.index + 1)} / ${pad(payload.total)}${tag}`;
   roomTitle.textContent = payload.room.name;
   roomEn.textContent = payload.room.en;
   roomSub.textContent = payload.room.subtitle;
-  roomQuota.textContent = String(payload.room.quota);
+  roomQuota.textContent = surge ? `${payload.room.surgeDuration ?? 38}s` : String(payload.room.quota);
+  roomQuotaLabel.textContent = surge ? '高压时长' : '清场配额';
   roomHp.textContent = `${Math.ceil(payload.hp)} / ${payload.maxHp}`;
   roomKills.textContent = String(payload.kills);
   roomKicker.classList.toggle('is-elite', elite);
@@ -393,9 +397,11 @@ export function renderRoomPreview(payload: RoomPreview): void {
 
   const foot = roomScreen.querySelector<HTMLElement>('.room-foot span');
   if (foot) {
-    foot.textContent = elite
-      ? '精英房：怪潮与领袖一起压上，清场后四选一。连杀会加快攻击。'
-      : '怪潮成组压上，清空后三选一；连杀会加快攻击，后期怪潮会混入头目。';
+    foot.textContent = surge
+      ? '高压遭遇：连续波次 + 保底精英，坚持到计时结束；清场后四选一。'
+      : elite
+        ? '精英房：怪潮与领袖一起压上，清场后四选一。连杀会加快攻击。'
+        : '怪潮成组压上，清空后三选一；连杀会加快攻击，后期怪潮会混入头目。';
   }
 }
 
@@ -434,9 +440,10 @@ export function renderRoute(
   payload.options.forEach((option, index) => {
     const isEvent = option.kind === 'event';
     const elite = !isEvent && Boolean(option.room.elite);
+    const surge = !isEvent && Boolean(option.room.surge);
     const card = el(
       'button',
-      `route-option${isEvent ? ' is-event' : elite ? ' is-elite' : ''}`
+      `route-option${isEvent ? ' is-event' : surge ? ' is-surge' : elite ? ' is-elite' : ''}`
     );
     card.type = 'button';
     card.dataset.kind = option.kind;
@@ -444,7 +451,11 @@ export function renderRoute(
 
     const head = el('div', 'route-option-head');
     head.append(
-      el('span', 'route-option-tag', isEvent ? '事件' : elite ? '精英' : '战斗'),
+      el(
+        'span',
+        'route-option-tag',
+        isEvent ? '事件' : surge ? '高压' : elite ? '精英' : '战斗'
+      ),
       el('b', 'route-option-name', isEvent ? option.event.name : option.room.name)
     );
     card.append(head);
@@ -480,7 +491,9 @@ export function renderRoute(
         el(
           'div',
           'route-option-foot',
-          `清场配额 ${option.room.quota} · ${elite ? '四选一奖励' : '三选一奖励'}`
+          surge
+            ? `高压 ${option.room.surgeDuration ?? 38} 秒 · 连续波次 · 四选一奖励`
+            : `清场配额 ${option.room.quota} · ${elite ? '四选一奖励' : '三选一奖励'}`
         )
       );
     }
