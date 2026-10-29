@@ -164,16 +164,16 @@ describe('run plan', () => {
     expect(getChapter(CHAPTERS.length)).toBeUndefined();
   });
 
-  it('builds a thirteen-step path through eighteen nodes', () => {
+  it('builds a ten-step path through thirteen nodes', () => {
     const plan = buildRunPlan(random);
-    expect(planStepCount(plan)).toBe(13);
-    expect(planNodeCount(plan)).toBe(18);
+    expect(planStepCount(plan)).toBe(10);
+    expect(planNodeCount(plan)).toBe(13);
   });
 
-  it('has five branching steps with two options each', () => {
+  it('has three branching steps with two options each', () => {
     const plan = buildRunPlan(random);
     const choices = plan.filter((step) => step.kind === 'choice');
-    expect(choices).toHaveLength(5);
+    expect(choices).toHaveLength(3);
     for (const choice of choices) {
       expect(choice.options).toHaveLength(2);
     }

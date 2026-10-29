@@ -10,7 +10,7 @@ if (!executablePath) throw new Error('No Chrome or Edge executable found.');
 
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:4177';
 const START = Math.max(0, Math.min(2, Number(process.argv[2] ?? process.env.START ?? 0)));
-const EXPECTED_STEPS = START === 0 ? 37 : START === 1 ? 24 : 12;
+const EXPECTED_STEPS = START === 0 ? 34 : START === 1 ? 24 : 12;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function snapshot(page) {

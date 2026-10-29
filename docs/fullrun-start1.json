@@ -13,12 +13,12 @@
         "name": "烈焰引爆"
       },
       {
-        "kind": "relic",
-        "name": "破裂棱镜"
+        "kind": "ascension",
+        "name": "雷霆领域"
       },
       {
         "kind": "reforge",
-        "name": "弹射 → 冰霜"
+        "name": "弹射 → 爆裂"
       }
     ]
   ],
@@ -26,7 +26,7 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "bloodflame-heart"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -48,7 +48,7 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "bloodflame-heart"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -70,7 +70,7 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "bloodflame-heart"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -92,7 +92,7 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "bloodflame-heart"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -114,7 +114,7 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "bloodflame-heart"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -136,10 +136,13 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -158,10 +161,14 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -180,10 +187,14 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -202,10 +213,14 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -224,12 +239,16 @@
     {
       "label": "失序工坊 · 章节奖励",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -249,12 +268,16 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -274,12 +297,16 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -299,12 +326,16 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -324,12 +355,16 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -349,12 +384,16 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -374,12 +413,16 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -399,12 +442,16 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -424,12 +471,16 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -449,12 +500,16 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
+        "thunder-emblem",
         "bloodflame-heart"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [],
+      "lateUpgrades": [
+        "frost-ring",
+        "pierce-momentum"
+      ],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -478,13 +533,17 @@
   "expectedSteps": 24,
   "roomsCleared": 20,
   "picks": 19,
-  "seconds": 38,
+  "seconds": 37,
   "relics": [
+    "thunder-emblem",
     "bloodflame-heart"
   ],
   "ascensions": [
     "burn"
   ],
-  "lateUpgrades": [],
+  "lateUpgrades": [
+    "frost-ring",
+    "pierce-momentum"
+  ],
   "errors": []
 }

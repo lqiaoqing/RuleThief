@@ -7,7 +7,7 @@ export const PACING = {
   rewardTime: 12,
   eventTime: 12,
   bossTime: 75,
-  targetMinMinutes: 8,
+  targetMinMinutes: 7.5,
   targetMaxMinutes: 12,
   /** measured (first human run: 8.5 min) / model (12.8 min) */
   measuredCalibration: 0.7

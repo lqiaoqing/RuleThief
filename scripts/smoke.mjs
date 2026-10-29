@@ -342,7 +342,7 @@ try {
   let overlay = await overlayState(page);
   let state = await snapshot(page);
   check('first room preview opens', overlay.roomVisible, overlay.roomKicker);
-  check('preview shows room 1 of 13', /ROOM 01 \/ 13/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
+  check('preview shows room 1 of 10', /ROOM 01 \/ 10/.test(overlay.roomKicker ?? ''), overlay.roomKicker);
   check(
     'preview shows the room name and quota',
     overlay.roomTitle === '训戒前庭' && overlay.roomQuota === '13',
@@ -365,7 +365,7 @@ try {
   check(
     'HUD shows room 1 and the codex',
     roomHud.roomNum === '01' &&
-      roomHud.roomTotal === '/ 13' &&
+      roomHud.roomTotal === '/ 10' &&
       roomHud.objective === '0 / 13' &&
       roomHud.objectiveLabel === 'ANTECHAMBER' &&
       roomHud.codexRows === 1,
@@ -681,15 +681,15 @@ try {
 
   const planInfo = await snapshot(page);
   check(
-    'run plan has thirteen steps',
-    Array.isArray(planInfo.plan) && planInfo.plan.length === 13,
+    'run plan has ten steps',
+    Array.isArray(planInfo.plan) && planInfo.plan.length === 10,
     String(planInfo.plan?.length)
   );
   const planNodes = (planInfo.plan ?? []).reduce(
     (sum, step) => sum + (step.kind === 'choice' ? step.options.length : 1),
     0
   );
-  check('plan exposes eighteen nodes', planNodes === 18, String(planNodes));
+  check('plan exposes thirteen nodes', planNodes === 13, String(planNodes));
   const planEvents = (planInfo.plan ?? [])
     .filter((step) => step.kind === 'encounter' && EVENT_IDS.includes(step.encounter))
     .map((step) => step.encounter);
@@ -699,8 +699,8 @@ try {
     JSON.stringify(planEvents)
   );
   check(
-    'plan contains five branching steps',
-    (planInfo.plan ?? []).filter((step) => step.kind === 'choice').length === 5,
+    'plan contains three branching steps',
+    (planInfo.plan ?? []).filter((step) => step.kind === 'choice').length === 3,
     String((planInfo.plan ?? []).filter((step) => step.kind === 'choice').length)
   );
 
@@ -714,7 +714,7 @@ try {
   for (let guard = 0; guard < 40; guard += 1) {
     const view = await overlayState(page);
     if (view.roomVisible) {
-      if (/ROOM 13 \/ 13/.test(view.roomKicker ?? '')) {
+      if (/ROOM 10 \/ 10/.test(view.roomKicker ?? '')) {
         bossPreview = view;
         break;
       }
@@ -883,12 +883,12 @@ try {
 
   check('run visited two events', seenEvents.length === 2, JSON.stringify(seenEvents));
   check('visited events are distinct', new Set(seenEvents).size === 2, JSON.stringify(seenEvents));
-  check('run entered ten combat rooms', roomsEntered === 10, String(roomsEntered));
+  check('run entered seven combat rooms', roomsEntered === 7, String(roomsEntered));
   check('boss preview reached', Boolean(bossPreview), bossPreview?.roomKicker);
 
   check(
     'boss room preview opens',
-    Boolean(bossPreview) && /ROOM 13 \/ 13/.test(bossPreview.roomKicker ?? ''),
+    Boolean(bossPreview) && /ROOM 10 \/ 10/.test(bossPreview.roomKicker ?? ''),
     bossPreview?.roomKicker
   );
 
@@ -1085,7 +1085,7 @@ try {
     'stopping after chapter one settles as a stage clear',
     bossVictory.kicker === 'CHAPTER COMPLETE' &&
       /阶段完成/.test(bossVictory.title ?? '') &&
-      bossVictory.rooms === '13 / 13',
+      bossVictory.rooms === '10 / 10',
     JSON.stringify(bossVictory)
   );
   check(
@@ -1185,7 +1185,7 @@ try {
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check('death shows the defeat result', defeat.title === '规则耗尽' && defeat.cls.includes('is-defeat'), JSON.stringify(defeat));
-  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 13', String(defeat.rooms));
+  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 10', String(defeat.rooms));
 
   const damageLine = await page.$eval('#result-damage', (el) => el.textContent);
   check(
@@ -1407,7 +1407,7 @@ try {
     String(dashNova.dashNovas)
   );
 
-  await hordePage.evaluate(() => window.__RT_STEP__?.(5));
+  await hordePage.evaluate(() => window.__RT_STEP__?.(6));
   await hordePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
   });
@@ -1460,7 +1460,7 @@ try {
   await bossPractice.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
   await sleep(400);
   const bossPreviewKicker = await bossPractice.$eval('#room-kicker', (el) => el.textContent);
-  check('boss practice jumps to room 13', /ROOM 13 \/ 13/.test(bossPreviewKicker ?? ''), String(bossPreviewKicker));
+  check('boss practice jumps to room 10', /ROOM 10 \/ 10/.test(bossPreviewKicker ?? ''), String(bossPreviewKicker));
   await bossPractice.tap('#room-enter-btn');
   await sleep(800);
   const practiceState = await snapshot(bossPractice);
@@ -1532,8 +1532,8 @@ try {
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check(
-    'boss race settles as a stage clear with all thirteen steps',
-    raceResult.kicker === 'CHAPTER COMPLETE' && raceResult.rooms === '13 / 13',
+    'boss race settles as a stage clear with all ten steps',
+    raceResult.kicker === 'CHAPTER COMPLETE' && raceResult.rooms === '10 / 10',
     JSON.stringify(raceResult)
   );
   await bossPractice.close();
