@@ -10,6 +10,15 @@ describe('wave director', () => {
     expect(plan.maxAlive).toBe(22);
   });
 
+  it('can vary the number of waves for room pacing', () => {
+    const burst = buildWavePlan(28, 0, false, 2);
+    expect(burst.groups).toHaveLength(2);
+    expect(burst.groups).toEqual([14, 14]);
+    const stream = buildWavePlan(28, 0, false, 5);
+    expect(stream.groups).toHaveLength(5);
+    expect(stream.groups.reduce((sum, count) => sum + count, 0)).toBe(28);
+  });
+
   it('keeps later-world crowds readable with a lower cap', () => {
     const plan = buildWavePlan(18, 1);
     expect(plan.maxAlive).toBeLessThanOrEqual(14);

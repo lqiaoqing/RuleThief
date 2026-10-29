@@ -86,11 +86,16 @@ export class WaveDirector {
 export function buildWavePlan(
   total: number,
   chapterIndex = 0,
-  elite = false
+  elite = false,
+  waveCountOverride?: number
 ): WavePlan {
   const count = Math.max(0, Math.floor(total));
   if (count === 0) return { groups: [], maxAlive: 0, gap: 0 };
-  const waveCount = count <= 12 ? 3 : count <= 20 ? 4 : chapterIndex >= 1 ? 5 : 4;
+  const defaultWaves = count <= 12 ? 3 : count <= 20 ? 4 : chapterIndex >= 1 ? 5 : 4;
+  const waveCount = Math.max(
+    2,
+    Math.min(6, Math.floor(waveCountOverride ?? defaultWaves))
+  );
   const base = Math.floor(count / waveCount);
   const remainder = count % waveCount;
   const groups: number[] = [];

@@ -1310,7 +1310,12 @@ export class M0Scene extends Phaser.Scene {
       this.waveDirector =
         remaining > 0
           ? new WaveDirector(
-              buildWavePlan(remaining, this.chapterIndex, Boolean(room.elite))
+              buildWavePlan(
+                remaining,
+                this.chapterIndex,
+                Boolean(room.elite),
+                this.waveCountForRoom(room)
+              )
             )
           : null;
     }
@@ -5419,6 +5424,11 @@ export class M0Scene extends Phaser.Scene {
       return fodder[combatInt(0, fodder.length - 1)];
     }
     return pickSpawnKind(room, combatRandom);
+  }
+
+  private waveCountForRoom(room: RoomDef): number | undefined {
+    if (this.chapterIndex !== 0 || room.elite || this.stepIndex < 5) return undefined;
+    return [2, 3, 5, 4][this.stepIndex % 4];
   }
 
   private spawnWaveCaptain(): void {
