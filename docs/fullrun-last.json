@@ -15,17 +15,17 @@
       },
       {
         "kind": "relic",
-        "name": "贪婪契约"
+        "name": "雷鸣徽章"
       },
       {
         "kind": "reforge",
-        "name": "弹射 → 冰霜"
+        "name": "冰霜 → 贯穿"
       }
     ],
     [
       {
-        "kind": "relic",
-        "name": "破裂棱镜"
+        "kind": "ascension",
+        "name": "雷霆领域"
       },
       {
         "kind": "relic",
@@ -33,7 +33,7 @@
       },
       {
         "kind": "support",
-        "name": "碎片缝合"
+        "name": "瞬时折叠"
       }
     ]
   ],
@@ -100,7 +100,9 @@
     },
     {
       "label": "ROOM 5 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -114,13 +116,15 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
     {
       "label": "ROOM 6 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -134,13 +138,15 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
     {
       "label": "ROOM 8 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -160,7 +166,9 @@
     },
     {
       "label": "ROOM 9 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -180,7 +188,9 @@
     },
     {
       "label": "ROOM 10 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -200,7 +210,9 @@
     },
     {
       "label": "ROOM 11 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -220,7 +232,9 @@
     },
     {
       "label": "ROOM 12 / 13 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -233,14 +247,16 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
+          "key": "frost",
           "level": 1
         }
       }
     },
     {
       "label": "审判废墟 · 章节奖励",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [
         "burn"
       ],
@@ -256,14 +272,16 @@
           "ascended": true
         },
         "secondary": {
-          "key": "chain",
+          "key": "frost",
           "level": 1
         }
       }
     },
     {
       "label": "ROOM 1 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [
         "burn"
       ],
@@ -279,14 +297,16 @@
           "ascended": true
         },
         "secondary": {
-          "key": "chain",
-          "level": 2
+          "key": "frost",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 2 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [
         "burn"
       ],
@@ -302,14 +322,16 @@
           "ascended": true
         },
         "secondary": {
-          "key": "chain",
-          "level": 3
+          "key": "frost",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 4 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [
         "burn"
       ],
@@ -325,14 +347,41 @@
           "ascended": true
         },
         "secondary": {
-          "key": "chain",
-          "level": 3
+          "key": "frost",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 5 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 12 已清空",
+      "relics": [
+        "frost-crown"
+      ],
       "ascensions": [
         "burn"
       ],
@@ -349,29 +398,6 @@
         },
         "secondary": {
           "key": "chain",
-          "level": 3
-        }
-      }
-    },
-    {
-      "label": "ROOM 6 / 12 已清空",
-      "relics": [],
-      "ascensions": [
-        "burn"
-      ],
-      "lateUpgrades": [],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "pierce",
           "level": 1
         }
       }
@@ -379,7 +405,7 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "greed"
+        "frost-crown"
       ],
       "ascensions": [
         "burn"
@@ -396,7 +422,7 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "chain",
           "level": 2
         }
       }
@@ -404,7 +430,7 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "greed"
+        "frost-crown"
       ],
       "ascensions": [
         "burn"
@@ -421,15 +447,15 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 2
+          "key": "chain",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "greed"
+        "frost-crown"
       ],
       "ascensions": [
         "burn"
@@ -446,7 +472,7 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "chain",
           "level": 3
         }
       }
@@ -454,7 +480,7 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "greed"
+        "frost-crown"
       ],
       "ascensions": [
         "burn"
@@ -471,7 +497,7 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "chain",
           "level": 3
         }
       }
@@ -479,11 +505,11 @@
     {
       "label": "失序工坊 · 章节奖励",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
       "lateUpgrades": [],
       "build": {
@@ -497,23 +523,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -525,24 +550,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -554,24 +577,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -583,24 +604,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -612,24 +631,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -641,24 +658,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -670,24 +685,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -699,24 +712,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -728,24 +739,22 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     },
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "greed",
-        "prism"
+        "frost-crown"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "chain"
       ],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -757,8 +766,9 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "chain",
+          "level": 3,
+          "ascended": true
         }
       }
     }
@@ -769,17 +779,14 @@
   "expectedSteps": 37,
   "roomsCleared": 31,
   "picks": 30,
-  "seconds": 58,
+  "seconds": 59,
   "relics": [
-    "greed",
-    "prism"
+    "frost-crown"
   ],
   "ascensions": [
-    "burn"
+    "burn",
+    "chain"
   ],
-  "lateUpgrades": [
-    "pierce-momentum",
-    "ember-spread"
-  ],
+  "lateUpgrades": [],
   "errors": []
 }

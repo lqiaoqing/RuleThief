@@ -9,12 +9,12 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -30,13 +30,13 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -52,13 +52,13 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -70,7 +70,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
+          "key": "blast",
           "level": 1
         }
       }
@@ -78,13 +78,13 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -96,7 +96,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
+          "key": "blast",
           "level": 1
         }
       }
@@ -104,13 +104,13 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -122,7 +122,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
+          "key": "blast",
           "level": 2
         }
       }
@@ -130,13 +130,13 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -148,21 +148,21 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
-          "level": 2
+          "key": "blast",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -174,7 +174,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
+          "key": "blast",
           "level": 3
         }
       }
@@ -182,13 +182,13 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -200,7 +200,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
+          "key": "blast",
           "level": 3
         }
       }
@@ -208,13 +208,13 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "thunder-emblem"
+        "thunder-emblem",
+        "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "frost-ring",
-        "ember-spread"
+        "rift-echo",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -226,7 +226,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "pierce",
+          "key": "blast",
           "level": 3
         }
       }
@@ -238,15 +238,15 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 18,
+  "seconds": 19,
   "relics": [
-    "frost-crown",
-    "thunder-emblem"
+    "thunder-emblem",
+    "prism"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "frost-ring",
-    "ember-spread"
+    "rift-echo",
+    "frost-ring"
   ],
   "errors": []
 }
