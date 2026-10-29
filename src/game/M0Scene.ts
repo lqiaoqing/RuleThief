@@ -356,6 +356,7 @@ export class M0Scene extends Phaser.Scene {
   private roomClearCount = 0;
   private resonanceGranted = false;
   private waveDirector: WaveDirector | null = null;
+  private waveSide = 0;
   private hordeEnabled = true;
   private waveCaptainSpawned = false;
   private overloadSpawned = 0;
@@ -1274,6 +1275,7 @@ export class M0Scene extends Phaser.Scene {
     this.roomSpawned = 0;
     this.pendingSpawns = 0;
     this.waveDirector = null;
+    this.waveSide = 0;
     this.waveCaptainSpawned = false;
     this.overloadSpawned = 0;
     this.hordeNovas = 0;
@@ -3978,12 +3980,12 @@ export class M0Scene extends Phaser.Scene {
     this.enemies.push(enemy);
   }
 
-  private chooseSpawnPosition(): { x: number; y: number } {
+  private chooseSpawnPosition(sideOverride?: number): { x: number; y: number } {
     const margin = 92;
     let x = margin;
     let y = margin;
     for (let attempt = 0; attempt < 14; attempt += 1) {
-      const side = combatInt(0, 3);
+      const side = sideOverride ?? combatInt(0, 3);
       if (side === 0) {
         x = combatInt(margin, ARENA - margin);
         y = margin;
@@ -5570,6 +5572,8 @@ export class M0Scene extends Phaser.Scene {
       );
       const snapshot = this.waveDirector.snapshot();
       if (snapshot.wave !== before && snapshot.wave > 0) {
+        const nextSide = combatInt(0, 3);
+        this.waveSide = nextSide === this.waveSide ? (nextSide + 1) % 4 : nextSide;
         showWaveBanner(snapshot.wave, snapshot.waves);
         audio.play('spawn');
       }
@@ -5599,7 +5603,7 @@ export class M0Scene extends Phaser.Scene {
   private spawnWaveEnemy(): void {
     const room = this.getRoom();
     const kind = this.pickWaveKind(room);
-    const pos = this.chooseSpawnPosition();
+    const pos = this.chooseSpawnPosition(this.waveSide);
     this.spawnPortal(kind, pos.x, pos.y, true);
     this.roomSpawned += 1;
   }

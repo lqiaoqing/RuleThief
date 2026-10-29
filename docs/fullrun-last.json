@@ -15,11 +15,11 @@
       },
       {
         "kind": "relic",
-        "name": "贪婪契约"
+        "name": "血焰之心"
       },
       {
         "kind": "reforge",
-        "name": "贯穿 → 爆裂"
+        "name": "贯穿 → 冰霜"
       }
     ],
     [
@@ -29,11 +29,11 @@
       },
       {
         "kind": "relic",
-        "name": "疾行之羽"
+        "name": "寒霜王冠"
       },
       {
         "kind": "reforge",
-        "name": "弹射 → 爆裂"
+        "name": "弹射 → 冰霜"
       }
     ]
   ],
@@ -80,7 +80,9 @@
     },
     {
       "label": "ROOM 4 / 10 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [],
       "lateUpgrades": [],
       "build": {
@@ -100,10 +102,12 @@
     },
     {
       "label": "ROOM 5 / 10 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -122,10 +126,12 @@
     },
     {
       "label": "ROOM 7 / 10 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -144,10 +150,12 @@
     },
     {
       "label": "ROOM 8 / 10 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -166,10 +174,12 @@
     },
     {
       "label": "ROOM 9 / 10 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -188,12 +198,14 @@
     },
     {
       "label": "审判废墟 · 章节奖励",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -213,12 +225,14 @@
     },
     {
       "label": "ROOM 1 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -238,12 +252,14 @@
     },
     {
       "label": "ROOM 2 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -263,12 +279,14 @@
     },
     {
       "label": "ROOM 4 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -288,12 +306,14 @@
     },
     {
       "label": "ROOM 5 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -313,12 +333,14 @@
     },
     {
       "label": "ROOM 6 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -338,12 +360,14 @@
     },
     {
       "label": "ROOM 8 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -363,12 +387,14 @@
     },
     {
       "label": "ROOM 9 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -388,12 +414,14 @@
     },
     {
       "label": "ROOM 10 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -413,12 +441,14 @@
     },
     {
       "label": "ROOM 11 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -438,13 +468,15 @@
     },
     {
       "label": "失序工坊 · 章节奖励",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -465,13 +497,15 @@
     },
     {
       "label": "ROOM 1 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -492,13 +526,15 @@
     },
     {
       "label": "ROOM 2 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -519,13 +555,73 @@
     },
     {
       "label": "ROOM 4 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 12 已清空",
+      "relics": [
+        "feather"
+      ],
+      "ascensions": [
+        "burn",
+        "chain"
+      ],
+      "lateUpgrades": [
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 1
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 12 已清空",
+      "relics": [
+        "feather"
+      ],
+      "ascensions": [
+        "burn",
+        "chain"
+      ],
+      "lateUpgrades": [
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -545,73 +641,22 @@
       }
     },
     {
-      "label": "ROOM 5 / 12 已清空",
-      "relics": [],
-      "ascensions": [
-        "burn",
-        "chain"
-      ],
-      "lateUpgrades": [
-        "pierce-momentum"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "pierce",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
-        }
-      }
-    },
-    {
-      "label": "ROOM 6 / 12 已清空",
-      "relics": [],
-      "ascensions": [
-        "burn",
-        "chain"
-      ],
-      "lateUpgrades": [
-        "pierce-momentum"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "pierce",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
-        }
-      }
-    },
-    {
       "label": "ROOM 8 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather",
+        "greed"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         },
         "impact": {
           "key": "burn",
@@ -627,13 +672,16 @@
     },
     {
       "label": "ROOM 9 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather",
+        "greed"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -654,13 +702,17 @@
     },
     {
       "label": "ROOM 10 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather",
+        "greed"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -681,13 +733,17 @@
     },
     {
       "label": "ROOM 11 / 12 已清空",
-      "relics": [],
+      "relics": [
+        "feather",
+        "greed"
+      ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
@@ -713,14 +769,18 @@
   "expectedSteps": 34,
   "roomsCleared": 28,
   "picks": 27,
-  "seconds": 53,
-  "relics": [],
+  "seconds": 52,
+  "relics": [
+    "feather",
+    "greed"
+  ],
   "ascensions": [
     "burn",
     "chain"
   ],
   "lateUpgrades": [
-    "pierce-momentum"
+    "ember-spread",
+    "frost-ring"
   ],
   "errors": []
 }
