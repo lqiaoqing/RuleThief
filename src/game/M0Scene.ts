@@ -351,6 +351,7 @@ export class M0Scene extends Phaser.Scene {
   private waveCaptainSpawned = false;
   private overloadSpawned = 0;
   private hordeNovas = 0;
+  private dashNovas = 0;
   private portalToken = 0;
   private killStreak = 0;
   private killStreakBest = 0;
@@ -1232,6 +1233,7 @@ export class M0Scene extends Phaser.Scene {
     this.waveCaptainSpawned = false;
     this.overloadSpawned = 0;
     this.hordeNovas = 0;
+    this.dashNovas = 0;
     this.killStreak = 0;
     this.killStreakTimer = 0;
     this.killBurst = 0;
@@ -1905,6 +1907,7 @@ export class M0Scene extends Phaser.Scene {
       hitStopMs: this.hitStopMs,
       overloadSpawned: this.overloadSpawned,
       hordeNovas: this.hordeNovas,
+      dashNovas: this.dashNovas,
       roomElite: Boolean(this.getRoom().elite),
       roomBoss: Boolean(this.getRoom().boss),
       rewardOpen: this.rewardOpen,
@@ -2465,6 +2468,18 @@ export class M0Scene extends Phaser.Scene {
     setDash(0, this.dashCooldown);
     audio.play('dash');
     this.spawnDashBurst();
+    if (this.hordeEnabled) {
+      const token = this.runToken;
+      this.time.delayedCall(80, () => {
+        if (
+          token === this.runToken &&
+          this.runState === 'playing' &&
+          this.roomState === 'fighting'
+        ) {
+          this.triggerDashNova();
+        }
+      });
+    }
   }
 
   private spawnDashBurst(): void {
@@ -3446,6 +3461,34 @@ export class M0Scene extends Phaser.Scene {
   private hordeDamageMultiplier(): number {
     if (!this.hordeEnabled) return 1;
     return 1 + Math.min(0.3, this.killStreak * 0.012);
+  }
+
+  private triggerDashNova(): void {
+    this.dashNovas += 1;
+    const x = this.playerRoot.x;
+    const y = this.playerRoot.y;
+    const ring = this.add
+      .circle(x, y, 24, 0x000000, 0)
+      .setStrokeStyle(2.5, COLORS.cyan, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 4.6,
+      alpha: 0,
+      duration: 260,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy()
+    });
+    this.cameras.main.shake(55, 0.0015);
+    for (const enemy of [...this.enemies]) {
+      if (enemy.dead || ENEMY_SPECS[enemy.kind].boss) continue;
+      if (
+        Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y) <= 120
+      ) {
+        this.applyDamage(enemy, 24, 'blast');
+      }
+    }
   }
 
   private triggerHordeNova(radius: number, damage: number): void {

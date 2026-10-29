@@ -1362,6 +1362,15 @@ try {
     JSON.stringify({ wave: hordeState.wave, alive: hordeState.alive, hud: hordeHud })
   );
 
+  await hordePage.keyboard.press('Space');
+  await sleep(180);
+  const dashNova = await snapshot(hordePage);
+  check(
+    'dashing through a horde releases a shockwave',
+    Number(dashNova.dashNovas) >= 1,
+    String(dashNova.dashNovas)
+  );
+
   await hordePage.evaluate(() => {
     window.__RT_KILL_ONE__?.();
     window.__RT_KILL_ONE__?.();
