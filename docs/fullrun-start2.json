@@ -9,13 +9,11 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
-      "lateUpgrades": [
-        "pierce-momentum"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -24,20 +22,21 @@
         "impact": {
           "key": "burn",
           "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "rift-echo"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -46,20 +45,21 @@
         "impact": {
           "key": "burn",
           "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "rift-echo"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -70,22 +70,19 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
-          "level": 1
+          "key": "chain",
+          "level": 2
         }
       }
     },
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "rift-echo"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -96,22 +93,19 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
-          "level": 1
+          "key": "chain",
+          "level": 2
         }
       }
     },
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "rift-echo"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -122,7 +116,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
+          "key": "chain",
           "level": 2
         }
       }
@@ -130,14 +124,11 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
-      "lateUpgrades": [
-        "pierce-momentum",
-        "rift-echo"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -148,7 +139,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
+          "key": "chain",
           "level": 3
         }
       }
@@ -156,12 +147,11 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
         "rift-echo"
       ],
       "build": {
@@ -174,7 +164,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
+          "key": "chain",
           "level": 3
         }
       }
@@ -182,12 +172,11 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
         "rift-echo"
       ],
       "build": {
@@ -200,7 +189,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
+          "key": "chain",
           "level": 3
         }
       }
@@ -208,12 +197,11 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "frost-crown",
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
         "rift-echo"
       ],
       "build": {
@@ -226,7 +214,7 @@
           "level": 3
         },
         "secondary": {
-          "key": "blast",
+          "key": "chain",
           "level": 3
         }
       }
@@ -238,14 +226,13 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 18,
+  "seconds": 19,
   "relics": [
-    "frost-crown",
-    "prism"
+    "thunder-emblem",
+    "frost-crown"
   ],
   "ascensions": [],
   "lateUpgrades": [
-    "pierce-momentum",
     "rift-echo"
   ],
   "errors": []

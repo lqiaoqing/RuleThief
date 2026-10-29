@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   LATE_UPGRADE_IDS,
   LATE_UPGRADES,
+  MAX_LATE_LEVEL,
   MAX_LATE_UPGRADES,
+  lateLevel,
   lateUpgradeEligible,
-  pickResonance
+  lateUpgradePool,
+  pickResonance,
+  type LateUpgradeId
 } from './lateUpgrades';
 import { ROOMS, buildChapterRewards, buildRoomRewards } from './rooms';
 import type { PlayerBuild } from './rules';
@@ -16,10 +20,11 @@ const maxed: PlayerBuild = {
 };
 
 describe('late upgrades', () => {
-  it('ships four unique late upgrades', () => {
-    expect(LATE_UPGRADE_IDS).toHaveLength(4);
-    expect(new Set(LATE_UPGRADE_IDS.map((id) => LATE_UPGRADES[id].name)).size).toBe(4);
-    expect(MAX_LATE_UPGRADES).toBe(2);
+  it('ships six late upgrades with three levels each', () => {
+    expect(LATE_UPGRADE_IDS).toHaveLength(6);
+    expect(new Set(LATE_UPGRADE_IDS.map((id) => LATE_UPGRADES[id].name)).size).toBe(6);
+    expect(MAX_LATE_LEVEL).toBe(3);
+    expect(MAX_LATE_UPGRADES).toBe(9);
   });
 
   it('is only eligible with two maxed rules and two relics', () => {
@@ -30,35 +35,70 @@ describe('late upgrades', () => {
     ).toBe(false);
   });
 
-  it('offers a late upgrade in rooms once eligible', () => {
-    const rewards = buildRoomRewards(maxed, ROOMS[0], random, {
-      lateEligible: true,
-      lateUpgrades: []
-    });
-    expect(rewards.some((reward) => reward.kind === 'late')).toBe(true);
+  it('pools only upgrades that match the equipped rules', () => {
+    expect(
+      lateUpgradePool(maxed, [])
+        .map((def) => def.id)
+        .sort()
+    ).toEqual(['ember-spread', 'rift-echo']);
+    expect(
+      lateUpgradePool(
+        {
+          trajectory: { key: 'spread', level: 3 },
+          impact: { key: 'blast', level: 3 },
+          secondary: { key: 'pierce', level: 3 }
+        },
+        []
+      )
+        .map((def) => def.id)
+        .sort()
+    ).toEqual(['blast-resonance', 'pierce-momentum', 'spread-resonance']);
+  });
+
+  it('stops pooling an upgrade once it reaches level 3', () => {
+    expect(
+      lateUpgradePool(maxed, ['ember-spread', 'ember-spread', 'ember-spread']).map(
+        (def) => def.id
+      )
+    ).toEqual(['rift-echo']);
+    expect(
+      lateLevel(['ember-spread', 'ember-spread', 'rift-echo'], 'ember-spread')
+    ).toBe(2);
+  });
+
+  it('cycles resonance levels before raising the same one again', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 2 },
+      impact: { key: 'burn', level: 2 },
+      secondary: { key: 'spread', level: 2 }
+    };
+    expect(pickResonance(build, [], () => 0)?.id).toBe('ember-spread');
+    expect(pickResonance(build, ['ember-spread', 'ember-spread'], () => 0)?.id).toBe(
+      'pierce-momentum'
+    );
+    const filled: LateUpgradeId[] = [
+      'ember-spread',
+      'ember-spread',
+      'pierce-momentum',
+      'pierce-momentum',
+      'pierce-momentum',
+      'spread-resonance',
+      'spread-resonance',
+      'spread-resonance'
+    ];
+    expect(pickResonance(build, filled, () => 0)?.id).toBe('ember-spread');
+    expect(
+      pickResonance(build, [...filled, 'ember-spread'], () => 0)
+    ).toBeNull();
+  });
+
+  it('keeps late upgrades out of regular room rewards', () => {
+    const rewards = buildRoomRewards(maxed, ROOMS[0], random);
+    expect(rewards.some((reward) => reward.kind === 'late')).toBe(false);
     expect(rewards).toHaveLength(3);
   });
 
-  it('stops offering late upgrades at the cap', () => {
-    const rewards = buildRoomRewards(maxed, ROOMS[0], random, {
-      lateEligible: true,
-      lateUpgrades: ['ember-spread', 'rift-echo']
-    });
-    expect(rewards.some((reward) => reward.kind === 'late')).toBe(false);
-  });
-
-  it('picks a mid-run resonance that matches the equipped rules', () => {
-    const build: PlayerBuild = {
-      trajectory: { key: 'pierce', level: 2 },
-      impact: { key: 'burn', level: 2 }
-    };
-    const resonance = pickResonance(build, [], random);
-    expect(['ember-spread', 'pierce-momentum']).toContain(resonance?.id);
-    expect(pickResonance({ trajectory: { key: 'spread', level: 2 }, impact: { key: 'blast', level: 2 } }, [], random)).toBeNull();
-    expect(pickResonance(build, ['ember-spread', 'pierce-momentum'], random)).toBeNull();
-  });
-
-  it('offers late upgrades in chapter rewards after ascensions and relics are full', () => {
+  it('offers rule-matched late upgrades in chapter rewards', () => {
     const rewards = buildChapterRewards(maxed, ['prism', 'frost-crown'], random, {
       lateEligible: true,
       lateUpgrades: []
@@ -66,5 +106,20 @@ describe('late upgrades', () => {
     expect(rewards.some((reward) => reward.kind === 'late')).toBe(true);
     expect(rewards.every((reward) => reward.kind !== 'relic')).toBe(true);
     expect(rewards).toHaveLength(3);
+  });
+
+  it('stops chapter late offers once the matching pool is maxed', () => {
+    const rewards = buildChapterRewards(maxed, ['prism', 'frost-crown'], random, {
+      lateEligible: true,
+      lateUpgrades: [
+        'ember-spread',
+        'ember-spread',
+        'ember-spread',
+        'rift-echo',
+        'rift-echo',
+        'rift-echo'
+      ]
+    });
+    expect(rewards.some((reward) => reward.kind === 'late')).toBe(false);
   });
 });

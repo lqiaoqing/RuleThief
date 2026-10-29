@@ -15,7 +15,7 @@
       },
       {
         "kind": "relic",
-        "name": "血焰之心"
+        "name": "贪婪契约"
       },
       {
         "kind": "reforge",
@@ -28,12 +28,12 @@
         "name": "雷霆领域"
       },
       {
-        "kind": "relic",
-        "name": "寒霜王冠"
+        "kind": "late",
+        "name": "裂隙回响"
       },
       {
         "kind": "reforge",
-        "name": "弹射 → 冰霜"
+        "name": "弹射 → 贯穿"
       }
     ]
   ],
@@ -81,7 +81,7 @@
     {
       "label": "ROOM 4 / 10 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -103,11 +103,11 @@
     {
       "label": "ROOM 5 / 10 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -127,11 +127,11 @@
     {
       "label": "ROOM 7 / 10 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -151,11 +151,11 @@
     {
       "label": "ROOM 8 / 10 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -175,11 +175,11 @@
     {
       "label": "ROOM 9 / 10 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -199,13 +199,13 @@
     {
       "label": "审判废墟 · 章节奖励",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -226,13 +226,13 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -253,13 +253,13 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -280,13 +280,15 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
@@ -307,13 +309,15 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
@@ -334,13 +338,15 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
@@ -361,13 +367,16 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -388,13 +397,16 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -415,13 +427,16 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -442,12 +457,16 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
         "ember-spread"
       ],
       "build": {
@@ -469,13 +488,17 @@
     {
       "label": "失序工坊 · 章节奖励",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
         "ember-spread"
       ],
       "build": {
@@ -498,13 +521,17 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
         "ember-spread"
       ],
       "build": {
@@ -527,13 +554,17 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
         "ember-spread"
       ],
       "build": {
@@ -556,14 +587,19 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
+        "ember-spread",
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -585,14 +621,19 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
+        "ember-spread",
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -614,14 +655,19 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "feather"
+        "thunder-emblem",
+        "greed"
       ],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
+        "ember-spread",
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -643,7 +689,7 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "feather",
+        "thunder-emblem",
         "greed"
       ],
       "ascensions": [
@@ -651,12 +697,17 @@
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
+        "ember-spread",
+        "rift-echo",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -673,7 +724,7 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "feather",
+        "thunder-emblem",
         "greed"
       ],
       "ascensions": [
@@ -681,7 +732,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
+        "ember-spread",
+        "rift-echo",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -703,7 +759,7 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "feather",
+        "thunder-emblem",
         "greed"
       ],
       "ascensions": [
@@ -711,8 +767,12 @@
         "chain"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
         "ember-spread",
-        "frost-ring"
+        "rift-echo",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -734,7 +794,7 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "feather",
+        "thunder-emblem",
         "greed"
       ],
       "ascensions": [
@@ -742,8 +802,13 @@
         "chain"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
+        "spread-resonance",
+        "rift-echo",
         "ember-spread",
-        "frost-ring"
+        "rift-echo",
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -771,7 +836,7 @@
   "picks": 27,
   "seconds": 52,
   "relics": [
-    "feather",
+    "thunder-emblem",
     "greed"
   ],
   "ascensions": [
@@ -779,8 +844,13 @@
     "chain"
   ],
   "lateUpgrades": [
+    "pierce-momentum",
+    "spread-resonance",
+    "rift-echo",
     "ember-spread",
-    "frost-ring"
+    "rift-echo",
+    "pierce-momentum",
+    "ember-spread"
   ],
   "errors": []
 }

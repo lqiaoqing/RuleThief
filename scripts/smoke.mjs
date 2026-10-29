@@ -709,6 +709,7 @@ try {
   let pendingCurse = false;
   let roomsEntered = 1;
   let supportChecked = false;
+  let resonanceSeen = false;
   let bossPreview = null;
 
   for (let guard = 0; guard < 40; guard += 1) {
@@ -787,6 +788,8 @@ try {
         reward.rewardVisible,
         JSON.stringify({ cards: reward.cards.length })
       );
+      const resonanceCards = reward.cards.filter((card) => card.kind === 'resonance').length;
+      if (resonanceCards > 0) resonanceSeen = true;
       if (inside.roomElite) {
         const mutationBefore = Boolean((await snapshot(page)).mutation);
         const mutationCards = reward.cards.filter((card) => card.kind === 'mutation').length;
@@ -794,13 +797,21 @@ try {
           `elite room ${inside.roomIndex + 1} offers four cards and a guaranteed mutation`,
           reward.cards.length === 4 &&
             (mutationBefore ? mutationCards === 0 : mutationCards === 1),
-          JSON.stringify({ mutationBefore, mutationCards, cards: reward.cards.length })
+          JSON.stringify({
+            mutationBefore,
+            mutationCards,
+            cards: reward.cards.length,
+            resonanceCards
+          })
         );
       } else {
+        const baseCards = 3 + (curse ? 1 : 0);
         check(
           `room ${inside.roomIndex + 1} offers three cards`,
-          reward.cards.length === 3 + (curse ? 1 : 0),
-          JSON.stringify({ cards: reward.cards.length, curse })
+          reward.cards.length >= baseCards &&
+            reward.cards.length <= baseCards + 1 &&
+            resonanceCards <= 1,
+          JSON.stringify({ cards: reward.cards.length, curse, resonanceCards })
         );
       }
       if (!supportChecked) {
@@ -884,6 +895,7 @@ try {
   check('run visited two events', seenEvents.length === 2, JSON.stringify(seenEvents));
   check('visited events are distinct', new Set(seenEvents).size === 2, JSON.stringify(seenEvents));
   check('run entered seven combat rooms', roomsEntered === 7, String(roomsEntered));
+  check('mid-run rule resonance is offered', resonanceSeen);
   check('boss preview reached', Boolean(bossPreview), bossPreview?.roomKicker);
 
   check(
@@ -2261,6 +2273,127 @@ try {
     String(momentumState.pierceMomentum)
   );
   await momentumPage.close();
+
+  const spreadPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await spreadPage.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(spreadPage);
+  await spreadPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(spreadPage);
+  await sleep(500);
+  await spreadPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_SPAWN_AT__?.('spore', 620, 300);
+  });
+  await sleep(150);
+  await spreadPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(60);
+  const spreadBase = await snapshot(spreadPage);
+  await spreadPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_LATE__?.('spread-resonance');
+    window.__RT_LATE__?.('spread-resonance');
+    window.__RT_SPAWN_AT__?.('spore', 620, 300);
+  });
+  await sleep(150);
+  await spreadPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(60);
+  const spreadBoosted = await snapshot(spreadPage);
+  check(
+    'spread resonance adds a bolt per level',
+    Number(spreadBoosted.bolts) === Number(spreadBase.bolts) + 2,
+    JSON.stringify({ base: spreadBase.bolts, boosted: spreadBoosted.bolts })
+  );
+  await spreadPage.close();
+
+  const blastPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await blastPage.goto(`${BASE}/?arena=1&horde=0&build=chain,blast,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(blastPage);
+  await blastPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(blastPage);
+  await sleep(500);
+  await blastPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_SPAWN_AT__?.('beetle', 520, 300);
+  });
+  await sleep(150);
+  await blastPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(1000);
+  const blastBase = await snapshot(blastPage);
+  await blastPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_LATE__?.('blast-resonance');
+    window.__RT_SPAWN_AT__?.('beetle', 520, 300);
+  });
+  await sleep(150);
+  await blastPage.evaluate(() => window.__RT_VOLLEY__?.());
+  await sleep(1000);
+  const blastBoosted = await snapshot(blastPage);
+  check(
+    'blast resonance enlarges the explosion',
+    Number(blastBoosted.lastExplosionRadius) > Number(blastBase.lastExplosionRadius) * 1.2,
+    JSON.stringify({
+      base: blastBase.lastExplosionRadius,
+      boosted: blastBoosted.lastExplosionRadius
+    })
+  );
+  await blastPage.close();
+
+  const scalingPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await scalingPage.goto(`${BASE}/?arena=1&horde=1&build=chain,blast,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(scalingPage);
+  await scalingPage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await enterRoom(scalingPage);
+  await sleep(450);
+  await scalingPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_SPAWN_AT__?.('beetle', 520, 300);
+  });
+  await sleep(120);
+  const w1State = await snapshot(scalingPage);
+  const w1Hp = Number(
+    (w1State.enemyList ?? []).find(
+      (enemy) => enemy.kind === 'beetle' && Math.abs(enemy.x - 520) < 8
+    )?.hp
+  );
+  await scalingPage.evaluate(() => window.__RT_CHAPTER_START__?.(1));
+  await sleep(500);
+  await enterRoom(scalingPage);
+  await sleep(450);
+  await scalingPage.evaluate(() => {
+    window.__RT_FREEZE_ATTACK__?.();
+    window.__RT_PURGE_ENEMIES__?.();
+    window.__RT_SPAWN_AT__?.('beetle', 520, 300);
+  });
+  await sleep(120);
+  const w2State = await snapshot(scalingPage);
+  const w2Hp = Number(
+    (w2State.enemyList ?? []).find(
+      (enemy) => enemy.kind === 'beetle' && Math.abs(enemy.x - 520) < 8
+    )?.hp
+  );
+  check(
+    'horde enemy hp rises in the second world',
+    w1Hp > 0 && w2Hp > w1Hp * 1.4,
+    JSON.stringify({ w1Hp, w2Hp })
+  );
+  await scalingPage.close();
 
   const thirdPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await thirdPage.goto(`${BASE}/?arena=1&horde=0&build=chain,burn,3,3`, { waitUntil: 'networkidle0' });

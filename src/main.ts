@@ -373,7 +373,7 @@ function showResult(payload: RunEndPayload): void {
   resultRelics.textContent = `遗物 · ${payload.relics.length ? payload.relics.join(' / ') : '无'}${
     payload.ascensions.length ? ` · 升阶 ${payload.ascensions.join(' / ')}` : ''
   }`;
-  resultLate.textContent = `高阶强化 · ${
+  resultLate.textContent = `后期强化 · ${
     payload.lateUpgrades.length ? payload.lateUpgrades.join(' / ') : '无'
   }`;
   const totalTaken = payload.damage.reduce((sum, entry) => sum + entry.amount, 0);

@@ -241,7 +241,7 @@ function resonanceCard(
   card.append(head, el('p', 'rule-card-desc', upgrade.description));
   card.append(el('span', 'rule-card-now', upgrade.detail));
   card.append(
-    el('div', 'rule-card-combo', '第 4 个战斗房后出现 · 不新增槽位 · 与现有规则联动')
+    el('div', 'rule-card-combo', '第 4 房后每 3 房出现 · 可重复获得 · 最高 Lv.3')
   );
   card.append(el('span', 'rule-card-key', String(index + 1)));
   return card;
@@ -261,7 +261,7 @@ function lateCard(reward: Extract<Reward, { kind: 'late' }>, index: number) {
   iconBox.append(iconSvg(upgrade.icon));
   const title = el('div', 'rule-card-title');
   title.append(
-    el('span', 'rule-card-slot', '高阶强化 · LATE'),
+    el('span', 'rule-card-slot', '后期强化 · LATE'),
     el('span', 'rule-card-name', upgrade.name)
   );
   head.append(iconBox, title, el('span', 'rule-card-action upgrade', '强化'));
@@ -269,7 +269,7 @@ function lateCard(reward: Extract<Reward, { kind: 'late' }>, index: number) {
   card.append(head, el('p', 'rule-card-desc', upgrade.description));
   card.append(el('span', 'rule-card-now', upgrade.detail));
   card.append(
-    el('div', 'rule-card-combo', '每局最多 2 个 · 规则满级且遗物满槽后进入奖励池')
+    el('div', 'rule-card-combo', '章节奖励 · 与已装备规则联动 · 最高 Lv.3')
   );
   card.append(el('span', 'rule-card-key', String(index + 1)));
   return card;

@@ -13,9 +13,8 @@ import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionDef, type AscensionId } from './ascensions';
 import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
 import {
-  LATE_UPGRADE_IDS,
-  LATE_UPGRADES,
   MAX_LATE_UPGRADES,
+  lateUpgradePool,
   type LateUpgradeDef,
   type LateUpgradeId
 } from './lateUpgrades';
@@ -1069,8 +1068,6 @@ export function buildRoomRewards(
   options: {
     hasMutation?: boolean;
     bonusCards?: number;
-    lateEligible?: boolean;
-    lateUpgrades?: readonly LateUpgradeId[];
     reforgeLeft?: number;
   } = {}
 ): Reward[] {
@@ -1087,19 +1084,6 @@ export function buildRoomRewards(
   for (const offer of ruleOffers) {
     if (rewards.length >= count) break;
     rewards.push({ kind: 'rule', offer });
-  }
-
-  const ownedLate = options.lateUpgrades ?? [];
-  if (
-    options.lateEligible &&
-    ownedLate.length < MAX_LATE_UPGRADES &&
-    rewards.length < count
-  ) {
-    const latePool = shuffle(
-      LATE_UPGRADE_IDS.filter((id) => !ownedLate.includes(id)).map((id) => LATE_UPGRADES[id]),
-      random
-    );
-    if (latePool[0]) rewards.push({ kind: 'late', upgrade: latePool[0] });
   }
 
   const reforgeLeft = options.reforgeLeft ?? 0;
@@ -1167,10 +1151,7 @@ export function buildChapterRewards(
     ownedLate.length < MAX_LATE_UPGRADES &&
     rewards.length < 3
   ) {
-    const latePool = shuffle(
-      LATE_UPGRADE_IDS.filter((id) => !ownedLate.includes(id)).map((id) => LATE_UPGRADES[id]),
-      random
-    );
+    const latePool = shuffle(lateUpgradePool(build, ownedLate), random);
     if (latePool[0]) rewards.push({ kind: 'late', upgrade: latePool[0] });
   }
 

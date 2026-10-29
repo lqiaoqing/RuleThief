@@ -11,7 +11,7 @@ import {
 import { ENEMY_SPECS, type EnemyKind } from '../game/rooms';
 import type { MutationDef } from '../game/mutations';
 import type { RelicDef } from '../game/relics';
-import type { LateUpgradeDef } from '../game/lateUpgrades';
+import { MAX_LATE_UPGRADES, type LateUpgradeDef } from '../game/lateUpgrades';
 import { formatTime } from '../game/theme';
 
 export type RuleToastKind = RuleKey | 'heal';
@@ -227,16 +227,28 @@ export function setRelics(relics: readonly RelicDef[]): void {
 
 export function setLate(upgrades: readonly LateUpgradeDef[]): void {
   lateLine.hidden = upgrades.length === 0;
-  lateCount.textContent = `${upgrades.length} / 2`;
-  lateNames.textContent = upgrades.length
-    ? upgrades.map((upgrade) => upgrade.name).join(' · ')
+  lateCount.textContent = `${upgrades.length} / ${MAX_LATE_UPGRADES}`;
+  const grouped = new Map<string, { def: LateUpgradeDef; level: number }>();
+  for (const upgrade of upgrades) {
+    const entry = grouped.get(upgrade.id);
+    if (entry) entry.level += 1;
+    else grouped.set(upgrade.id, { def: upgrade, level: 1 });
+  }
+  const entries = [...grouped.values()];
+  lateNames.textContent = entries.length
+    ? entries
+        .map(({ def, level }) => (level > 1 ? `${def.name} Lv.${level}` : def.name))
+        .join(' · ')
     : '—';
   bindItemTip(lateLine, () =>
-    upgrades.length
+    entries.length
       ? {
-          title: `高阶强化 · ${upgrades.map((upgrade) => upgrade.name).join(' / ')}`,
-          lines: upgrades.map(
-            (upgrade) => `${upgrade.name}：${upgrade.description}\n${upgrade.detail}`
+          title: `后期强化 · ${entries
+            .map(({ def, level }) => `${def.name} Lv.${level}`)
+            .join(' / ')}`,
+          lines: entries.map(
+            ({ def, level }) =>
+              `${def.name} Lv.${level}：${def.description}\n${def.detail}`
           )
         }
       : null

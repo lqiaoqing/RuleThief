@@ -52,9 +52,12 @@ import { RELICS, MAX_RELICS, RELIC_IDS, type RelicId } from './relics';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionId } from './ascensions';
 import {
   LATE_UPGRADES,
+  MAX_LATE_LEVEL,
   MAX_LATE_UPGRADES,
+  lateLevel,
   lateUpgradeEligible,
   pickResonance,
+  type LateUpgradeDef,
   type LateUpgradeId
 } from './lateUpgrades';
 import { getMutator, clampMutator } from './mutators';
@@ -354,7 +357,7 @@ export class M0Scene extends Phaser.Scene {
   private thunderStacks = 0;
   private reforgesUsed = 0;
   private roomClearCount = 0;
-  private resonanceGranted = false;
+  private lastResonanceRoom = 0;
   private waveDirector: WaveDirector | null = null;
   private waveSide = 0;
   private hordeEnabled = true;
@@ -673,7 +676,7 @@ export class M0Scene extends Phaser.Scene {
     this.thunderStacks = 0;
     this.reforgesUsed = 0;
     this.roomClearCount = 0;
-    this.resonanceGranted = false;
+    this.lastResonanceRoom = 0;
     this.totalOverloads = 0;
     this.totalNovas = 0;
     this.waveDirector = null;
@@ -1144,7 +1147,10 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public debugGrantLate(id: LateUpgradeId): void {
-    if (this.lateUpgrades.includes(id) || this.lateUpgrades.length >= MAX_LATE_UPGRADES) {
+    if (
+      lateLevel(this.lateUpgrades, id) >= MAX_LATE_LEVEL ||
+      this.lateUpgrades.length >= MAX_LATE_UPGRADES
+    ) {
       return;
     }
     this.lateUpgrades.push(id);
@@ -1413,31 +1419,28 @@ export class M0Scene extends Phaser.Scene {
     const rewards = buildRoomRewards(this.build, this.getRoom(), random, {
       hasMutation: Boolean(this.mutation.id),
       bonusCards: this.roomBonusCards + speedBonus,
-      lateEligible: lateUpgradeEligible(this.build, this.relics.length),
-      lateUpgrades: this.lateUpgrades,
       reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed)
     });
     this.roomClearCount += 1;
     if (
       !this.getRoom().boss &&
       this.roomClearCount >= 4 &&
-      !this.resonanceGranted &&
+      this.roomClearCount - this.lastResonanceRoom >= 3 &&
       this.lateUpgrades.length < MAX_LATE_UPGRADES
     ) {
       const upgrade = pickResonance(this.build, this.lateUpgrades, random);
       if (upgrade) {
         const card: Reward = { kind: 'resonance', upgrade };
         const supportIndex = rewards.findIndex((reward) => reward.kind === 'support');
-        if (supportIndex >= 0) {
-          rewards[supportIndex] = card;
-          this.resonanceGranted = true;
-        } else if (rewards.length < 4) {
+        if (rewards.length < 4) {
           rewards.push(card);
-          this.resonanceGranted = true;
+        } else if (supportIndex >= 0) {
+          rewards[supportIndex] = card;
+        } else {
+          rewards[rewards.length - 1] = card;
         }
-        if (this.resonanceGranted) {
-          showRuleToast('chain', '规则共鸣', `${upgrade.name} · ${upgrade.description}`);
-        }
+        this.lastResonanceRoom = this.roomClearCount;
+        showRuleToast('chain', '规则共鸣', `${upgrade.name} · ${upgrade.description}`);
       }
     }
     this.game.events.emit('m2-room-cleared', {
@@ -1485,26 +1488,8 @@ export class M0Scene extends Phaser.Scene {
         title: '规则升阶',
         sub: `${reward.ascension.name} · ${reward.ascension.en}`
       });
-    } else if (reward.kind === 'late') {
-      if (
-        !this.lateUpgrades.includes(reward.upgrade.id) &&
-        this.lateUpgrades.length < MAX_LATE_UPGRADES
-      ) {
-        this.lateUpgrades.push(reward.upgrade.id);
-        setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
-        audio.play('rule');
-        showRuleToast('chain', `高阶强化 · ${reward.upgrade.name}`, reward.upgrade.description);
-      }
-    } else if (reward.kind === 'resonance') {
-      if (
-        !this.lateUpgrades.includes(reward.upgrade.id) &&
-        this.lateUpgrades.length < MAX_LATE_UPGRADES
-      ) {
-        this.lateUpgrades.push(reward.upgrade.id);
-        setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
-        audio.play('rule');
-        showRuleToast('chain', `规则共鸣 · ${reward.upgrade.name}`, reward.upgrade.description);
-      }
+    } else if (reward.kind === 'late' || reward.kind === 'resonance') {
+      this.grantLateUpgrade(reward.upgrade, reward.kind);
     } else if (reward.kind === 'reforge') {
       this.applyReforge(reward.offer);
     } else {
@@ -2857,7 +2842,8 @@ export class M0Scene extends Phaser.Scene {
     pierceBonus = 0
   ): void {
     if (profile?.kind === 'spread') {
-      const angles = getSpreadAngles(baseAngle, profile.bolts, profile.spreadDeg);
+      const bolts = profile.bolts + this.lateUpgradeLevel('spread-resonance');
+      const angles = getSpreadAngles(baseAngle, bolts, profile.spreadDeg);
       for (const angle of angles) {
         this.spawnBolt({
           mode: 'spread',
@@ -3107,7 +3093,10 @@ export class M0Scene extends Phaser.Scene {
     this.attackHits.add(enemy);
     this.checkThunderEmblem();
     if (bolt.mode === 'pierce' && bolt.pierceHits > 0 && this.hasLate('pierce-momentum')) {
-      this.pierceMomentum = Math.min(3, this.pierceMomentum + 1);
+      this.pierceMomentum = Math.min(
+        2 + Math.max(1, this.lateUpgradeLevel('pierce-momentum')),
+        this.pierceMomentum + 1
+      );
     }
     const pierceBonus = bolt.mode === 'pierce' ? 1 + 0.2 * bolt.pierceHits : 1;
     bolt.pierceHits += 1;
@@ -3207,6 +3196,7 @@ export class M0Scene extends Phaser.Scene {
       const x = target.root.x;
       const y = target.root.y - 10;
       this.riftEchoCasts += 1;
+      const damage = 6 + 6 * this.lateUpgradeLevel('rift-echo');
       this.spawnExplosion(x, y, 70);
       audio.play('explosion');
       const budget = new TriggerBudget(2);
@@ -3214,7 +3204,7 @@ export class M0Scene extends Phaser.Scene {
         if (enemy.dead || enemy === target) continue;
         const dist = Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y - 10);
         if (dist <= enemy.radius + 70 && budget.tryConsume()) {
-          this.applyDamage(enemy, 12, 'blast');
+          this.applyDamage(enemy, damage, 'blast');
         }
       }
     });
@@ -3232,9 +3222,10 @@ export class M0Scene extends Phaser.Scene {
     this.impactProcs += 1;
     const profile = getImpactProfile(sealed.key, sealed.level);
     if (profile.kind === 'blast') {
+      const boost = 1 + 0.25 * this.lateUpgradeLevel('blast-resonance');
       this.explodeAt(enemy.root.x, enemy.root.y - 10, enemy, {
-        radius: profile.radius,
-        damage: profile.damage * power
+        radius: profile.radius * boost,
+        damage: profile.damage * power * boost
       });
     } else if (!enemy.dead) {
       if (profile.kind === 'burn') {
@@ -3278,8 +3269,9 @@ export class M0Scene extends Phaser.Scene {
     enemy.aura.setAlpha(0.24);
     this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.cyan);
     if (this.hasLate('frost-ring') && this.frostRingCd <= 0) {
-      this.frostRingCd = 1.2;
-      this.spawnSlowField(enemy.root.x, enemy.root.y, 70, 1.8);
+      const level = this.lateUpgradeLevel('frost-ring');
+      this.frostRingCd = 1.4 - 0.2 * level;
+      this.spawnSlowField(enemy.root.x, enemy.root.y, 60 + 10 * level, 1.8);
     }
     if (this.build.impact?.key === 'frost' && this.build.impact.ascended) {
       this.frostAscendHits += 1;
@@ -3303,8 +3295,37 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  private grantLateUpgrade(upgrade: LateUpgradeDef, source: 'late' | 'resonance'): void {
+    if (
+      lateLevel(this.lateUpgrades, upgrade.id) >= MAX_LATE_LEVEL ||
+      this.lateUpgrades.length >= MAX_LATE_UPGRADES
+    ) {
+      return;
+    }
+    this.lateUpgrades.push(upgrade.id);
+    setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
+    audio.play('rule');
+    const level = lateLevel(this.lateUpgrades, upgrade.id);
+    const label = source === 'resonance' ? '规则共鸣' : '后期强化';
+    showRuleToast('chain', `${label} · ${upgrade.name} Lv.${level}`, upgrade.description);
+  }
+
   private hasLate(id: LateUpgradeId): boolean {
     return this.lateUpgrades.includes(id);
+  }
+
+  private lateUpgradeLevel(id: LateUpgradeId): number {
+    return lateLevel(this.lateUpgrades, id);
+  }
+
+  private lateUpgradeSummary(): string[] {
+    const counts = new Map<LateUpgradeId, number>();
+    for (const id of this.lateUpgrades) {
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([id, level]) =>
+      level > 1 ? `${LATE_UPGRADES[id].name} Lv.${level}` : LATE_UPGRADES[id].name
+    );
   }
 
   private relicDamageMultiplier(): number {
@@ -3511,7 +3532,8 @@ export class M0Scene extends Phaser.Scene {
             Phaser.Math.Distance.Between(x, y, item.root.x, item.root.y) < 240
         );
       if (target) {
-        target.burnTime = Math.max(target.burnTime, enemy.burnTime * 0.5);
+        const ratio = Math.min(1, 0.35 + 0.15 * this.lateUpgradeLevel('ember-spread'));
+        target.burnTime = Math.max(target.burnTime, enemy.burnTime * ratio);
         target.burnDps = Math.max(target.burnDps, enemy.burnDps);
         target.burnTick = Math.min(target.burnTick || 0.5, 0.5);
         target.aura.setTint(COLORS.orange);
@@ -3840,7 +3862,10 @@ export class M0Scene extends Phaser.Scene {
     const mutator = getMutator(this.mutatorLevel);
     const chapterHpScale = this.chapterIndex >= 1 ? 1.15 : 1;
     const thirdHpScale = this.build.secondary ? 1.05 : 1;
-    const hordeHpScale = this.hordeEnabled && !elite && !spec.boss ? 0.38 : 1;
+    const hordeHpScale =
+      this.hordeEnabled && !elite && !spec.boss
+        ? [0.38, 0.55, 0.7][Math.min(2, this.chapterIndex)]
+        : 1;
     const baseHp =
       spec.hp *
       (spec.boss ? mutator.bossHp : mutator.enemyHp) *
@@ -5685,7 +5710,7 @@ export class M0Scene extends Phaser.Scene {
       ascensions: [this.build.trajectory, this.build.impact, this.build.secondary]
         .map((ref) => (ref?.ascended ? getAscensionForRule(ref.key)?.name ?? null : null))
         .filter((name): name is string => Boolean(name)),
-      lateUpgrades: this.lateUpgrades.map((id) => LATE_UPGRADES[id].name),
+      lateUpgrades: this.lateUpgradeSummary(),
       rulesSeen: [
         ...new Set(
           [
