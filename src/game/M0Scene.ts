@@ -5106,6 +5106,10 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private spawnFirePatch(x: number, y: number, radius: number, life: number): void {
+    const activeFires = this.hazards.filter(
+      (hazard) => hazard.kind === 'fire' && !hazard.dead
+    ).length;
+    if (this.hordeEnabled && activeFires >= 12) return;
     const glow = this.add
       .image(0, 0, 'glow')
       .setDisplaySize(radius * 2.3, radius * 2.3)
@@ -5332,8 +5336,8 @@ export class M0Scene extends Phaser.Scene {
     setHp(this.hp, this.maxHp);
     this.refreshRoomHud();
     audio.play('hurt');
-    this.cameras.main.shake(130, 0.0022);
-    this.cameras.main.flash(110, 255, 55, 80);
+    this.cameras.main.shake(this.hordeEnabled ? 90 : 130, this.hordeEnabled ? 0.0018 : 0.0022);
+    this.cameras.main.flash(this.hordeEnabled ? 65 : 110, 255, 55, 80);
     this.spawnHitDirection(sourceX, sourceY);
     this.spawnDamageNumber(
       this.playerRoot.x,
