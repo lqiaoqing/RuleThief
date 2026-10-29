@@ -54,6 +54,7 @@ import {
   LATE_UPGRADES,
   MAX_LATE_UPGRADES,
   lateUpgradeEligible,
+  pickResonance,
   type LateUpgradeId
 } from './lateUpgrades';
 import { getMutator, clampMutator } from './mutators';
@@ -350,6 +351,8 @@ export class M0Scene extends Phaser.Scene {
   private chapterRewardOpen = false;
   private thunderStacks = 0;
   private reforgesUsed = 0;
+  private roomClearCount = 0;
+  private resonanceGranted = false;
   private waveDirector: WaveDirector | null = null;
   private hordeEnabled = true;
   private waveCaptainSpawned = false;
@@ -362,6 +365,7 @@ export class M0Scene extends Phaser.Scene {
   private killStreakTimer = 0;
   private killBurst = 0;
   private hitStopMs = 0;
+  private godMode = false;
   private attackHits = new Set<EnemyUnit>();
   private attackThunderAwarded = false;
   private prismTime = 0;
@@ -660,6 +664,8 @@ export class M0Scene extends Phaser.Scene {
     this.chapterRewardOpen = false;
     this.thunderStacks = 0;
     this.reforgesUsed = 0;
+    this.roomClearCount = 0;
+    this.resonanceGranted = false;
     this.waveDirector = null;
     this.portalToken = 0;
     this.killStreak = 0;
@@ -667,6 +673,7 @@ export class M0Scene extends Phaser.Scene {
     this.killStreakTimer = 0;
     this.killBurst = 0;
     this.hitStopMs = 0;
+    this.godMode = false;
     this.prismTime = 0;
     this.bloodflameCd = 0;
     this.featherTime = 0;
@@ -1050,6 +1057,27 @@ export class M0Scene extends Phaser.Scene {
     return this.swapRandomRule();
   }
 
+  public debugGodMode(enabled: boolean): void {
+    this.godMode = enabled;
+  }
+
+  public debugDash(): void {
+    this.tryDash();
+  }
+
+  public debugClearSeal(): void {
+    if (!this.sealSlot) return;
+    this.sealSlot = null;
+    this.sealTime = 0;
+    setSealedRule(null, false);
+  }
+
+  public debugSetKillStreak(count: number): void {
+    this.killStreak = Math.max(0, Math.floor(count));
+    this.killStreakTimer = 2.4;
+    setKillStreak(this.killStreak, this.killStreakBest);
+  }
+
   public debugReforge(key: RuleKey): boolean {
     if (this.reforgesUsed >= MAX_REFORGES) return false;
     const slot = reforgeSlot(this.build);
@@ -1376,6 +1404,29 @@ export class M0Scene extends Phaser.Scene {
       lateUpgrades: this.lateUpgrades,
       reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed)
     });
+    this.roomClearCount += 1;
+    if (
+      !this.getRoom().boss &&
+      this.roomClearCount >= 4 &&
+      !this.resonanceGranted &&
+      this.lateUpgrades.length < MAX_LATE_UPGRADES
+    ) {
+      const upgrade = pickResonance(this.build, this.lateUpgrades, random);
+      if (upgrade) {
+        const card: Reward = { kind: 'resonance', upgrade };
+        const supportIndex = rewards.findIndex((reward) => reward.kind === 'support');
+        if (supportIndex >= 0) {
+          rewards[supportIndex] = card;
+          this.resonanceGranted = true;
+        } else if (rewards.length < 4) {
+          rewards.push(card);
+          this.resonanceGranted = true;
+        }
+        if (this.resonanceGranted) {
+          showRuleToast('chain', '规则共鸣', `${upgrade.name} · ${upgrade.description}`);
+        }
+      }
+    }
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
       total: this.stepTotal,
@@ -1430,6 +1481,16 @@ export class M0Scene extends Phaser.Scene {
         setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
         audio.play('rule');
         showRuleToast('chain', `高阶强化 · ${reward.upgrade.name}`, reward.upgrade.description);
+      }
+    } else if (reward.kind === 'resonance') {
+      if (
+        !this.lateUpgrades.includes(reward.upgrade.id) &&
+        this.lateUpgrades.length < MAX_LATE_UPGRADES
+      ) {
+        this.lateUpgrades.push(reward.upgrade.id);
+        setLate(this.lateUpgrades.map((id) => LATE_UPGRADES[id]));
+        audio.play('rule');
+        showRuleToast('chain', `规则共鸣 · ${reward.upgrade.name}`, reward.upgrade.description);
       }
     } else if (reward.kind === 'reforge') {
       this.applyReforge(reward.offer);
@@ -5377,6 +5438,7 @@ export class M0Scene extends Phaser.Scene {
     source: DamageSource = 'other'
   ): void {
     if (this.runState !== 'playing' || this.victoryLocked || this.invuln > 0) return;
+    if (this.godMode) return;
     if (
       this.relics.includes('frost-crown') &&
       this.enemies.some(

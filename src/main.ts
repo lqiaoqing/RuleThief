@@ -83,6 +83,10 @@ declare global {
     __RT_SWAP__?: () => boolean;
     __RT_REFORGE__?: (key: RuleKey) => boolean;
     __RT_STEP__?: (index: number) => boolean;
+    __RT_SET_STREAK__?: (count: number) => void;
+    __RT_GOD__?: (enabled: boolean) => void;
+    __RT_DASH__?: () => void;
+    __RT_CLEAR_SEAL__?: () => void;
     __RT_SET_ROOM_KILLS__?: (kills: number) => void;
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
     __RT_VOLLEY__?: () => number;
@@ -799,6 +803,10 @@ function handleReady(): void {
   window.__RT_SWAP__ = () => scene?.debugSwapRule() ?? false;
   window.__RT_REFORGE__ = (key) => scene?.debugReforge(key) ?? false;
   window.__RT_STEP__ = (index) => scene?.debugJumpToStep(index) ?? false;
+  window.__RT_SET_STREAK__ = (count) => scene?.debugSetKillStreak(count);
+  window.__RT_GOD__ = (enabled) => scene?.debugGodMode(enabled);
+  window.__RT_DASH__ = () => scene?.debugDash();
+  window.__RT_CLEAR_SEAL__ = () => scene?.debugClearSeal();
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
   window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;

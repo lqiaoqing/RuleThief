@@ -216,6 +216,37 @@ function ascensionCard(reward: Extract<Reward, { kind: 'ascension' }>, index: nu
   return card;
 }
 
+function resonanceCard(
+  reward: Extract<Reward, { kind: 'resonance' }>,
+  index: number
+) {
+  const upgrade = reward.upgrade;
+  const card = el('button', 'rule-card action-late');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', upgrade.color);
+  card.dataset.key = upgrade.id;
+  card.dataset.action = 'resonance';
+  card.dataset.kind = 'resonance';
+
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(upgrade.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '规则共鸣 · RESONANCE'),
+    el('span', 'rule-card-name', upgrade.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action upgrade', '共鸣'));
+
+  card.append(head, el('p', 'rule-card-desc', upgrade.description));
+  card.append(el('span', 'rule-card-now', upgrade.detail));
+  card.append(
+    el('div', 'rule-card-combo', '第 4 个战斗房后出现 · 不新增槽位 · 与现有规则联动')
+  );
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 function lateCard(reward: Extract<Reward, { kind: 'late' }>, index: number) {
   const upgrade = reward.upgrade;
   const card = el('button', 'rule-card action-late');
@@ -300,9 +331,11 @@ export function renderRewards(rewards: readonly Reward[], onPick: (reward: Rewar
               ? ascensionCard(reward, index)
               : reward.kind === 'late'
                 ? lateCard(reward, index)
-                : reward.kind === 'reforge'
-                  ? reforgeCard(reward, index)
-                  : supportCard(reward, index);
+                : reward.kind === 'resonance'
+                  ? resonanceCard(reward, index)
+                  : reward.kind === 'reforge'
+                    ? reforgeCard(reward, index)
+                    : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
     offersWrap.append(card);
   });

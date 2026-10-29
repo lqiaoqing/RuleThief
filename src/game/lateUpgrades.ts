@@ -1,3 +1,5 @@
+import type { PlayerBuild, RuleKey } from './rules';
+
 export type LateUpgradeId =
   | 'ember-spread'
   | 'rift-echo'
@@ -64,6 +66,31 @@ export const MAX_LATE_UPGRADES = 2;
 
 export function getLateUpgrade(id: LateUpgradeId): LateUpgradeDef {
   return LATE_UPGRADES[id];
+}
+
+const RESONANCE_RULES: { id: LateUpgradeId; rules: RuleKey[] }[] = [
+  { id: 'ember-spread', rules: ['burn'] },
+  { id: 'rift-echo', rules: ['chain'] },
+  { id: 'frost-ring', rules: ['frost'] },
+  { id: 'pierce-momentum', rules: ['pierce'] }
+];
+
+export function pickResonance(
+  build: PlayerBuild,
+  owned: readonly LateUpgradeId[],
+  random: () => number = Math.random
+): LateUpgradeDef | null {
+  const keys = new Set(
+    [build.trajectory, build.impact, build.secondary]
+      .filter((ref): ref is NonNullable<typeof ref> => Boolean(ref))
+      .map((ref) => ref.key)
+  );
+  const pool = RESONANCE_RULES.filter(
+    (entry) => !owned.includes(entry.id) && entry.rules.some((key) => keys.has(key))
+  );
+  if (pool.length === 0) return null;
+  const pick = pool[Math.floor(random() * pool.length)];
+  return LATE_UPGRADES[pick.id];
 }
 
 export function lateUpgradeEligible(

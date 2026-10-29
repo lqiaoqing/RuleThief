@@ -3,7 +3,8 @@ import {
   LATE_UPGRADE_IDS,
   LATE_UPGRADES,
   MAX_LATE_UPGRADES,
-  lateUpgradeEligible
+  lateUpgradeEligible,
+  pickResonance
 } from './lateUpgrades';
 import { ROOMS, buildChapterRewards, buildRoomRewards } from './rooms';
 import type { PlayerBuild } from './rules';
@@ -44,6 +45,17 @@ describe('late upgrades', () => {
       lateUpgrades: ['ember-spread', 'rift-echo']
     });
     expect(rewards.some((reward) => reward.kind === 'late')).toBe(false);
+  });
+
+  it('picks a mid-run resonance that matches the equipped rules', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 2 },
+      impact: { key: 'burn', level: 2 }
+    };
+    const resonance = pickResonance(build, [], random);
+    expect(['ember-spread', 'pierce-momentum']).toContain(resonance?.id);
+    expect(pickResonance({ trajectory: { key: 'spread', level: 2 }, impact: { key: 'blast', level: 2 } }, [], random)).toBeNull();
+    expect(pickResonance(build, ['ember-spread', 'pierce-momentum'], random)).toBeNull();
   });
 
   it('offers late upgrades in chapter rewards after ascensions and relics are full', () => {

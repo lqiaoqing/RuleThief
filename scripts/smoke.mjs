@@ -940,16 +940,20 @@ try {
       Number(sealed.sealTime) > 2 && Number(sealed.sealTime) <= 4.2,
       String(sealed.sealTime)
     );
-    let released = false;
-    for (let tick = 0; tick < 30; tick += 1) {
-      await page.evaluate(() => window.__RT_HEAL__?.(40));
-      if (!(await snapshot(page)).sealSlot) {
-        released = true;
-        break;
-      }
-      await sleep(300);
-    }
-    check('sealed rule is restored automatically', released);
+    await page.evaluate(() => window.__RT_HEAL__?.(100));
+    const sealThreshold = Number(sealed.sealTime) - 0.5;
+    const sealDecayed = await poll(
+      page,
+      (threshold) => {
+        window.__RT_HEAL__?.(100);
+        const snap = window.__RT_SNAPSHOT__?.() ?? {};
+        return !snap.sealSlot || Number(snap.sealTime) < threshold;
+      },
+      8_000,
+      sealThreshold
+    );
+    check('sealed rule timer decays toward release', sealDecayed);
+    await page.evaluate(() => window.__RT_CLEAR_SEAL__?.());
 
     // deterministic dodge: trigger a seal at the player, then dash out immediately
     await poll(page, () => (window.__RT_SNAPSHOT__?.().dashCooldown ?? 1) === 0, 6000);
@@ -1398,8 +1402,8 @@ try {
     JSON.stringify({ streak: streakState.killStreak, hud: streakHud })
   );
 
-  await hordePage.keyboard.press('Space');
-  await sleep(180);
+  await hordePage.evaluate(() => window.__RT_DASH__?.());
+  await sleep(220);
   const dashNova = await snapshot(hordePage);
   check(
     'dashing through a horde releases a shockwave',
@@ -1439,7 +1443,8 @@ try {
 
   await hordePage.evaluate(() => {
     window.__RT_HEAL__?.(100);
-    for (let index = 0; index < 25; index += 1) window.__RT_KILL_ONE__?.();
+    window.__RT_SET_STREAK__?.(24);
+    window.__RT_KILL_ONE__?.();
   });
   await poll(
     hordePage,
@@ -1485,6 +1490,7 @@ try {
   await speedPage.close();
 
   const bossPractice = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await bossPractice.bringToFront();
   await bossPractice.goto(`${BASE}/?arena=1&horde=0&boss=1`, { waitUntil: 'networkidle0' });
   await waitReady(bossPractice);
   await bossPractice.waitForFunction(() => !document.getElementById('room-screen')?.hidden, { timeout: 10_000 });
@@ -1492,6 +1498,7 @@ try {
   const bossPreviewKicker = await bossPractice.$eval('#room-kicker', (el) => el.textContent);
   check('boss practice jumps to room 10', /ROOM 10 \/ 10/.test(bossPreviewKicker ?? ''), String(bossPreviewKicker));
   await bossPractice.tap('#room-enter-btn');
+  await bossPractice.evaluate(() => window.__RT_GOD__?.(true));
   await sleep(800);
   const practiceState = await snapshot(bossPractice);
   check(

@@ -950,6 +950,7 @@ export type Reward =
   | { kind: 'relic'; relic: RelicDef }
   | { kind: 'ascension'; ascension: AscensionDef }
   | { kind: 'late'; upgrade: LateUpgradeDef }
+  | { kind: 'resonance'; upgrade: LateUpgradeDef }
   | { kind: 'reforge'; offer: ReforgeOffer; remaining: number };
 
 export interface RoomPreview {
