@@ -27,6 +27,10 @@ describe('wave director', () => {
     const late = buildWavePlan(34, 1);
     expect(late.groups).toHaveLength(7);
     expect(late.maxAlive).toBe(16);
+    const waste = buildWavePlan(200, 3);
+    expect(waste.groups.length).toBeGreaterThanOrEqual(10);
+    expect(waste.maxAlive).toBe(45);
+    expect(waste.gap).toBeCloseTo(0.55, 5);
   });
 
   it('spawns a whole wave without waiting for kills and keeps a capacity cap', () => {

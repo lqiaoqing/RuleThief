@@ -106,7 +106,7 @@ describe('event definitions', () => {
 
 describe('run plan', () => {
   it('exposes the first chapter as the judgement ruins', () => {
-    expect(CHAPTERS.length).toBe(3);
+    expect(CHAPTERS.length).toBe(4);
     const first = CHAPTERS[0];
     expect(first.id).toBe('judgement');
     expect(first.name).toBe('审判废墟');
@@ -157,6 +157,28 @@ describe('run plan', () => {
       .flatMap((step) => stepEncounters(step))
       .filter((encounter) => encounter.kind === 'event');
     expect(events).toHaveLength(2);
+  });
+
+
+  it('builds a boundless waste chapter of 22 steps on large maps', () => {
+    const plan = buildChapterPlan(3, random);
+    expect(planStepCount(plan)).toBe(22);
+    const rooms = plan
+      .flatMap((step) => stepEncounters(step))
+      .filter((encounter) => encounter.kind === 'room')
+      .map((encounter) => (encounter.kind === 'room' ? encounter.room : null))
+      .filter((room): room is NonNullable<typeof room> => Boolean(room));
+    expect(rooms.every((room) => room.arenaSize === 2400)).toBe(true);
+    const last = plan[plan.length - 1];
+    expect(last.kind).toBe('encounter');
+    if (last.kind === 'encounter' && last.encounter.kind === 'room') {
+      expect(last.encounter.room.boss).toBe('source');
+      expect(last.encounter.room.arenaSize).toBe(2400);
+    }
+    const events = plan
+      .flatMap((step) => stepEncounters(step))
+      .filter((encounter) => encounter.kind === 'event');
+    expect(events).toHaveLength(3);
   });
 
   it('returns an empty plan for an unknown chapter', () => {

@@ -1,39 +1,54 @@
 {
   "result": {
     "title": "规则终结",
-    "rooms": "36 / 36"
+    "rooms": "58 / 58"
   },
   "chapters": [
     "审判废墟 · 已完成",
-    "失序工坊 · 已完成"
+    "失序工坊 · 已完成",
+    "逆律深渊 · 已完成"
   ],
   "chapterRewards": [
     [
+      {
+        "kind": "ascension",
+        "name": "烈焰引爆"
+      },
+      {
+        "kind": "relic",
+        "name": "雷鸣徽章"
+      },
+      {
+        "kind": "reforge",
+        "name": "贯穿 → 冰霜"
+      }
+    ],
+    [
+      {
+        "kind": "relic",
+        "name": "雷鸣徽章"
+      },
       {
         "kind": "relic",
         "name": "破裂棱镜"
       },
       {
-        "kind": "relic",
-        "name": "雷鸣徽章"
-      },
-      {
         "kind": "reforge",
-        "name": "爆裂 → 燃烧"
+        "name": "贯穿 → 散射"
       }
     ],
     [
       {
         "kind": "ascension",
-        "name": "雷霆领域"
+        "name": "极寒禁锢"
       },
       {
-        "kind": "relic",
-        "name": "雷鸣徽章"
+        "kind": "late",
+        "name": "霜环驻留"
       },
       {
         "kind": "reforge",
-        "name": "弹射 → 贯穿"
+        "name": "冰霜 → 弹射"
       }
     ]
   ],
@@ -125,7 +140,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -133,8 +148,8 @@
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 1
+          "key": "burn",
+          "level": 3
         },
         "secondary": {
           "key": "pierce",
@@ -147,7 +162,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -155,8 +170,8 @@
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 1
+          "key": "burn",
+          "level": 3
         },
         "secondary": {
           "key": "pierce",
@@ -169,7 +184,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -177,8 +192,8 @@
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 1
+          "key": "burn",
+          "level": 3
         },
         "secondary": {
           "key": "pierce",
@@ -188,12 +203,12 @@
     },
     {
       "label": "审判废墟 · 章节奖励",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -201,8 +216,9 @@
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "pierce",
@@ -212,12 +228,12 @@
     },
     {
       "label": "ROOM 1 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -225,8 +241,9 @@
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "pierce",
@@ -236,12 +253,12 @@
     },
     {
       "label": "ROOM 2 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -249,8 +266,9 @@
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "pierce",
@@ -260,22 +278,23 @@
     },
     {
       "label": "ROOM 4 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
+        "ember-spread",
         "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
-          "level": 3
+          "key": "pierce",
+          "level": 1
         },
         "impact": {
-          "key": "blast",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "pierce",
@@ -285,22 +304,23 @@
     },
     {
       "label": "ROOM 5 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
+        "ember-spread",
         "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
-          "level": 3
+          "key": "pierce",
+          "level": 2
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "pierce",
@@ -310,157 +330,163 @@
     },
     {
       "label": "ROOM 6 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo"
+        "ember-spread",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "chain",
-          "level": 1
+          "key": "pierce",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 8 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "chain",
-          "level": 2
+          "key": "pierce",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 9 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 11 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 12 / 13 已清空",
-      "relics": [
-        "prism"
+      "relics": [],
+      "ascensions": [
+        "burn"
       ],
-      "ascensions": [],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "chain",
+          "key": "pierce",
           "level": 3
         }
       }
@@ -468,372 +494,1101 @@
     {
       "label": "失序工坊 · 章节奖励",
       "relics": [
-        "prism"
+        "thunder-emblem"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 1 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 2 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "blast-resonance",
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum",
+        "ember-spread",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 4 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
-        "frost-ring"
+        "ember-spread",
+        "pierce-momentum",
+        "pierce-momentum",
+        "ember-spread",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 1
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 5 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
         "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 2
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 6 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
         "frost-ring",
-        "frost-ring"
+        "frost-ring",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 2
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 8 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
         "frost-ring",
-        "frost-ring"
+        "frost-ring",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 2
         }
       }
     },
     {
       "label": "ROOM 9 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
         "frost-ring",
-        "frost-ring"
+        "frost-ring",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
         "frost-ring",
         "frost-ring",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 11 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
         "frost-ring",
         "frost-ring",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "pierce",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
+          "key": "burn",
           "level": 3,
           "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 12 / 13 已清空",
       "relics": [
-        "prism"
+        "thunder-emblem",
+        "frost-crown"
       ],
       "ascensions": [
-        "chain"
+        "burn"
       ],
       "lateUpgrades": [
-        "rift-echo",
-        "spread-resonance",
-        "spread-resonance",
-        "rift-echo",
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
         "frost-ring",
         "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "逆律深渊 · 章节奖励",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 1 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 2 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 10 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 11 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "pierce-momentum",
+        "pierce-momentum",
+        "frost-ring",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 13 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
         "rift-echo"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
+          "key": "chain",
+          "level": 2
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 14 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 3
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 15 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
           "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 16 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 17 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 18 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 19 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 20 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        }
+      }
+    },
+    {
+      "label": "ROOM 21 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "frost-crown"
+      ],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ember-spread",
+        "ember-spread",
+        "ember-spread",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "rift-echo",
+        "rift-echo",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "chain",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "frost",
           "level": 3,
           "ascended": true
         }
       }
     }
   ],
-  "chapterIndex": 2,
-  "chaptersTotal": 3,
+  "chapterIndex": 3,
+  "chaptersTotal": 4,
   "startChapter": 0,
-  "expectedSteps": 36,
-  "roomsCleared": 30,
-  "picks": 29,
-  "seconds": 55,
+  "expectedSteps": 58,
+  "roomsCleared": 49,
+  "picks": 48,
+  "seconds": 92,
   "relics": [
-    "prism"
+    "thunder-emblem",
+    "frost-crown"
   ],
   "ascensions": [
-    "chain"
+    "burn",
+    "frost"
   ],
   "lateUpgrades": [
-    "rift-echo",
-    "spread-resonance",
-    "spread-resonance",
-    "rift-echo",
+    "ember-spread",
+    "ember-spread",
+    "ember-spread",
     "frost-ring",
     "frost-ring",
+    "frost-ring",
+    "rift-echo",
+    "rift-echo",
     "rift-echo"
   ],
   "errors": []

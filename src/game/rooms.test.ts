@@ -47,11 +47,13 @@ describe('enemy catalogue', () => {
 });
 
 describe('room definitions', () => {
-  it('ships forty-six rooms with rising pressure', () => {
-    expect(ROOMS).toHaveLength(46);
+  it('ships seventy rooms with rising pressure', () => {
+    expect(ROOMS).toHaveLength(70);
     expect(ROOMS.map((room) => room.quota)).toEqual([
       13, 20, 22, 24, 22, 28, 28, 28, 22, 28, 28, 28, 28, 16, 16, 1, 24, 29, 31, 21, 29, 31, 31,
-      34, 45, 29, 30, 30, 31, 31, 1, 26, 30, 31, 31, 33, 21, 31, 33, 33, 31, 35, 34, 35, 50, 1
+      34, 45, 29, 30, 30, 31, 31, 1, 26, 30, 31, 31, 33, 21, 31, 33, 33, 31, 35, 34, 35, 50, 1,
+      190, 200, 200, 210, 200, 210, 200, 210, 210, 220, 210, 220, 220, 220, 220, 230, 230, 230,
+      240, 240, 250, 240, 250, 1
     ]);
     expect(ROOMS[0].maxAlive).toBeLessThan(ROOMS[3].maxAlive);
   });
@@ -111,7 +113,7 @@ describe('room definitions', () => {
   });
 
   it('gives the workshop its own shock-grid hazard rooms', () => {
-    const hazardRooms = ROOMS.filter((room) => room.hazard === 'shock-grid');
+    const hazardRooms = ROOMS.filter((room) => room.hazard === 'shock-grid' && !room.arenaSize);
     expect(hazardRooms.map((room) => room.id)).toEqual([
       'workshop-gate',
       'conveyor-hall',
@@ -129,7 +131,7 @@ describe('room definitions', () => {
   });
 
   it('gives the abyss void-rift hazards and rule-null modifiers', () => {
-    const voidRooms = ROOMS.filter((room) => room.hazard === 'void-rift');
+    const voidRooms = ROOMS.filter((room) => room.hazard === 'void-rift' && !room.arenaSize);
     expect(voidRooms.map((room) => room.id)).toEqual([
       'abyss-gate',
       'null-chapel',
@@ -140,7 +142,7 @@ describe('room definitions', () => {
       'final-gate',
       'inverse-storm'
     ]);
-    const nullRooms = ROOMS.filter((room) => room.modifier === 'rule-null');
+    const nullRooms = ROOMS.filter((room) => room.modifier === 'rule-null' && !room.arenaSize);
     expect(nullRooms.map((room) => room.id)).toEqual([
       'abyss-gate',
       'mirror-hall',
@@ -334,5 +336,16 @@ describe('room rewards', () => {
         (reward) => reward.kind === 'reforge'
       )
     ).toBe(false);
+  });
+});
+
+describe('boundless waste rooms', () => {
+  it('adds large-map rooms with fivefold quotas', () => {
+    const waste = ROOMS.filter((room) => room.arenaSize === 2400);
+    expect(waste.length).toBeGreaterThanOrEqual(20);
+    expect(waste.every((room) => room.arenaSize === 2400)).toBe(true);
+    const combat = waste.filter((room) => !room.boss);
+    expect(combat.every((room) => room.quota >= 180)).toBe(true);
+    expect(combat.every((room) => room.maxAlive >= 45)).toBe(true);
   });
 });

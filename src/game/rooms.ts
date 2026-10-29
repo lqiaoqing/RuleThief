@@ -34,7 +34,15 @@ export type EnemyKind =
   | 'core'
   | 'seer'
   | 'source'
-  | 'warden';
+  | 'warden'
+  | 'brood'
+  | 'spawnling'
+  | 'splitter'
+  | 'bulwark'
+  | 'burrower'
+  | 'artillery'
+  | 'mirror'
+  | 'hexer';
 
 export interface EnemySpec {
   name: string;
@@ -214,6 +222,94 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     elite: true,
     boss: true
   },
+  brood: {
+    name: '巢母',
+    rule: 'spread',
+    ruleName: '孵育',
+    hint: '固定产卵 · 持续孵化幼体',
+    hp: 260,
+    radius: 38,
+    speed: 0,
+    sprite: 'spore',
+    displaySize: 150
+  },
+  spawnling: {
+    name: '巢群幼体',
+    rule: 'pierce',
+    ruleName: '群袭',
+    hint: '低血快速 · 纯怪潮填充',
+    hp: 18,
+    radius: 14,
+    speed: 108,
+    sprite: 'bat',
+    displaySize: 54
+  },
+  splitter: {
+    name: '裂体',
+    rule: 'blast',
+    ruleName: '裂解',
+    hint: '死亡分裂 · 优先打断',
+    hp: 76,
+    radius: 28,
+    speed: 52,
+    sprite: 'slime',
+    displaySize: 100
+  },
+  bulwark: {
+    name: '壁垒',
+    rule: 'frost',
+    ruleName: '护壁',
+    hint: '减伤光环 · 需要绕后点杀',
+    hp: 190,
+    radius: 38,
+    speed: 36,
+    sprite: 'sunder',
+    displaySize: 148
+  },
+  burrower: {
+    name: '潜地者',
+    rule: 'pierce',
+    ruleName: '潜袭',
+    hint: '钻地突起 · 迫使移动',
+    hp: 68,
+    radius: 28,
+    speed: 62,
+    sprite: 'beetle',
+    displaySize: 98
+  },
+  artillery: {
+    name: '重炮',
+    rule: 'blast',
+    ruleName: '曲射',
+    hint: '远程曲射 · 落点预警',
+    hp: 92,
+    radius: 30,
+    speed: 24,
+    sprite: 'sentry',
+    displaySize: 132
+  },
+  mirror: {
+    name: '镜像',
+    rule: 'chain',
+    ruleName: '映射',
+    hint: '复制走位 · 延迟弹幕',
+    hp: 58,
+    radius: 24,
+    speed: 60,
+    sprite: 'wisp',
+    displaySize: 108
+  },
+  hexer: {
+    name: '噬法者',
+    rule: 'frost',
+    ruleName: '噬法',
+    hint: '远程噬法 · 减速压制',
+    hp: 84,
+    radius: 26,
+    speed: 48,
+    sprite: 'wisp',
+    displaySize: 120
+  },
   warden: {
     name: '护盾机兵',
     rule: 'chain',
@@ -259,9 +355,10 @@ export interface RoomDef {
   conveyor?: { x: number; y: number };
   surge?: boolean;
   surgeDuration?: number;
+  arenaSize?: number;
 }
 
-export const ROOMS: readonly RoomDef[] = [
+const BASE_ROOMS: readonly RoomDef[] = [
   {
     id: 'antechamber',
     name: '训戒前庭',
@@ -943,6 +1040,124 @@ export const ROOMS: readonly RoomDef[] = [
     rewardCount: 0
   }
 ] as const;
+
+function wasteRoom(
+  id: string,
+  name: string,
+  en: string,
+  subtitle: string,
+  quota: number,
+  mix: { kind: EnemyKind; weight: number }[],
+  options: Partial<RoomDef> = {}
+): RoomDef {
+  return {
+    id,
+    name,
+    en,
+    subtitle,
+    quota,
+    maxAlive: 45,
+    spawnInterval: 0.7,
+    mix,
+    arenaSize: 2400,
+    hazard: 'void-rift',
+    cover: [
+      { x: 600, y: 640, radius: 62 },
+      { x: 1800, y: 640, radius: 62 },
+      { x: 1200, y: 1480, radius: 84 }
+    ],
+    ...options
+  };
+}
+
+const WASTE_ROOMS: readonly RoomDef[] = [
+  wasteRoom('waste-gate', '荒原入口', 'WASTE GATE', '风口之后没有安全区，只有不断压上的潮汐。', 190, [
+    { kind: 'sentry', weight: 4 }, { kind: 'phase', weight: 4 }, { kind: 'beetle', weight: 3 },
+    { kind: 'brood', weight: 2 }, { kind: 'spawnling', weight: 3 }
+  ]),
+  wasteRoom('dust-basin', '尘暴盆地', 'DUST BASIN', '尘暴遮住弹道，重炮在远处校准落点。', 200, [
+    { kind: 'sentry', weight: 4 }, { kind: 'artillery', weight: 3 }, { kind: 'slime', weight: 3 }
+  ]),
+  wasteRoom('bone-field', '骨骸原野', 'BONE FIELD', '旧远征队的残骸仍在移动，冲锋从四面八方来。', 200, [
+    { kind: 'splitter', weight: 4 }, { kind: 'bulwark', weight: 3 }, { kind: 'beetle', weight: 3 }
+  ]),
+  wasteRoom('rift-scar', '裂隙伤痕', 'RIFT SCAR', '大地被规则切开，裂隙会吞掉落点。', 210, [
+    { kind: 'phase', weight: 4 }, { kind: 'bomber', weight: 4 }, { kind: 'sentry', weight: 3 }
+  ]),
+  wasteRoom('spore-wilds', '孢子荒野', 'SPORE WILDS', '孢子随风扩散，停下来就会被包围。', 200, [
+    { kind: 'spore', weight: 4 }, { kind: 'brood', weight: 3 }, { kind: 'spawnling', weight: 4 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('iron-dunes', '铁砂丘', 'IRON DUNES', '铁砂磨平了掩体，机兵在风里换位。', 210, [
+    { kind: 'bulwark', weight: 4 }, { kind: 'artillery', weight: 4 }, { kind: 'phase', weight: 3 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('echo-plain', '回声平原', 'ECHO PLAIN', '每一次攻击都会被荒原重复一次。', 200, [
+    { kind: 'mirror', weight: 4 }, { kind: 'phase', weight: 4 }, { kind: 'spore', weight: 3 }
+  ]),
+  wasteRoom('ash-road', '灰烬之路', 'ASH ROAD', '灰烬覆盖了道路，爆炸会把灰重新点燃。', 210, [
+    { kind: 'slime', weight: 4 }, { kind: 'bomber', weight: 4 }, { kind: 'beetle', weight: 3 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('sunken-yard', '沉没庭院', 'SUNKEN YARD', '地面正在下沉，冰霜会拖慢你的撤离。', 210, [
+    { kind: 'wisp', weight: 4 }, { kind: 'spore', weight: 4 }, { kind: 'phase', weight: 3 }
+  ]),
+  wasteRoom('storm-ridge', '风暴山脊', 'STORM RIDGE', '风暴把弹幕吹成弧线，掩体是唯一的直线。', 220, [
+    { kind: 'mirror', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'burrower', weight: 3 }
+  ]),
+  wasteRoom('hollow-marsh', '空洞沼泽', 'HOLLOW MARSH', '沼泽里没有实地，只有一层会碎的规则。', 210, [
+    { kind: 'hexer', weight: 4 }, { kind: 'spore', weight: 4 }, { kind: 'slime', weight: 3 }
+  ]),
+  wasteRoom('shard-valley', '碎片峡谷', 'SHARD VALLEY', '碎片会割断直线，也会割断冲锋。', 220, [
+    { kind: 'splitter', weight: 4 }, { kind: 'burrower', weight: 4 }, { kind: 'bomber', weight: 3 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('black-river', '黑河', 'BLACK RIVER', '黑河漫过脚面，炮台在对岸等你露头。', 220, [
+    { kind: 'wisp', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'phase', weight: 3 }
+  ]),
+  wasteRoom('titan-grave', '巨像墓地', 'TITAN GRAVE', '巨像倒下后仍在守墓，护盾会一层层再生。', 220, [
+    { kind: 'sunder', weight: 4 }, { kind: 'warden', weight: 4 }, { kind: 'phase', weight: 3 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('lawless-field', '无法之地', 'LAWLESS FIELD', '规则不在这里生效，只有自爆与冲锋。', 220, [
+    { kind: 'bomber', weight: 4 }, { kind: 'phase', weight: 4 }, { kind: 'sentry', weight: 3 }
+  ], { modifier: 'rule-null' }),
+  wasteRoom('world-scar', '世界伤痕', 'WORLD SCAR', '世界的伤口正在呼吸，裂隙会跟着它开合。', 230, [
+    { kind: 'phase', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'bat', weight: 3 }
+  ]),
+  wasteRoom('broken-sky', '破碎苍穹', 'BROKEN SKY', '天空碎成弹片，落点没有一块是安全的。', 230, [
+    { kind: 'sunder', weight: 4 }, { kind: 'warden', weight: 4 }, { kind: 'bomber', weight: 3 }
+  ]),
+  wasteRoom('last-bastion', '最后壁垒', 'LAST BASTION', '最后的壁垒挡不住潮汐，只能挡一瞬。', 230, [
+    { kind: 'warden', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'phase', weight: 3 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('void-throne', '虚空王座', 'VOID THRONE', '王座周围没有规则，只有被抽空的站位。', 240, [
+    { kind: 'phase', weight: 4 }, { kind: 'bomber', weight: 4 }, { kind: 'wisp', weight: 3 }
+  ], { modifier: 'rule-null' }),
+  wasteRoom('waste-core', '荒原核心', 'WASTE CORE', '核心把荒原的规则压成一条线，越过它就会直面吞世者。', 240, [
+    { kind: 'sunder', weight: 4 }, { kind: 'warden', weight: 4 }, { kind: 'phase', weight: 3 }
+  ]),
+  wasteRoom('final-waste', '终末荒原', 'FINAL WASTE', '所有潮汐在这里汇合，没有退路。', 250, [
+    { kind: 'brood', weight: 4 }, { kind: 'artillery', weight: 4 }, { kind: 'splitter', weight: 3 },
+    { kind: 'bulwark', weight: 2 }, { kind: 'mirror', weight: 2 }
+  ]),
+  wasteRoom('waste-sanctum', '荒原圣所', 'WASTE SANCTUM', '圣所只保留最后一条规则，守住它的人已经不在。', 240, [
+    { kind: 'warden', weight: 4 }, { kind: 'phase', weight: 4 }, { kind: 'bat', weight: 3 }
+  ], { hazard: 'shock-grid' }),
+  wasteRoom('last-march', '最后行军', 'LAST MARCH', '荒原的潮汐推着所有敌人向前，停下就会被吞没。', 250, [
+    { kind: 'sunder', weight: 4 }, { kind: 'bomber', weight: 4 }, { kind: 'phase', weight: 3 }
+  ]),
+  {
+    id: 'world-eater',
+    name: '荒原吞世者',
+    en: 'WORLD EATER',
+    subtitle: '它不守护规则，它把规则连同荒原一起吞下。',
+    quota: 1,
+    maxAlive: 3,
+    spawnInterval: 99,
+    mix: [],
+    arenaSize: 2400,
+    boss: 'source',
+    rewardCount: 0
+  }
+];
+
+export const ROOMS: readonly RoomDef[] = [...BASE_ROOMS, ...WASTE_ROOMS];
 
 export function getRoomRuleKeys(room: RoomDef): RuleKey[] {
   const keys = new Set<RuleKey>();

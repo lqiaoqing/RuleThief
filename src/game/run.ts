@@ -281,7 +281,7 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
   return copy;
 }
 
-export type ChapterId = 'judgement' | 'workshop' | 'abyss';
+export type ChapterId = 'judgement' | 'workshop' | 'abyss' | 'waste';
 
 export interface ChapterDef {
   id: ChapterId;
@@ -370,6 +370,42 @@ export const CHAPTERS: readonly ChapterDef[] = [
         { kind: 'encounter', encounter: room('final-gate') },
         { kind: 'encounter', encounter: room('inverse-storm') },
         { kind: 'encounter', encounter: room('source-chamber') }
+      ];
+    }
+  },
+  {
+    id: 'waste',
+    index: 3,
+    name: '无界荒原',
+    en: 'BOUNDLESS WASTE',
+    subtitle: '规则被吞掉之后，荒原只剩下无穷的潮汐与更深的裂隙。',
+    bossName: '荒原吞世者',
+    bossEn: 'WORLD EATER',
+    buildPlan: (random) => {
+      const events = shuffle(EVENT_IDS, random).slice(0, 3) as EventId[];
+      return [
+        { kind: 'encounter', encounter: room('waste-gate') },
+        { kind: 'choice', options: [room('dust-basin'), room('bone-field')] },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[0]] } },
+        { kind: 'encounter', encounter: room('rift-scar') },
+        { kind: 'choice', options: [room('spore-wilds'), room('iron-dunes')] },
+        { kind: 'encounter', encounter: room('echo-plain') },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[1]] } },
+        { kind: 'choice', options: [room('ash-road'), room('sunken-yard')] },
+        { kind: 'encounter', encounter: room('storm-ridge') },
+        { kind: 'choice', options: [room('hollow-marsh'), room('shard-valley')] },
+        { kind: 'encounter', encounter: room('black-river') },
+        { kind: 'encounter', encounter: { kind: 'event', event: EVENTS[events[2]] } },
+        { kind: 'choice', options: [room('titan-grave'), room('lawless-field')] },
+        { kind: 'encounter', encounter: room('world-scar') },
+        { kind: 'encounter', encounter: room('broken-sky') },
+        { kind: 'encounter', encounter: room('last-bastion') },
+        { kind: 'encounter', encounter: room('void-throne') },
+        { kind: 'encounter', encounter: room('waste-core') },
+        { kind: 'encounter', encounter: room('final-waste') },
+        { kind: 'encounter', encounter: room('waste-sanctum') },
+        { kind: 'encounter', encounter: room('last-march') },
+        { kind: 'encounter', encounter: room('world-eater') }
       ];
     }
   }

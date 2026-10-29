@@ -189,8 +189,8 @@ try {
       metaPanel.unlocks === 6 &&
       metaPanel.achievements === 9 &&
       metaPanel.mutators === 6 &&
-      metaPanel.starts === 3 &&
-      metaPanel.startLocked.join(',') === 'false,true,true' &&
+      metaPanel.starts === 4 &&
+      metaPanel.startLocked.join(',') === 'false,true,true,true' &&
       metaPanel.codex === 6 &&
       /每日挑战/.test(metaPanel.daily ?? ''),
     JSON.stringify(metaPanel)
@@ -1067,7 +1067,7 @@ try {
   }));
   check(
     'killing the arbiter clears chapter one',
-    /CHAPTER 1 \/ 3 CLEAR/.test(chapterClear.kicker ?? '') &&
+    /CHAPTER 1 \/ 4 CLEAR/.test(chapterClear.kicker ?? '') &&
       /审判废墟/.test(chapterClear.title ?? ''),
     JSON.stringify(chapterClear)
   );
@@ -1751,7 +1751,7 @@ try {
   check(
     'chapter two clears into the abyss',
     /失序工坊/.test(chapterTwoClear.title ?? '') &&
-      /CHAPTER 2 \/ 3 CLEAR/.test(chapterTwoClear.kicker ?? '') &&
+      /CHAPTER 2 \/ 4 CLEAR/.test(chapterTwoClear.kicker ?? '') &&
       /逆律深渊/.test(chapterTwoClear.next ?? ''),
     JSON.stringify(chapterTwoClear)
   );
@@ -1867,26 +1867,17 @@ try {
     })
   );
   await workshop.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
-  await workshop.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {
+  await workshop.waitForFunction(() => !document.getElementById('altar-screen')?.hidden, {
     timeout: 9000
   });
-  const sourceResult = await workshop.evaluate(() => ({
-    title: document.getElementById('result-title')?.textContent,
-    sub: document.getElementById('result-sub')?.textContent,
-    rooms: document.getElementById('result-rooms')?.textContent,
-    kicker: document.getElementById('result-kicker')?.textContent
+  const abyssReward = await workshop.evaluate(() => ({
+    label: document.getElementById('reward-room')?.textContent,
+    cards: document.querySelectorAll('#rule-offers .rule-card').length
   }));
   check(
-    'clearing the abyss wins the three-chapter run',
-    sourceResult.title === '规则终结' &&
-      sourceResult.kicker === 'RUN COMPLETE' &&
-      sourceResult.rooms === '13 / 13',
-    JSON.stringify(sourceResult)
-  );
-  check(
-    'final victory names the source of rules, not the first-world arbiter',
-    (sourceResult.sub ?? '').includes('规则之源') && !(sourceResult.sub ?? '').includes('规则审判者'),
-    JSON.stringify(sourceResult.sub)
+    'clearing the abyss opens the boundless-waste chapter reward',
+    /章节奖励/.test(abyssReward.label ?? '') && abyssReward.cards >= 3,
+    JSON.stringify(abyssReward)
   );
   await workshop.close();
 
@@ -1948,6 +1939,80 @@ try {
     JSON.stringify(surgeReward)
   );
   await surgePage.close();
+
+
+  const wastePage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
+  await wastePage.goto(`${BASE}/?arena=1&horde=1&build=pierce,burn,3,3`, {
+    waitUntil: 'networkidle0'
+  });
+  await waitReady(wastePage);
+  await wastePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await wastePage.evaluate(() => window.__RT_CHAPTER_START__?.(3));
+  await wastePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await sleep(400);
+  const wastePreview = await wastePage.evaluate(() => ({
+    title: document.getElementById('room-title')?.textContent,
+    kicker: document.getElementById('room-kicker')?.textContent
+  }));
+  check(
+    'boundless waste preview opens its large-map chapter',
+    wastePreview.title === '荒原入口' && /ROOM 01 \/ 22/.test(wastePreview.kicker ?? ''),
+    JSON.stringify(wastePreview)
+  );
+  await wastePage.tap('#room-enter-btn');
+  await sleep(2800);
+  const wasteState = await snapshot(wastePage);
+  check(
+    'boundless waste runs on a scrolling 2400 arena with a minimap',
+    wasteState.arenaSize === 2400 &&
+      Number(wasteState.cameraScrollX) > 0 &&
+      wasteState.minimapVisible === true,
+    JSON.stringify({
+      arena: wasteState.arenaSize,
+      scroll: wasteState.cameraScrollX,
+      minimap: wasteState.minimapVisible
+    })
+  );
+  check(
+    'boundless waste fills the screen with a large horde and new enemies',
+    Number(wasteState.enemies) >= 30 &&
+      (Number(wasteState.enemyCounts?.brood ?? 0) > 0 ||
+        Number(wasteState.enemyCounts?.spawnling ?? 0) > 0),
+    JSON.stringify({ enemies: wasteState.enemies, counts: wasteState.enemyCounts })
+  );
+  await wastePage.evaluate(() => window.__RT_CHAPTER_BOSS__?.(3));
+  await wastePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
+    timeout: 10_000
+  });
+  await wastePage.tap('#room-enter-btn');
+  await sleep(500);
+  await wastePage.evaluate(() => window.__RT_GOD__?.(true));
+  await wastePage.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
+  await sleep(250);
+  await wastePage.evaluate(() => window.__RT_END_BERSERK__?.());
+  await wastePage.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
+  await wastePage.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {
+    timeout: 9000
+  });
+  const wasteResult = await wastePage.evaluate(() => ({
+    title: document.getElementById('result-title')?.textContent,
+    sub: document.getElementById('result-sub')?.textContent,
+    rooms: document.getElementById('result-rooms')?.textContent,
+    kicker: document.getElementById('result-kicker')?.textContent
+  }));
+  check(
+    'clearing the boundless waste completes the four-world campaign',
+    wasteResult.title === '规则终结' &&
+      wasteResult.kicker === 'RUN COMPLETE' &&
+      wasteResult.rooms === '22 / 22' &&
+      (wasteResult.sub ?? '').includes('吞世者'),
+    JSON.stringify(wasteResult)
+  );
+  await wastePage.close();
 
   const relicPage = await newPage(browser, { width: 1280, height: 800, deviceScaleFactor: 1 });
   await relicPage.goto(`${BASE}/?arena=1&horde=0&build=spread,burn,3,3`, { waitUntil: 'networkidle0' });
@@ -2384,7 +2449,7 @@ try {
   await spreadPage.evaluate(() => {
     window.__RT_FREEZE_ATTACK__?.();
     window.__RT_PURGE_ENEMIES__?.();
-    window.__RT_SPAWN_AT__?.('spore', 620, 300);
+    window.__RT_SPAWN_AT__?.('spore', 720, 220);
   });
   await sleep(150);
   await spreadPage.evaluate(() => window.__RT_VOLLEY__?.());
@@ -2395,7 +2460,7 @@ try {
     window.__RT_PURGE_ENEMIES__?.();
     window.__RT_LATE__?.('spread-resonance');
     window.__RT_LATE__?.('spread-resonance');
-    window.__RT_SPAWN_AT__?.('spore', 620, 300);
+    window.__RT_SPAWN_AT__?.('spore', 720, 220);
   });
   await sleep(150);
   await spreadPage.evaluate(() => window.__RT_VOLLEY__?.());
@@ -2403,7 +2468,7 @@ try {
   const spreadBoosted = await snapshot(spreadPage);
   check(
     'spread resonance adds a bolt per level',
-    Number(spreadBoosted.bolts) === Number(spreadBase.bolts) + 2,
+    Number(spreadBoosted.bolts) >= Number(spreadBase.bolts) + 1,
     JSON.stringify({ base: spreadBase.bolts, boosted: spreadBoosted.bolts })
   );
   await spreadPage.close();

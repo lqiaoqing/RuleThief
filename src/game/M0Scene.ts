@@ -293,9 +293,13 @@ export class M0Scene extends Phaser.Scene {
   private frameLayer!: Phaser.GameObjects.Container;
   private coverLayer!: Phaser.GameObjects.Container;
   private covers: readonly CoverDef[] = [];
+  private arenaSize = ARENA;
   private floorImage?: Phaser.GameObjects.Image;
+  private floorShade?: Phaser.GameObjects.Rectangle;
   private themeWash?: Phaser.GameObjects.Rectangle;
   private arenaFrame?: Phaser.GameObjects.Graphics;
+  private wasteTerrain?: Phaser.GameObjects.Graphics;
+  private minimapGfx?: Phaser.GameObjects.Graphics;
   private brazierGlows: Phaser.GameObjects.Image[] = [];
   private dustEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
   private arbiterHost!: ArbiterHost;
@@ -496,8 +500,13 @@ export class M0Scene extends Phaser.Scene {
     this.createPlayer();
     this.fxLayer = this.add.container(0, 0);
     this.world.add(this.fxLayer);
+    this.minimapGfx = this.add
+      .graphics()
+      .setScrollFactor(0)
+      .setDepth(1200)
+      .setVisible(false);
     this.arbiterHost = {
-      arena: ARENA,
+      arena: this.arenaSize,
       playerRadius: PLAYER_RADIUS,
       playerX: () => this.playerRoot.x,
       playerY: () => this.playerRoot.y,
@@ -537,7 +546,7 @@ export class M0Scene extends Phaser.Scene {
       isPlaying: () => this.runState === 'playing'
     };
     const bossHost = {
-      arena: ARENA,
+      arena: this.arenaSize,
       playerRadius: PLAYER_RADIUS,
       now: () => this.time.now,
       playerX: () => this.playerRoot.x,
@@ -1294,6 +1303,8 @@ export class M0Scene extends Phaser.Scene {
   public beginRoom(): void {
     if (this.runState !== 'playing') return;
     if (this.encounter?.kind !== 'room') return;
+    const room = this.encounter.room;
+    this.applyArenaSize(room.arenaSize ?? ARENA);
     this.clearTransient();
     this.roomState = 'fighting';
     this.rewardOpen = false;
@@ -1331,9 +1342,11 @@ export class M0Scene extends Phaser.Scene {
     this.attackCd = 0.5;
     this.invuln = 1.0;
     this.slowTime = 0;
-    this.playerRoot.setPosition(300, 500);
+    this.playerRoot.setPosition(
+      this.arenaSize > ARENA ? this.arenaSize * 0.5 : 300,
+      this.arenaSize > ARENA ? this.arenaSize * 0.78 : 500
+    );
     this.playerSprite.setAlpha(1).clearTint();
-    const room = this.getRoom();
     this.roomHazardCd = room.hazard ? (room.hazard === 'void-rift' ? 1.5 : 1.8) : 0;
     this.roomModifierCd = room.modifier === 'rule-null' ? 4.5 : 0;
     this.conveyorVec.set(
@@ -1349,12 +1362,12 @@ export class M0Scene extends Phaser.Scene {
     audio.play('spawn');
 
     if (room.leader) {
-      this.spawnEnemy(room.leader, ARENA * 0.5, 210);
+      this.spawnEnemy(room.leader, this.arenaSize * 0.5, 210);
       this.roomSpawned += 1;
-      this.spawnLeaderBurst(ARENA * 0.5, 210);
+      this.spawnLeaderBurst(this.arenaSize * 0.5, 210);
     }
     if (room.boss) {
-      this.spawnEnemy(room.boss, ARENA * 0.5, 235);
+      this.spawnEnemy(room.boss, this.arenaSize * 0.5, 235);
       this.roomSpawned += 1;
       this.bossRef = this.enemies[this.enemies.length - 1] ?? null;
       this.bossPhase = 1;
@@ -1364,7 +1377,7 @@ export class M0Scene extends Phaser.Scene {
       this.bossSealCd = 6;
       this.coreLaserCd = 3.5;
       this.coreLaserTime = 0;
-      this.spawnLeaderBurst(ARENA * 0.5, 235);
+      this.spawnLeaderBurst(this.arenaSize * 0.5, 235);
       this.cameras.main.shake(420, 0.005);
     }
     if (this.pendingBonusElite) {
@@ -1373,8 +1386,8 @@ export class M0Scene extends Phaser.Scene {
         this.pendingBonusCards = 0;
       } else {
         const kind: EnemyKind = combatRandom() < 0.5 ? 'sunder' : 'thunder';
-        this.spawnEnemy(kind, ARENA - 150, 200, false);
-        this.spawnLeaderBurst(ARENA - 150, 200);
+        this.spawnEnemy(kind, this.arenaSize - 150, 200, false);
+        this.spawnLeaderBurst(this.arenaSize - 150, 200);
         showRuleToast('blast', '诅咒宝箱', `额外出现 ${ENEMY_SPECS[kind].name} · 本房奖励 +1 张`);
       }
     }
@@ -1387,8 +1400,8 @@ export class M0Scene extends Phaser.Scene {
     ) {
       const kinds: EnemyKind[] = ['sunder', 'thunder', 'seer'];
       const kind = kinds[combatInt(0, kinds.length - 1)];
-      this.spawnEnemy(kind, ARENA - 160, 240, false);
-      this.spawnLeaderBurst(ARENA - 160, 240);
+      this.spawnEnemy(kind, this.arenaSize - 160, 240, false);
+      this.spawnLeaderBurst(this.arenaSize - 160, 240);
       showRuleToast('blast', '异变 · 额外精英', `${ENEMY_SPECS[kind].name} 进入本房`);
     }
 
@@ -2045,6 +2058,10 @@ export class M0Scene extends Phaser.Scene {
       roomSurge: Boolean(this.getRoom().surge),
       surgeActive: this.surgeActive,
       surgeRemaining: this.surgeRemaining,
+      arenaSize: this.arenaSize,
+      cameraScrollX: Math.round(this.cameras.main.scrollX),
+      cameraScrollY: Math.round(this.cameras.main.scrollY),
+      minimapVisible: Boolean(this.minimapGfx?.visible),
       bossBerserk: this.sourceBerserkTime,
       bossInvulnerable: this.sourceBerserkTime > 0,
       rewardOpen: this.rewardOpen,
@@ -2251,16 +2268,17 @@ export class M0Scene extends Phaser.Scene {
 
   private addFloor(): void {
     const floor = this.add
-      .image(ARENA / 2, ARENA / 2, 'floor')
-      .setDisplaySize(ARENA, ARENA);
+      .image(this.arenaSize / 2, this.arenaSize / 2, 'floor')
+      .setDisplaySize(this.arenaSize, this.arenaSize);
     this.world.add(floor);
     this.floorImage = floor;
     const shade = this.add
-      .rectangle(ARENA / 2, ARENA / 2, ARENA, ARENA, 0x050a12, 0.14)
+      .rectangle(this.arenaSize / 2, this.arenaSize / 2, this.arenaSize, this.arenaSize, 0x050a12, 0.14)
       .setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.world.add(shade);
+    this.floorShade = shade;
     const wash = this.add
-      .rectangle(ARENA / 2, ARENA / 2, ARENA, ARENA, 0xffb066, 0.045)
+      .rectangle(this.arenaSize / 2, this.arenaSize / 2, this.arenaSize, this.arenaSize, 0xffb066, 0.045)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.world.add(wash);
     this.themeWash = wash;
@@ -2268,7 +2286,7 @@ export class M0Scene extends Phaser.Scene {
 
   private addBossHologram(): void {
     const glow = this.add
-      .image(ARENA / 2, 166, 'glow')
+      .image(this.arenaSize / 2, 166, 'glow')
       .setDisplaySize(460, 460)
       .setTint(COLORS.purple)
       .setAlpha(0.11)
@@ -2276,7 +2294,7 @@ export class M0Scene extends Phaser.Scene {
     this.world.add(glow);
 
     const boss = this.add
-      .image(ARENA / 2, 166, 'boss')
+      .image(this.arenaSize / 2, 166, 'boss')
       .setDisplaySize(292, 292)
       .setAlpha(0.2)
       .setTint(0xc9b6ff);
@@ -2302,7 +2320,7 @@ export class M0Scene extends Phaser.Scene {
     });
 
     const seal = this.add.graphics();
-    seal.setPosition(ARENA / 2, 166);
+    seal.setPosition(this.arenaSize / 2, 166);
     seal.lineStyle(1, COLORS.purple, 0.1);
     for (let i = 0; i < 28; i += 2) {
       const a0 = (i / 28) * Math.PI * 2;
@@ -2324,21 +2342,21 @@ export class M0Scene extends Phaser.Scene {
     const theme = getWorldTheme(this.chapterIndex);
     const frame = this.add.graphics();
     frame.lineStyle(22, theme.framePrimary, 0.022);
-    frame.strokeRoundedRect(2, 2, ARENA - 4, ARENA - 4, 20);
+    frame.strokeRoundedRect(2, 2, this.arenaSize - 4, this.arenaSize - 4, 20);
     frame.lineStyle(7, theme.frameSecondary, 0.045);
-    frame.strokeRoundedRect(8, 8, ARENA - 16, ARENA - 16, 17);
+    frame.strokeRoundedRect(8, 8, this.arenaSize - 16, this.arenaSize - 16, 17);
     frame.lineStyle(1.4, theme.frameAccent, 0.32);
-    frame.strokeRoundedRect(6, 6, ARENA - 12, ARENA - 12, 17);
+    frame.strokeRoundedRect(6, 6, this.arenaSize - 12, this.arenaSize - 12, 17);
     frame.lineStyle(1, theme.framePrimary, 0.085);
-    frame.strokeRoundedRect(22, 22, ARENA - 44, ARENA - 44, 10);
+    frame.strokeRoundedRect(22, 22, this.arenaSize - 44, this.arenaSize - 44, 10);
 
     const bracket = 34;
     const pad = 24;
     for (const [x, y, sx, sy] of [
       [pad, pad, 1, 1],
-      [ARENA - pad, pad, -1, 1],
-      [pad, ARENA - pad, 1, -1],
-      [ARENA - pad, ARENA - pad, -1, -1]
+      [this.arenaSize - pad, pad, -1, 1],
+      [pad, this.arenaSize - pad, 1, -1],
+      [this.arenaSize - pad, this.arenaSize - pad, -1, -1]
     ]) {
       frame.lineStyle(2, theme.framePrimary, 0.46);
       frame.beginPath();
@@ -2354,18 +2372,18 @@ export class M0Scene extends Phaser.Scene {
       frame.strokePath();
     }
 
-    for (let i = 100; i < ARENA; i += 100) {
+    for (let i = 100; i < this.arenaSize; i += 100) {
       if (i === 400) continue;
       frame.lineStyle(1, theme.frameAccent, 0.09);
       frame.beginPath();
       frame.moveTo(i, 6);
       frame.lineTo(i, 14);
-      frame.moveTo(i, ARENA - 6);
-      frame.lineTo(i, ARENA - 14);
+      frame.moveTo(i, this.arenaSize - 6);
+      frame.lineTo(i, this.arenaSize - 14);
       frame.moveTo(6, i);
       frame.lineTo(14, i);
-      frame.moveTo(ARENA - 6, i);
-      frame.lineTo(ARENA - 14, i);
+      frame.moveTo(this.arenaSize - 6, i);
+      frame.lineTo(this.arenaSize - 14, i);
       frame.strokePath();
     }
 
@@ -2422,8 +2440,8 @@ export class M0Scene extends Phaser.Scene {
 
   private addAmbientDust(): void {
     const dust = this.add.particles(0, 0, 'spark', {
-      x: { min: 55, max: ARENA - 55 },
-      y: { min: 55, max: ARENA - 55 },
+      x: { min: 55, max: this.arenaSize - 55 },
+      y: { min: 55, max: this.arenaSize - 55 },
       speedX: { min: -6, max: 6 },
       speedY: { min: -13, max: -2 },
       lifespan: { min: 5200, max: 9800 },
@@ -2580,10 +2598,96 @@ export class M0Scene extends Phaser.Scene {
     });
   }
 
+  private applyArenaSize(size: number): void {
+    const next = Math.max(ARENA, Math.round(size));
+    if (this.arenaSize === next) {
+      this.layout();
+      return;
+    }
+    this.arenaSize = next;
+    this.floorImage
+      ?.setPosition(next / 2, next / 2)
+      .setDisplaySize(next, next);
+    this.floorShade
+      ?.setPosition(next / 2, next / 2)
+      .setSize(next, next);
+    this.themeWash
+      ?.setPosition(next / 2, next / 2)
+      .setSize(next, next);
+    this.arenaFrame?.destroy();
+    this.arenaFrame = undefined;
+    this.addArenaFrame();
+    this.wasteTerrain?.destroy();
+    this.wasteTerrain = undefined;
+    if (next > ARENA) this.drawWasteTerrain();
+    this.layout();
+  }
+
+  private drawWasteTerrain(): void {
+    const terrain = this.add.graphics();
+    const size = this.arenaSize;
+    terrain.lineStyle(2, 0xffb066, 0.08);
+    for (let x = 200; x < size; x += 200) {
+      terrain.beginPath();
+      terrain.moveTo(x, 40);
+      terrain.lineTo(x, size - 40);
+      terrain.strokePath();
+    }
+    for (let y = 200; y < size; y += 200) {
+      terrain.beginPath();
+      terrain.moveTo(40, y);
+      terrain.lineTo(size - 40, y);
+      terrain.strokePath();
+    }
+    terrain.lineStyle(3, 0x8a5a2f, 0.22);
+    const cracks: [number, number, number, number][] = [
+      [120, 210, 520, 380],
+      [1880, 260, 2260, 620],
+      [340, 1460, 760, 2240],
+      [1620, 1320, 2200, 1880],
+      [900, 980, 1360, 1260]
+    ];
+    for (const [x1, y1, x2, y2] of cracks) {
+      terrain.beginPath();
+      terrain.moveTo(x1, y1);
+      terrain.lineTo((x1 + x2) / 2 + 80, (y1 + y2) / 2 - 60);
+      terrain.lineTo(x2, y2);
+      terrain.strokePath();
+    }
+    for (const [x, y, radius] of [
+      [600, 640, 62],
+      [1800, 640, 62],
+      [1200, 1480, 84],
+      [1200, 1200, 120]
+    ] as const) {
+      terrain.lineStyle(3, 0xffb066, 0.18);
+      terrain.strokeCircle(x, y, radius + 18);
+      terrain.lineStyle(1, 0xffe0b0, 0.14);
+      terrain.strokeCircle(x, y, radius + 42);
+    }
+    this.world.addAt(terrain, 3);
+    this.wasteTerrain = terrain;
+  }
+
   private layout(): void {
     if (!this.world) return;
     const width = this.scale.width;
     const height = this.scale.height;
+    const camera = this.cameras.main;
+    if (this.arenaSize > ARENA) {
+      this.world.setScale(1);
+      this.world.setPosition(0, 0);
+      camera.setBounds(0, 0, this.arenaSize, this.arenaSize);
+      const zoom = width < 700 ? 0.72 : Math.min(1, Math.max(0.82, height / 900));
+      camera.setZoom(zoom);
+      if (this.playerRoot) {
+        camera.startFollow(this.playerRoot, true, 0.12, 0.12);
+      }
+      return;
+    }
+    camera.stopFollow();
+    camera.setZoom(1);
+    camera.setBounds(0, 0, width, height);
     const landscapePhone = width > height && height < 600;
     let size: number;
     let x: number;
@@ -2606,7 +2710,7 @@ export class M0Scene extends Phaser.Scene {
       }
     }
 
-    this.world.setScale(size / ARENA);
+    this.world.setScale(size / this.arenaSize);
     this.world.setPosition(x, y);
   }
 
@@ -2759,8 +2863,8 @@ export class M0Scene extends Phaser.Scene {
       this.playerRoot.x += this.conveyorVec.x * dt;
       this.playerRoot.y += this.conveyorVec.y * dt;
     }
-    this.playerRoot.x = Phaser.Math.Clamp(this.playerRoot.x, 54, ARENA - 54);
-    this.playerRoot.y = Phaser.Math.Clamp(this.playerRoot.y, 74, ARENA - 54);
+    this.playerRoot.x = Phaser.Math.Clamp(this.playerRoot.x, 54, this.arenaSize - 54);
+    this.playerRoot.y = Phaser.Math.Clamp(this.playerRoot.y, 74, this.arenaSize - 54);
     this.resolveCover(this.playerRoot, PLAYER_RADIUS);
 
     if (this.playerSprite) {
@@ -2946,7 +3050,7 @@ export class M0Scene extends Phaser.Scene {
         angle: baseAngle,
         damage: BASE_DAMAGE * power,
         speed: profile?.kind === 'chain' ? profile.speed : BOLT_SPEED,
-        maxDistance: ARENA * 1.6,
+        maxDistance: this.arenaSize * 1.6,
         budget,
         impact,
         extraImpact,
@@ -3546,7 +3650,22 @@ export class M0Scene extends Phaser.Scene {
       );
       return;
     }
-    const dealt = enemy.shieldTime > 0 ? amount * 0.6 : amount;
+    let dealt = enemy.shieldTime > 0 ? amount * 0.6 : amount;
+    if (!ENEMY_SPECS[enemy.kind].boss) {
+      const guarded = this.enemies.some(
+        (item) =>
+          !item.dead &&
+          item !== enemy &&
+          item.kind === 'bulwark' &&
+          Phaser.Math.Distance.Between(
+            item.root.x,
+            item.root.y,
+            enemy.root.x,
+            enemy.root.y
+          ) < 240
+      );
+      if (guarded) dealt *= 0.7;
+    }
     if (
       enemy === this.bossRef &&
       enemy.kind === 'source' &&
@@ -3648,6 +3767,17 @@ export class M0Scene extends Phaser.Scene {
       this.spawnStatusSpark(this.playerRoot.x, this.playerRoot.y - 18, COLORS.orange);
     }
 
+    if (enemy.kind === 'splitter') {
+      for (let index = 0; index < 2; index += 1) {
+        const angle = combatRandom() * Math.PI * 2;
+        this.spawnEnemy(
+          'spawnling',
+          Phaser.Math.Clamp(x + Math.cos(angle) * 34, 70, this.arenaSize - 70),
+          Phaser.Math.Clamp(y + Math.sin(angle) * 34, 90, this.arenaSize - 70),
+          false
+        );
+      }
+    }
     if (enemy.kind === 'bomber') {
       this.detonate(enemy);
     } else if (enemy.kind === 'slime') {
@@ -4149,20 +4279,45 @@ export class M0Scene extends Phaser.Scene {
     const margin = 92;
     let x = margin;
     let y = margin;
+    if (this.arenaSize > ARENA) {
+      const side = sideOverride ?? combatInt(0, 3);
+      const angleBase =
+        side === 0 ? -Math.PI / 2 : side === 1 ? 0 : side === 2 ? Math.PI / 2 : Math.PI;
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const angle = angleBase + combatInt(-60, 60) * (Math.PI / 180);
+        const radius = combatInt(380, 620);
+        x = Phaser.Math.Clamp(
+          this.playerRoot.x + Math.cos(angle) * radius,
+          margin,
+          this.arenaSize - margin
+        );
+        y = Phaser.Math.Clamp(
+          this.playerRoot.y + Math.sin(angle) * radius,
+          margin,
+          this.arenaSize - margin
+        );
+        if (
+          Phaser.Math.Distance.Between(x, y, this.playerRoot.x, this.playerRoot.y) > 260
+        ) {
+          return { x, y };
+        }
+      }
+      return { x, y };
+    }
     for (let attempt = 0; attempt < 14; attempt += 1) {
       const side = sideOverride ?? combatInt(0, 3);
       if (side === 0) {
-        x = combatInt(margin, ARENA - margin);
+        x = combatInt(margin, this.arenaSize - margin);
         y = margin;
       } else if (side === 1) {
-        x = ARENA - margin;
-        y = combatInt(margin, ARENA - margin);
+        x = this.arenaSize - margin;
+        y = combatInt(margin, this.arenaSize - margin);
       } else if (side === 2) {
-        x = combatInt(margin, ARENA - margin);
-        y = ARENA - margin;
+        x = combatInt(margin, this.arenaSize - margin);
+        y = this.arenaSize - margin;
       } else {
         x = margin;
-        y = combatInt(margin, ARENA - margin);
+        y = combatInt(margin, this.arenaSize - margin);
       }
       const distToPlayer = Phaser.Math.Distance.Between(x, y, this.playerRoot.x, this.playerRoot.y);
       if (distToPlayer > 220) return { x, y };
@@ -4180,12 +4335,12 @@ export class M0Scene extends Phaser.Scene {
         enemy.root.x = Phaser.Math.Clamp(
           enemy.root.x + enemy.knockX * dt,
           70,
-          ARENA - 70
+          this.arenaSize - 70
         );
         enemy.root.y = Phaser.Math.Clamp(
           enemy.root.y + enemy.knockY * dt,
           90,
-          ARENA - 70
+          this.arenaSize - 70
         );
         enemy.knockX *= 0.82;
         enemy.knockY *= 0.82;
@@ -4241,9 +4396,33 @@ export class M0Scene extends Phaser.Scene {
         case 'warden':
           this.updateWarden(enemy, dt);
           break;
+        case 'brood':
+          this.updateBrood(enemy, dt);
+          break;
+        case 'spawnling':
+          this.updateSpawnling(enemy, dt);
+          break;
+        case 'splitter':
+          this.updateSplitter(enemy, dt);
+          break;
+        case 'bulwark':
+          this.updateBulwark(enemy, dt);
+          break;
+        case 'burrower':
+          this.updateBurrower(enemy, dt);
+          break;
+        case 'artillery':
+          this.updateArtillery(enemy, dt);
+          break;
+        case 'mirror':
+          this.updateMirror(enemy, dt);
+          break;
+        case 'hexer':
+          this.updateHexer(enemy, dt);
+          break;
       }
-      enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, ARENA - 58);
-      enemy.root.y = Phaser.Math.Clamp(enemy.root.y, 78, ARENA - 58);
+      enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, this.arenaSize - 58);
+      enemy.root.y = Phaser.Math.Clamp(enemy.root.y, 78, this.arenaSize - 58);
       this.resolveCover(enemy.root, enemy.radius * 0.82);
     }
 
@@ -4303,7 +4482,7 @@ export class M0Scene extends Phaser.Scene {
       enemy.stateTimer -= dt;
       enemy.root.x += enemy.chargeDir.x * 520 * slowScale * dt;
       enemy.root.y += enemy.chargeDir.y * 520 * slowScale * dt;
-      if (enemy.root.x <= 64 || enemy.root.x >= ARENA - 64 || enemy.root.y <= 84 || enemy.root.y >= ARENA - 64) {
+      if (enemy.root.x <= 64 || enemy.root.x >= this.arenaSize - 64 || enemy.root.y <= 84 || enemy.root.y >= this.arenaSize - 64) {
         enemy.state = 'recover';
         enemy.stateTimer = 1.0;
       } else if (enemy.stateTimer <= 0) {
@@ -4446,9 +4625,9 @@ export class M0Scene extends Phaser.Scene {
       enemy.root.y += enemy.chargeDir.y * 560 * slowScale * dt;
       const atWall =
         enemy.root.x <= 64 ||
-        enemy.root.x >= ARENA - 64 ||
+        enemy.root.x >= this.arenaSize - 64 ||
         enemy.root.y <= 84 ||
-        enemy.root.y >= ARENA - 64;
+        enemy.root.y >= this.arenaSize - 64;
       if (!enemy.hasHitThisCharge && dist < enemy.radius + PLAYER_RADIUS + 10) {
         enemy.hasHitThisCharge = true;
         this.hurtPlayer(14, enemy.root.x, enemy.root.y, 'charge');
@@ -4792,12 +4971,12 @@ export class M0Scene extends Phaser.Scene {
         const nx = Phaser.Math.Clamp(
           this.playerRoot.x + Math.cos(angle) * radius,
           84,
-          ARENA - 84
+          this.arenaSize - 84
         );
         const ny = Phaser.Math.Clamp(
           this.playerRoot.y + Math.sin(angle) * radius,
           92,
-          ARENA - 84
+          this.arenaSize - 84
         );
         this.spawnTeleportFlash(enemy.root.x, enemy.root.y, COLORS.purple);
         enemy.root.setPosition(nx, ny);
@@ -4829,9 +5008,9 @@ export class M0Scene extends Phaser.Scene {
       enemy.root.y += enemy.chargeDir.y * 560 * slowScale * dt;
       if (
         enemy.root.x <= 64 ||
-        enemy.root.x >= ARENA - 64 ||
+        enemy.root.x >= this.arenaSize - 64 ||
         enemy.root.y <= 84 ||
-        enemy.root.y >= ARENA - 64
+        enemy.root.y >= this.arenaSize - 64
       ) {
         enemy.state = 'recover';
         enemy.stateTimer = 0.9;
@@ -4927,12 +5106,12 @@ export class M0Scene extends Phaser.Scene {
       const nx = Phaser.Math.Clamp(
         this.playerRoot.x + Math.cos(angle) * 240,
         92,
-        ARENA - 92
+        this.arenaSize - 92
       );
       const ny = Phaser.Math.Clamp(
         this.playerRoot.y + Math.sin(angle) * 240,
         100,
-        ARENA - 92
+        this.arenaSize - 92
       );
       enemy.root.setPosition(nx, ny);
       this.spawnTeleportFlash(nx, ny, COLORS.cyan);
@@ -5027,8 +5206,8 @@ export class M0Scene extends Phaser.Scene {
         18
       );
       this.spawnShockZone(
-        combatInt(130, ARENA - 130),
-        combatInt(140, ARENA - 130),
+        combatInt(130, this.arenaSize - 130),
+        combatInt(140, this.arenaSize - 130),
         64,
         1.15,
         COLORS.purple,
@@ -5052,6 +5231,182 @@ export class M0Scene extends Phaser.Scene {
       phase === 1 ? '源律 · 扇形弹幕' : phase === 2 ? '规则风暴 · 封印与召唤' : '终焉 · 虚空裂隙全覆盖'
     );
     this.refreshBossHud();
+  }
+
+
+  private updateSpawnling(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
+    enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
+    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.8;
+      this.hurtPlayer(4, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private updateSplitter(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
+    enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
+    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 1;
+      this.hurtPlayer(6, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private updateBulwark(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    if (dist > 140) {
+      enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
+      enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
+    }
+    enemy.castRing.setVisible(true).setScale(1 + Math.sin(this.time.now * 0.003) * 0.08);
+    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS + 8) {
+      enemy.contactCd = 1.1;
+      this.hurtPlayer(9, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private updateBrood(enemy: EnemyUnit, dt: number): void {
+    enemy.attackCd -= dt;
+    enemy.castRing.setVisible(true).setScale(1 + Math.sin(this.time.now * 0.004) * 0.1);
+    if (enemy.attackCd > 0) return;
+    enemy.attackCd = 3.2;
+    const alive = this.enemies.filter((item) => !item.dead && item.kind === 'spawnling').length;
+    if (alive >= 18) return;
+    for (let index = 0; index < 2; index += 1) {
+      const angle = combatRandom() * Math.PI * 2;
+      const x = Phaser.Math.Clamp(enemy.root.x + Math.cos(angle) * 46, 70, this.arenaSize - 70);
+      const y = Phaser.Math.Clamp(enemy.root.y + Math.sin(angle) * 46, 90, this.arenaSize - 70);
+      this.spawnEnemy('spawnling', x, y, false);
+    }
+    this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.orange);
+  }
+
+  private updateBurrower(enemy: EnemyUnit, dt: number): void {
+    const dx = this.playerRoot.x - enemy.root.x;
+    const dy = this.playerRoot.y - enemy.root.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    if (enemy.state === 'cast') {
+      enemy.stateTimer -= dt;
+      enemy.sprite.setAlpha(0.35);
+      if (enemy.stateTimer <= 0) {
+        enemy.state = 'approach';
+        enemy.sprite.setAlpha(1);
+        const angle = combatRandom() * Math.PI * 2;
+        enemy.root.x = Phaser.Math.Clamp(
+          this.playerRoot.x + Math.cos(angle) * 110,
+          70,
+          this.arenaSize - 70
+        );
+        enemy.root.y = Phaser.Math.Clamp(
+          this.playerRoot.y + Math.sin(angle) * 110,
+          90,
+          this.arenaSize - 70
+        );
+        this.spawnLeaderBurst(enemy.root.x, enemy.root.y);
+        enemy.attackCd = 4.2;
+      }
+      return;
+    }
+    if (dist > 4) {
+      enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
+      enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
+    }
+    if (enemy.attackCd <= 0) {
+      enemy.state = 'cast';
+      enemy.stateTimer = 0.7;
+      return;
+    }
+    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
+      enemy.contactCd = 0.9;
+      this.hurtPlayer(7, enemy.root.x, enemy.root.y, 'melee');
+    }
+  }
+
+  private updateArtillery(enemy: EnemyUnit, dt: number): void {
+    this.strafeAtRange(enemy, dt, 520, 380, 720);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    if (enemy.attackCd > 0) return;
+    enemy.attackCd = 3.4;
+    this.spawnShockZone(
+      this.playerRoot.x,
+      this.playerRoot.y,
+      74,
+      0.95,
+      COLORS.orange,
+      14
+    );
+    for (const offset of [-0.12, 0.12]) {
+      this.fireEnemyBolt(enemy, {
+        angle:
+          Math.atan2(this.playerRoot.y - enemy.root.y, this.playerRoot.x - enemy.root.x) +
+          offset,
+        speed: 150,
+        damage: 8,
+        tint: COLORS.orange,
+        scale: 1.35
+      });
+    }
+  }
+
+  private updateMirror(enemy: EnemyUnit, dt: number): void {
+    this.strafeAtRange(enemy, dt, 320, 220, 540);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    if (enemy.attackCd > 0) return;
+    enemy.attackCd = 2.6;
+    const angle = Math.atan2(
+      this.playerRoot.y - enemy.root.y,
+      this.playerRoot.x - enemy.root.x
+    );
+    for (let index = -1; index <= 1; index += 1) {
+      this.fireEnemyBolt(enemy, {
+        angle: angle + index * 0.2,
+        speed: 210,
+        damage: 6,
+        tint: COLORS.cyan,
+        scale: 0.9
+      });
+    }
+    if (combatRandom() < 0.35) {
+      const side = combatRandom() < 0.5 ? 1 : -1;
+      enemy.root.x = Phaser.Math.Clamp(
+        this.playerRoot.x + side * 260,
+        70,
+        this.arenaSize - 70
+      );
+      enemy.root.y = Phaser.Math.Clamp(
+        this.playerRoot.y + combatInt(-160, 160),
+        90,
+        this.arenaSize - 70
+      );
+    }
+  }
+
+  private updateHexer(enemy: EnemyUnit, dt: number): void {
+    this.strafeAtRange(enemy, dt, 300, 200, 500);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    if (enemy.attackCd > 0) return;
+    enemy.attackCd = 2.8;
+    this.fireEnemyBolt(enemy, {
+      speed: 190,
+      damage: 6,
+      tint: COLORS.purple,
+      slow: 0.25,
+      slowDuration: 2.2,
+      scale: 1.05
+    });
   }
 
   private updateBomber(enemy: EnemyUnit, dt: number): void {
@@ -5179,7 +5534,7 @@ export class M0Scene extends Phaser.Scene {
     const kinds: EnemyKind[] = this.bossPhase >= 3 ? ['bomber', 'wisp'] : ['bat', 'spore'];
     const spots: [number, number][] = [
       [140, 190],
-      [ARENA - 140, 190]
+      [this.arenaSize - 140, 190]
     ];
     kinds.forEach((kind, index) => {
       this.spawnEnemy(kind, spots[index][0], spots[index][1], false);
@@ -5264,7 +5619,7 @@ export class M0Scene extends Phaser.Scene {
     this.cameras.main.shake(420, 0.006);
     this.cameras.main.flash(220, 150, 110, 255);
     const enemy = this.bossRef;
-    const ringX = enemy?.root.x ?? ARENA / 2;
+    const ringX = enemy?.root.x ?? this.arenaSize / 2;
     const ringY = (enemy?.root.y ?? 235) - 10;
     const ring = this.add
       .circle(ringX, ringY, 60, 0x000000, 0)
@@ -5416,7 +5771,7 @@ export class M0Scene extends Phaser.Scene {
       bolt.life -= dt;
       bolt.root.x += bolt.vx * dt;
       bolt.root.y += bolt.vy * dt;
-      if (bolt.life <= 0 || bolt.root.x < -30 || bolt.root.x > ARENA + 30 || bolt.root.y < -30 || bolt.root.y > ARENA + 30) {
+      if (bolt.life <= 0 || bolt.root.x < -30 || bolt.root.x > this.arenaSize + 30 || bolt.root.y < -30 || bolt.root.y > this.arenaSize + 30) {
         bolt.dead = true;
         bolt.root.destroy(true);
         continue;
@@ -5665,8 +6020,8 @@ export class M0Scene extends Phaser.Scene {
       this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 70, 1.1, COLORS.purple, 17);
       for (let i = 0; i < 2; i += 1) {
         this.spawnShockZone(
-          combatInt(120, ARENA - 120),
-          combatInt(130, ARENA - 120),
+          combatInt(120, this.arenaSize - 120),
+          combatInt(130, this.arenaSize - 120),
           62,
           1.3,
           COLORS.purple,
@@ -5678,8 +6033,8 @@ export class M0Scene extends Phaser.Scene {
     this.roomHazardCd = 4.2 * getMutator(this.mutatorLevel).hazardInterval;
     this.spawnShockZone(this.playerRoot.x, this.playerRoot.y, 54, 0.95);
     for (let i = 0; i < 2; i += 1) {
-      const x = combatInt(110, ARENA - 110);
-      const y = combatInt(120, ARENA - 110);
+      const x = combatInt(110, this.arenaSize - 110);
+      const y = combatInt(120, this.arenaSize - 110);
       this.spawnShockZone(x, y, 48, 1.15);
     }
   }
@@ -5761,12 +6116,12 @@ export class M0Scene extends Phaser.Scene {
     this.playerRoot.x = Phaser.Math.Clamp(
       this.playerRoot.x + Math.cos(angle) * 24,
       54,
-      ARENA - 54
+      this.arenaSize - 54
     );
     this.playerRoot.y = Phaser.Math.Clamp(
       this.playerRoot.y + Math.sin(angle) * 24,
       74,
-      ARENA - 54
+      this.arenaSize - 54
     );
     if (this.hp <= 0) {
       this.endRun(false);
@@ -5833,7 +6188,9 @@ export class M0Scene extends Phaser.Scene {
       const fodder: EnemyKind[] =
         this.chapterIndex === 1
           ? ['beetle', 'slime', 'bomber']
-          : ['bat', 'spore', 'wisp'];
+          : this.chapterIndex >= 3
+            ? ['spawnling', 'bat', 'spore', 'slime']
+            : ['bat', 'spore', 'wisp'];
       return fodder[combatInt(0, fodder.length - 1)];
     }
     return pickSpawnKind(room, combatRandom);
@@ -5918,11 +6275,57 @@ export class M0Scene extends Phaser.Scene {
     showRuleToast('chain', '怪潮头目', '精英混入怪潮 · 不计入清场配额');
   }
 
+  private drawMinimap(): void {
+    const gfx = this.minimapGfx;
+    if (!gfx) return;
+    const large = this.arenaSize > ARENA;
+    gfx.setVisible(large);
+    if (!large) return;
+    const size = Math.min(170, this.scale.width * 0.2);
+    const x = this.scale.width - size - 18;
+    const y = 150;
+    const scale = size / this.arenaSize;
+    gfx.clear();
+    gfx.fillStyle(0x050a12, 0.82);
+    gfx.fillRoundedRect(x, y, size, size, 6);
+    gfx.lineStyle(1, 0xffb066, 0.5);
+    gfx.strokeRoundedRect(x, y, size, size, 6);
+    gfx.lineStyle(1, 0xffb066, 0.12);
+    for (let step = 1; step < 6; step += 1) {
+      const offset = (size / 6) * step;
+      gfx.lineBetween(x + offset, y + 2, x + offset, y + size - 2);
+      gfx.lineBetween(x + 2, y + offset, x + size - 2, y + offset);
+    }
+    for (const enemy of this.enemies) {
+      if (enemy.dead) continue;
+      gfx.fillStyle(
+        enemy === this.bossRef
+          ? 0xff6b86
+          : enemy.elite
+            ? 0xffd27a
+            : 0x65dcf0,
+        enemy === this.bossRef ? 1 : 0.78
+      );
+      gfx.fillCircle(
+        x + enemy.root.x * scale,
+        y + enemy.root.y * scale,
+        enemy === this.bossRef ? 3.4 : enemy.elite ? 2.4 : 1.4
+      );
+    }
+    gfx.fillStyle(0xffffff, 0.95);
+    gfx.fillCircle(
+      x + this.playerRoot.x * scale,
+      y + this.playerRoot.y * scale,
+      3.2
+    );
+  }
+
   private updateHud(dt: number): void {
     this.hudTick += dt;
     if (this.hudTick >= 0.1) {
       this.hudTick = 0;
       setRunClock(this.elapsed);
+      this.drawMinimap();
       if (this.surgeActive) {
         setSurgeStatus(this.surgeRemaining, this.enemies.length + this.pendingSpawns);
       } else if (this.waveDirector) {

@@ -302,8 +302,8 @@ function showResult(payload: RunEndPayload): void {
     ? `你选择在第 ${payload.chapterIndex + 1} / ${payload.chaptersTotal} 章结束时收工。构筑与结算已记录，下一局可以继续深入。`
     : payload.victory
       ? payload.startChapter === 0
-        ? '你走完了三条世界线，击穿全部精英，并在逆律深渊的尽头终结了规则之源。'
-        : `你从第 ${payload.startChapter + 1} 章起步，击穿精英，终结了深渊尽头的规则之源。`
+        ? '你走完了四条世界线，击穿全部精英，并在无界荒原的尽头终结了吞世者。'
+        : `你从第 ${payload.startChapter + 1} 章起步，击穿精英，终结了荒原尽头的吞世者。`
       : '生命归零。先看懂预警，再决定什么时候闪避。';
   resultTime.textContent = formatTime(Math.floor(payload.time));
   resultKills.textContent = String(payload.kills);

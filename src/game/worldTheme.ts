@@ -49,11 +49,23 @@ export const WORLD_THEMES: Record<ChapterId, WorldTheme> = {
     frameAccent: 0xe0d0ff,
     brazier: 0xb69bff,
     dust: [0xb69bff, 0x7a3cff, 0xffffff]
+  },
+  waste: {
+    id: 'waste',
+    name: '无界荒原',
+    floorTint: 0xffd2a8,
+    washColor: 0xff7a34,
+    washAlpha: 0.075,
+    framePrimary: 0xffb066,
+    frameSecondary: 0x8a5a2f,
+    frameAccent: 0xffe0b0,
+    brazier: 0xff7a34,
+    dust: [0xffb066, 0x8a5a2f, 0xfff0d0]
   }
 };
 
-export const WORLD_THEME_ORDER: readonly ChapterId[] = ['judgement', 'workshop', 'abyss'];
+export const WORLD_THEME_ORDER: readonly ChapterId[] = ['judgement', 'workshop', 'abyss', 'waste'];
 
 export function getWorldTheme(index: number): WorldTheme {
-  return WORLD_THEMES[WORLD_THEME_ORDER[Math.max(0, Math.min(2, index))]];
+  return WORLD_THEMES[WORLD_THEME_ORDER[Math.max(0, Math.min(3, index))]];
 }
