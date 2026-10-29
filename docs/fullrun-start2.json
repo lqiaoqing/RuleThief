@@ -9,7 +9,7 @@
     {
       "label": "ROOM 1 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
@@ -30,13 +30,13 @@
     {
       "label": "ROOM 2 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -52,13 +52,13 @@
     {
       "label": "ROOM 4 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -78,13 +78,13 @@
     {
       "label": "ROOM 5 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -104,13 +104,13 @@
     {
       "label": "ROOM 6 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -130,13 +130,13 @@
     {
       "label": "ROOM 8 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -156,13 +156,13 @@
     {
       "label": "ROOM 9 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -182,13 +182,13 @@
     {
       "label": "ROOM 10 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -208,13 +208,13 @@
     {
       "label": "ROOM 11 / 12 已清空",
       "relics": [
-        "thunder-emblem",
+        "frost-crown",
         "prism"
       ],
       "ascensions": [],
       "lateUpgrades": [
         "pierce-momentum",
-        "ember-spread"
+        "rift-echo"
       ],
       "build": {
         "trajectory": {
@@ -238,15 +238,15 @@
   "expectedSteps": 12,
   "roomsCleared": 10,
   "picks": 9,
-  "seconds": 19,
+  "seconds": 18,
   "relics": [
-    "thunder-emblem",
+    "frost-crown",
     "prism"
   ],
   "ascensions": [],
   "lateUpgrades": [
     "pierce-momentum",
-    "ember-spread"
+    "rift-echo"
   ],
   "errors": []
 }
