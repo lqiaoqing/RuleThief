@@ -1381,6 +1381,21 @@ try {
     JSON.stringify({ streak: streakState.killStreak, hud: streakHud })
   );
 
+  await hordePage.evaluate(() => {
+    for (let index = 0; index < 7; index += 1) window.__RT_KILL_ONE__?.();
+  });
+  await poll(
+    hordePage,
+    () => Number(window.__RT_SNAPSHOT__?.().overloadSpawned ?? 0) >= 1,
+    3000
+  );
+  const overload = await snapshot(hordePage);
+  check(
+    'ten kills overload the room with a bonus pack',
+    Number(overload.overloadSpawned) >= 1 && Number(overload.alive) >= 3,
+    JSON.stringify({ overload: overload.overloadSpawned, alive: overload.alive })
+  );
+
   await hordePage.evaluate(() => window.__RT_STEP__?.(5));
   await hordePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1390,8 +1405,9 @@ try {
   await poll(
     hordePage,
     () => {
+      window.__RT_HEAL__?.(100);
       const snap = window.__RT_SNAPSHOT__?.() ?? {};
-      return Number(snap.eliteAlive) >= 1 && Number(snap.alive) >= 20;
+      return Number(snap.eliteAlive) >= 1 && Number(snap.enemies) >= 27;
     },
     7000
   );
@@ -1399,14 +1415,31 @@ try {
   check(
     'late first-world rooms add a horde captain',
     Number(lateHorde.roomQuota) >= 28 &&
-      Number(lateHorde.alive) >= 20 &&
+      Number(lateHorde.enemies) >= 20 &&
       Number(lateHorde.eliteAlive) >= 1,
     JSON.stringify({
       room: lateHorde.roomId,
       quota: lateHorde.roomQuota,
+      enemies: lateHorde.enemies,
       alive: lateHorde.alive,
       elites: lateHorde.eliteAlive
     })
+  );
+
+  await hordePage.evaluate(() => {
+    window.__RT_HEAL__?.(100);
+    for (let index = 0; index < 25; index += 1) window.__RT_KILL_ONE__?.();
+  });
+  await poll(
+    hordePage,
+    () => Number(window.__RT_SNAPSHOT__?.().hordeNovas ?? 0) >= 1,
+    3000
+  );
+  const novaState = await snapshot(hordePage);
+  check(
+    'twenty-five kills release a clearing nova',
+    Number(novaState.hordeNovas) >= 1,
+    JSON.stringify({ novas: novaState.hordeNovas, streak: novaState.killStreak })
   );
   await hordePage.close();
 

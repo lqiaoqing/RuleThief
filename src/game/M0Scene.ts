@@ -349,6 +349,8 @@ export class M0Scene extends Phaser.Scene {
   private waveDirector: WaveDirector | null = null;
   private hordeEnabled = true;
   private waveCaptainSpawned = false;
+  private overloadSpawned = 0;
+  private hordeNovas = 0;
   private portalToken = 0;
   private killStreak = 0;
   private killStreakBest = 0;
@@ -1228,6 +1230,8 @@ export class M0Scene extends Phaser.Scene {
     this.pendingSpawns = 0;
     this.waveDirector = null;
     this.waveCaptainSpawned = false;
+    this.overloadSpawned = 0;
+    this.hordeNovas = 0;
     this.killStreak = 0;
     this.killStreakTimer = 0;
     this.killBurst = 0;
@@ -1713,6 +1717,7 @@ export class M0Scene extends Phaser.Scene {
 
   public debugKillAll(): void {
     this.waveDirector?.complete();
+    this.overloadSpawned = 2;
     for (const enemy of [...this.enemies]) {
       this.killEnemy(enemy);
     }
@@ -1893,6 +1898,8 @@ export class M0Scene extends Phaser.Scene {
       killStreak: this.killStreak,
       killStreakBest: this.killStreakBest,
       hitStopMs: this.hitStopMs,
+      overloadSpawned: this.overloadSpawned,
+      hordeNovas: this.hordeNovas,
       roomElite: Boolean(this.getRoom().elite),
       roomBoss: Boolean(this.getRoom().boss),
       rewardOpen: this.rewardOpen,
@@ -2583,6 +2590,7 @@ export class M0Scene extends Phaser.Scene {
         this.fireAttack(target);
         this.attackCd =
           ATTACK_INTERVAL *
+          (this.hordeEnabled ? 0.85 : 1) *
           getAttackIntervalMultiplier(this.mutation) *
           this.hordeFrenzyMultiplier();
       } else {
@@ -2624,7 +2632,8 @@ export class M0Scene extends Phaser.Scene {
     const overcharged = consumeOverload(this.mutation);
     const power =
       getDamageMultiplier(this.mutation, this.hp, this.maxHp, overcharged) *
-      this.relicDamageMultiplier();
+      this.relicDamageMultiplier() *
+      this.hordeDamageMultiplier();
     if (this.thunderStacks >= 3) this.thunderStacks = 0;
     const impact = sealedImpact ? null : this.build.impact;
     const third = this.build.secondary ?? null;
@@ -3396,18 +3405,70 @@ export class M0Scene extends Phaser.Scene {
       this.cameras.main.shake(80, 0.0028);
       this.spawnHordeBurst();
     }
-    if (
-      this.hordeEnabled &&
-      (this.killStreak === 10 || this.killStreak === 25 || this.killStreak === 50)
-    ) {
-      showRuleToast('blast', `连杀 ×${this.killStreak}`, '清场节奏已经起来');
-      this.cameras.main.shake(140, 0.003);
+    if (this.hordeEnabled && !this.getRoom().boss && this.killStreak === 10) {
+      this.spawnOverloadPack(4);
+      showRuleToast('blast', 'OVERLOAD ×10', '额外怪潮压入 · 继续清场');
+      this.cameras.main.shake(150, 0.0034);
+      this.spawnHordeBurst();
+    } else if (this.hordeEnabled && !this.getRoom().boss && this.killStreak === 25) {
+      this.spawnOverloadPack(6);
+      this.triggerHordeNova(280, 42);
+      showRuleToast('blast', 'MASSACRE ×25', '规则爆发 · 清空周围怪潮');
+      this.cameras.main.shake(180, 0.004);
+    } else if (this.hordeEnabled && this.killStreak === 50) {
+      this.triggerHordeNova(360, 64);
+      showRuleToast('blast', 'MASSACRE ×50', '规则爆发 · 清场节奏拉满');
+      this.cameras.main.shake(200, 0.0045);
+    }
+  }
+
+  private spawnOverloadPack(count: number): void {
+    const room = this.getRoom();
+    if (room.boss || room.mix.length === 0 || this.overloadSpawned >= 2) return;
+    this.overloadSpawned += 1;
+    for (let index = 0; index < count; index += 1) {
+      const kind = pickSpawnKind(room, combatRandom);
+      const pos = this.chooseSpawnPosition();
+      this.spawnPortal(kind, pos.x, pos.y, true);
     }
   }
 
   private hordeFrenzyMultiplier(): number {
     if (!this.hordeEnabled) return 1;
     return Math.max(0.72, 1 - Math.min(0.28, this.killStreak * 0.012));
+  }
+
+  private hordeDamageMultiplier(): number {
+    if (!this.hordeEnabled) return 1;
+    return 1 + Math.min(0.3, this.killStreak * 0.012);
+  }
+
+  private triggerHordeNova(radius: number, damage: number): void {
+    this.hordeNovas += 1;
+    const x = this.playerRoot.x;
+    const y = this.playerRoot.y;
+    const ring = this.add
+      .circle(x, y, 34, 0x000000, 0)
+      .setStrokeStyle(4, COLORS.orange, 0.9)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.addFx(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: radius / 34,
+      alpha: 0,
+      duration: 420,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy()
+    });
+    this.cameras.main.flash(120, 255, 170, 90);
+    for (const enemy of [...this.enemies]) {
+      if (enemy.dead || ENEMY_SPECS[enemy.kind].boss) continue;
+      if (
+        Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y) <= radius
+      ) {
+        this.applyDamage(enemy, damage, 'blast');
+      }
+    }
   }
 
   private spawnHordeBurst(): void {
@@ -3590,7 +3651,7 @@ export class M0Scene extends Phaser.Scene {
     const mutator = getMutator(this.mutatorLevel);
     const chapterHpScale = this.chapterIndex >= 1 ? 1.15 : 1;
     const thirdHpScale = this.build.secondary ? 1.05 : 1;
-    const hordeHpScale = this.hordeEnabled && !elite && !spec.boss ? 0.45 : 1;
+    const hordeHpScale = this.hordeEnabled && !elite && !spec.boss ? 0.38 : 1;
     const baseHp =
       spec.hp *
       (spec.boss ? mutator.bossHp : mutator.enemyHp) *

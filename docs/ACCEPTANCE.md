@@ -9,15 +9,15 @@
 npm test                       168/168 通过（16 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.91MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  234/234 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
-npm run fullrun                37/37 三章结构性全流程通过（约 62 秒，非真实时长；升阶规则跨三章保留）
+npm run smoke                  236/236 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 4 项后期强化 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目/过载 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
+npm run fullrun                37/37 三章结构性全流程通过（约 56 秒，非真实时长；升阶规则跨三章保留）
 npm run fullrun-start1         24/24 从第二世界起点跑到终点
 npm run fullrun-start2         12/12 从第三世界起点跑到终点
 scripts/stress.mjs             40 敌人 / 45 发敌弹：avg 59.6 / min 59 fps
-scripts/lowend.mjs             CPU ×1/×4/×6：116.3 / 61.3 / 53.3 fps（120Hz 显示器，min 40，含怪潮）
-scripts/soak.mjs               3 分钟（怪潮）：监听器 +0、堆 14–36MB 随 GC 波动、143.6fps（高刷显示器）
+scripts/lowend.mjs             CPU ×1/×4/×6：119.3 / 76.0 / 61.3 fps（120Hz 显示器，min 53，含怪潮）
+scripts/soak.mjs               3 分钟（怪潮）：监听器 +0、堆 8–30MB 随 GC 波动、143.8fps（高刷显示器）
 scripts/combo-bench.mjs        9 组合 DPS：40–105（旧逐只模式木桩基准）
-scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房：5–9s，全部 13 杀、峰值 11–13
+scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房：6–13s、17 杀、峰值 11–13
 ```
 
 性能与浸泡结果在 `docs/STATUS.md` 与脚本输出中维护；本轮 M9 构建的复测结果见 C 节末尾。
@@ -81,8 +81,8 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M9.7 | 满槽后的有限重铸 | 自动 | 每局 2 次；精英房/章节奖励提供「规则重铸」；只替换最低等级未升阶槽位，类型匹配、目标 Lv.1，其余规则不变；`rules.test.ts` + `rooms.test.ts` + 冒烟 |
 | M9.7 | Core / Source 行为移出场景 | 自动 | `bosses/core.ts` / `source.ts` + `CoreHost` / `SourceHost`；10 项模块单测；`M0Scene.ts` 约 5,519 行，宿主与其余 AI 仍在场景类 |
 | M10.0 | 怪潮调度替代逐只刷新 | 自动 | `waves.ts` + 5 项单测；普通/精英房整组波次，第一世界后段 28 只/房；`?horde=0` 保留旧模式；冒烟「horde rooms spawn waves that overlap into a crowd」 |
-| M10.0 | 割草反馈与后期压力 | 自动 | 连杀 HUD、10/25 连杀 FRENZY/MASSACRE、同帧 3 杀 hitstop/震屏/冲击环、普攻击退、第一世界第 6 房起精英头目；冒烟连杀与头目断言 |
-| M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14；普通怪 HP ×0.45，精英/BOSS 不变；45 敌压测 111fps（120Hz）、CPU×6 53.3fps（min 40） |
+| M10.0 | 割草反馈与后期压力 | 自动 | 连杀 HUD、10/25 连杀 FRENZY/MASSACRE、同帧 3 杀 hitstop/震屏/冲击环、普攻击退、10/25 连杀压入额外怪潮、25/50 连杀规则爆发、第一世界第 6 房起精英头目；冒烟连杀/头目/过载/爆发断言 |
+| M10.0 | 怪潮可读性与容量 | 自动 | 第二/三世界同屏 ≤14；普通怪 HP ×0.38，精英/BOSS 不变；45 敌压测 120.1fps（120Hz）、CPU×6 61.3fps（min 53） |
 | M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 5,519 行，超过蓝图约束，普通敌人 AI/渲染待后续拆分 |
 
 ## D. 性能与长时运行
@@ -92,9 +92,9 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | 生产构建 | 自动 | `npm run build`；dist 1.91MB（JS 约 1.31MB / gzip 355KB + CSS 51KB） |
 | 静态资源 | 自动 | `npm run verify` 31/31 |
 | 40 敌人压力 | 自动近似 | `stress.mjs`：40 敌人 / 45 发敌弹，avg 59.6 / min 59 fps |
-| CPU 节流 | 自动近似 | `lowend.mjs`（怪潮）：×1 116.3 / ×4 61.3 / ×6 53.3 fps（120Hz 显示器，min 40） |
-| 长时浸泡 | 自动近似 | `soak.mjs`（怪潮，3 分钟）：监听器 +0、节点 1.8k–2.6k 波动、堆 14–36MB 随 GC 波动、143.6fps（高刷显示器）；旧节奏 8 分钟基线仍保留 |
-| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs`（旧逐只木桩）40–105 DPS；`combo-run.mjs`（怪潮）5–9s、13 杀、峰值 11–13 |
+| CPU 节流 | 自动近似 | `lowend.mjs`（怪潮）：×1 119.3 / ×4 76.0 / ×6 61.3 fps（120Hz 显示器，min 53） |
+| 长时浸泡 | 自动近似 | `soak.mjs`（怪潮，3 分钟）：监听器 +0、节点 1.8k–2.6k 波动、堆 8–30MB 随 GC 波动、143.8fps（高刷显示器）；旧节奏 8 分钟基线仍保留 |
+| 9 组合 DPS / 清房 | 自动 | `combo-bench.mjs`（旧逐只木桩）40–105 DPS；`combo-run.mjs`（怪潮）6–13s、17 杀、峰值 11–13 |
 
 ## E. 仅外部可完成的验收
 
