@@ -15,11 +15,11 @@
       },
       {
         "kind": "relic",
-        "name": "贪婪契约"
+        "name": "雷鸣徽章"
       },
       {
         "kind": "reforge",
-        "name": "贯穿 → 散射"
+        "name": "贯穿 → 冰霜"
       }
     ],
     [
@@ -29,11 +29,11 @@
       },
       {
         "kind": "relic",
-        "name": "贪婪契约"
+        "name": "疾行之羽"
       },
       {
         "kind": "reforge",
-        "name": "弹射 → 爆裂"
+        "name": "散射 → 贯穿"
       }
     ]
   ],
@@ -94,7 +94,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -103,7 +103,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -116,7 +116,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -125,7 +125,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -138,7 +138,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -147,7 +147,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -160,7 +160,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -169,7 +169,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -182,7 +182,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -193,7 +193,7 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -207,7 +207,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -218,7 +218,7 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -232,7 +232,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -243,7 +243,7 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -257,7 +257,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         }
       }
     },
@@ -268,7 +268,7 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -293,7 +293,7 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -318,7 +318,7 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
@@ -343,12 +343,37 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 12 已清空",
+      "relics": [],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -362,43 +387,18 @@
       }
     },
     {
-      "label": "ROOM 9 / 12 已清空",
-      "relics": [],
-      "ascensions": [
-        "burn"
-      ],
-      "lateUpgrades": [
-        "pierce-momentum"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "pierce",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3
-        }
-      }
-    },
-    {
       "label": "ROOM 10 / 12 已清空",
       "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -418,12 +418,12 @@
         "burn"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -444,12 +444,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -471,12 +471,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -498,12 +498,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -525,12 +525,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -552,12 +552,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 3
+          "level": 1
         },
         "impact": {
           "key": "burn",
@@ -579,12 +579,12 @@
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         },
         "impact": {
           "key": "burn",
@@ -602,19 +602,21 @@
       "label": "ROOM 8 / 12 已清空",
       "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
-          "key": "frost",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -627,19 +629,21 @@
       "label": "ROOM 9 / 12 已清空",
       "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
-          "key": "frost",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -652,19 +656,21 @@
       "label": "ROOM 10 / 12 已清空",
       "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
-          "key": "frost",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -677,19 +683,21 @@
       "label": "ROOM 11 / 12 已清空",
       "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "pierce-momentum"
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 3
+          "key": "spread",
+          "level": 1
         },
         "impact": {
-          "key": "frost",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -705,13 +713,14 @@
   "expectedSteps": 34,
   "roomsCleared": 28,
   "picks": 27,
-  "seconds": 54,
+  "seconds": 52,
   "relics": [],
   "ascensions": [
+    "burn",
     "chain"
   ],
   "lateUpgrades": [
-    "pierce-momentum"
+    "ember-spread"
   ],
   "errors": []
 }

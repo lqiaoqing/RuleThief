@@ -359,6 +359,8 @@ export class M0Scene extends Phaser.Scene {
   private overloadSpawned = 0;
   private hordeNovas = 0;
   private dashNovas = 0;
+  private totalOverloads = 0;
+  private totalNovas = 0;
   private portalToken = 0;
   private killStreak = 0;
   private killStreakBest = 0;
@@ -666,6 +668,8 @@ export class M0Scene extends Phaser.Scene {
     this.reforgesUsed = 0;
     this.roomClearCount = 0;
     this.resonanceGranted = false;
+    this.totalOverloads = 0;
+    this.totalNovas = 0;
     this.waveDirector = null;
     this.portalToken = 0;
     this.killStreak = 0;
@@ -3520,6 +3524,7 @@ export class M0Scene extends Phaser.Scene {
     const room = this.getRoom();
     if (room.boss || room.mix.length === 0 || this.overloadSpawned >= 2) return;
     this.overloadSpawned += 1;
+    this.totalOverloads += 1;
     for (let index = 0; index < count; index += 1) {
       const kind = this.pickWaveKind(room);
       const pos = this.chooseSpawnPosition();
@@ -3567,6 +3572,7 @@ export class M0Scene extends Phaser.Scene {
 
   private triggerHordeNova(radius: number, damage: number): void {
     this.hordeNovas += 1;
+    this.totalNovas += 1;
     const x = this.playerRoot.x;
     const y = this.playerRoot.y;
     const ring = this.add
@@ -5590,8 +5596,8 @@ export class M0Scene extends Phaser.Scene {
       time: this.elapsed,
       kills: this.kills,
       killStreakBest: this.killStreakBest,
-      overloads: this.overloadSpawned,
-      novas: this.hordeNovas,
+      overloads: this.totalOverloads,
+      novas: this.totalNovas,
       rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
       combo: getBuildCombo(this.build).name,
       levelSum: buildLevelSum(this.build),
