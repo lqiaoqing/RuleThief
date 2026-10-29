@@ -14,6 +14,7 @@ import {
   setRoomProgress,
   setRunClock,
   setSealedRule,
+  setCore,
   setSurgeStatus,
   setWaveStatus,
   showRuleToast,
@@ -62,6 +63,8 @@ import {
   type LateUpgradeDef,
   type LateUpgradeId
 } from './lateUpgrades';
+import { CORES, coreLevel, pickCoreOffer, type CoreRef } from './cores';
+import { pickAffix, type AffixId } from './affixes';
 import { getMutator, clampMutator } from './mutators';
 import { getWorldTheme } from './worldTheme';
 import { updateArbiter as updateArbiterBoss, type ArbiterHost } from './bosses/arbiter';
@@ -139,6 +142,8 @@ interface EnemyUnit {
   elite: boolean;
   chargesLeft: number;
   trailCd: number;
+  summonCd: number;
+  affix: AffixId | null;
   countsTowardQuota: boolean;
   knockX: number;
   knockY: number;
@@ -238,6 +243,7 @@ export interface RunEndPayload {
   relics: string[];
   ascensions: string[];
   lateUpgrades: string[];
+  core: string | null;
   rulesSeen: RuleKey[];
   rulesAscended: RuleKey[];
   build: PlayerBuild;
@@ -378,6 +384,8 @@ export class M0Scene extends Phaser.Scene {
   private sourceBerserkTriggered = false;
   private sourceBerserkTime = 0;
   private sourceBerserkCd = 0;
+  private coreTimer = 0;
+  private coreAura?: Phaser.GameObjects.Arc;
   private overloadSpawned = 0;
   private hordeNovas = 0;
   private dashNovas = 0;
@@ -711,6 +719,7 @@ export class M0Scene extends Phaser.Scene {
     this.sourceBerserkTriggered = false;
     this.sourceBerserkTime = 0;
     this.sourceBerserkCd = 0;
+    this.coreTimer = 0;
     this.portalToken = 0;
     this.killStreak = 0;
     this.killStreakBest = 0;
@@ -806,7 +815,7 @@ export class M0Scene extends Phaser.Scene {
   }
 
   public setStartChapter(index: number): void {
-    this.startChapter = Math.max(0, Math.min(2, Math.floor(index)));
+    this.startChapter = Math.max(0, Math.min(3, Math.floor(index)));
   }
 
   public setHordeEnabled(enabled: boolean): void {
@@ -1188,6 +1197,12 @@ export class M0Scene extends Phaser.Scene {
     setLate(this.lateUpgrades.map((lateId) => LATE_UPGRADES[lateId]));
   }
 
+  public debugGrantCore(id: import('./cores').CoreId): void {
+    const level = Math.min(3, coreLevel(this.build.core) + 1) as 1 | 2 | 3;
+    this.build.core = { key: id, level };
+    this.refreshCoreAura();
+  }
+
   public debugSetThird(key: RuleKey, level: RuleLevel = 3): void {
     this.build = { ...this.build, secondary: { key, level } };
     this.acquired.add(key);
@@ -1325,6 +1340,7 @@ export class M0Scene extends Phaser.Scene {
     this.sourceBerserkTriggered = false;
     this.sourceBerserkTime = 0;
     this.sourceBerserkCd = 0;
+    this.coreTimer = 0;
     this.overloadSpawned = 0;
     this.hordeNovas = 0;
     this.dashNovas = 0;
@@ -1358,16 +1374,22 @@ export class M0Scene extends Phaser.Scene {
     this.drawCovers();
     setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
+    this.refreshCoreAura();
     this.resumeScene();
     audio.play('spawn');
 
+    const anchorX = this.arenaSize > ARENA ? this.playerRoot.x : this.arenaSize * 0.5;
+    const anchorY =
+      this.arenaSize > ARENA
+        ? Math.max(200, this.playerRoot.y - 420)
+        : 210;
     if (room.leader) {
-      this.spawnEnemy(room.leader, this.arenaSize * 0.5, 210);
+      this.spawnEnemy(room.leader, anchorX, anchorY);
       this.roomSpawned += 1;
-      this.spawnLeaderBurst(this.arenaSize * 0.5, 210);
+      this.spawnLeaderBurst(anchorX, anchorY);
     }
     if (room.boss) {
-      this.spawnEnemy(room.boss, this.arenaSize * 0.5, 235);
+      this.spawnEnemy(room.boss, anchorX, anchorY + 25);
       this.roomSpawned += 1;
       this.bossRef = this.enemies[this.enemies.length - 1] ?? null;
       this.bossPhase = 1;
@@ -1377,7 +1399,7 @@ export class M0Scene extends Phaser.Scene {
       this.bossSealCd = 6;
       this.coreLaserCd = 3.5;
       this.coreLaserTime = 0;
-      this.spawnLeaderBurst(this.arenaSize * 0.5, 235);
+      this.spawnLeaderBurst(anchorX, anchorY + 25);
       this.cameras.main.shake(420, 0.005);
     }
     if (this.pendingBonusElite) {
@@ -1466,7 +1488,10 @@ export class M0Scene extends Phaser.Scene {
       bolt.root.destroy(true);
     }
     this.bolts = [];
-    this.hp = Math.min(this.maxHp, this.hp + 10);
+    this.hp = Math.min(
+      this.maxHp,
+      this.hp + 10 + 8 * lateLevel(this.lateUpgrades, 'regen')
+    );
     setHp(this.hp, this.maxHp);
     this.pauseScene();
     audio.play('rule');
@@ -1482,6 +1507,33 @@ export class M0Scene extends Phaser.Scene {
       reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed)
     });
     this.roomClearCount += 1;
+    if (
+      !this.getRoom().boss &&
+      this.roomClearCount % 4 === 0 &&
+      coreLevel(this.build.core) < 3
+    ) {
+      const offer = pickCoreOffer(this.build.core, random);
+      if (offer) {
+        const card: Reward = {
+          kind: 'core',
+          core: offer.core,
+          nextLevel: offer.nextLevel
+        };
+        const supportIndex = rewards.findIndex((reward) => reward.kind === 'support');
+        if (rewards.length < 4) {
+          rewards.push(card);
+        } else if (supportIndex >= 0) {
+          rewards[supportIndex] = card;
+        } else {
+          rewards[rewards.length - 1] = card;
+        }
+        showRuleToast(
+          'chain',
+          `律核 · ${offer.core.name} Lv.${offer.nextLevel}`,
+          offer.core.descriptions[offer.nextLevel - 1]
+        );
+      }
+    }
     if (
       !this.getRoom().boss &&
       this.roomClearCount >= 4 &&
@@ -1551,6 +1603,15 @@ export class M0Scene extends Phaser.Scene {
       });
     } else if (reward.kind === 'late' || reward.kind === 'resonance') {
       this.grantLateUpgrade(reward.upgrade, reward.kind);
+    } else if (reward.kind === 'core') {
+      this.build.core = { key: reward.core.id, level: reward.nextLevel };
+      this.refreshCoreAura();
+      audio.play('rule');
+      showRuleToast(
+        'chain',
+        `律核 · ${reward.core.name} Lv.${reward.nextLevel}`,
+        reward.core.descriptions[reward.nextLevel - 1]
+      );
     } else if (reward.kind === 'reforge') {
       this.applyReforge(reward.offer);
     } else {
@@ -2091,6 +2152,7 @@ export class M0Scene extends Phaser.Scene {
       riftEchoCasts: this.riftEchoCasts,
       thirdVolleys: this.thirdVolleys,
       lateUpgrades: [...this.lateUpgrades],
+      core: this.build.core ? { ...this.build.core } : null,
       reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed),
       pierceMomentum: this.pierceMomentum,
       slowFields: this.slowFields.length,
@@ -2744,10 +2806,17 @@ export class M0Scene extends Phaser.Scene {
     }
 
     this.dashRemaining = DASH_DURATION;
-    this.dashCooldown = this.dashCdMax;
+    this.dashCooldown = Math.max(
+      1.2,
+      this.dashCdMax - 0.15 * lateLevel(this.lateUpgrades, 'focus')
+    );
     if (this.relics.includes('feather')) this.featherTime = 2;
     triggerDashfire(this.mutation);
-    this.invuln = Math.max(this.invuln, DASH_IFRAME);
+    const core = this.build.core;
+    this.invuln = Math.max(
+      this.invuln,
+      DASH_IFRAME + (core?.key === 'aegis' ? 0.15 * core.level : 0)
+    );
     this.dashGhostClock = 0;
     setDash(0, this.dashCooldown);
     audio.play('dash');
@@ -2840,7 +2909,11 @@ export class M0Scene extends Phaser.Scene {
       }
     }
 
-    let speed = this.slowTime > 0 ? this.moveSpeed * (1 - this.slowFactor) : this.moveSpeed;
+    let speed =
+      (this.slowTime > 0
+        ? this.moveSpeed * (1 - this.slowFactor)
+        : this.moveSpeed) *
+      (1 + 0.06 * lateLevel(this.lateUpgrades, 'stride'));
     if (this.dashRemaining > 0) {
       this.dashRemaining -= dt;
       speed = this.moveSpeed * 3.25;
@@ -2897,7 +2970,8 @@ export class M0Scene extends Phaser.Scene {
           ATTACK_INTERVAL *
           (this.hordeEnabled ? 0.85 : 1) *
           getAttackIntervalMultiplier(this.mutation) *
-          this.hordeFrenzyMultiplier();
+          this.hordeFrenzyMultiplier() *
+          Math.max(0.72, 1 - 0.06 * lateLevel(this.lateUpgrades, 'haste'));
       } else {
         this.attackCd = 0;
       }
@@ -2935,10 +3009,15 @@ export class M0Scene extends Phaser.Scene {
       ? getTrajectoryProfile(trajectory.key, trajectory.level)
       : null;
     const overcharged = consumeOverload(this.mutation);
+    const core = this.build.core;
+    const execute =
+      core?.key === 'mark' && target.hp / target.maxHp < 0.3 ? 0.08 * core.level : 0;
     const power =
       getDamageMultiplier(this.mutation, this.hp, this.maxHp, overcharged) *
       this.relicDamageMultiplier() *
-      this.hordeDamageMultiplier();
+      this.hordeDamageMultiplier() *
+      this.lateDamageMultiplier(target) *
+      (1 + execute);
     if (this.thunderStacks >= 3) this.thunderStacks = 0;
     const impact = sealedImpact ? null : this.build.impact;
     const third = this.build.secondary ?? null;
@@ -3082,6 +3161,7 @@ export class M0Scene extends Phaser.Scene {
     chainMultiplier?: number;
     color: number;
   }): void {
+    const amplify = 1 + 0.08 * lateLevel(this.lateUpgrades, 'amplify');
     const startX = this.playerRoot.x + Math.cos(options.angle) * 24;
     const startY = this.playerRoot.y - 14 + Math.sin(options.angle) * 24;
     const wide = options.mode === 'pierce';
@@ -3501,12 +3581,151 @@ export class M0Scene extends Phaser.Scene {
     return summary;
   }
 
+  private lateDamageMultiplier(target?: EnemyUnit | null): number {
+    let multiplier =
+      1 +
+      0.1 * lateLevel(this.lateUpgrades, 'wrath') +
+      0.12 * lateLevel(this.lateUpgrades, 'greed-late');
+    if (this.killStreak >= 10) {
+      multiplier += 0.08 * lateLevel(this.lateUpgrades, 'frenzy');
+    }
+    if (
+      target &&
+      !ENEMY_SPECS[target.kind].boss &&
+      target.hp / target.maxHp < 0.3
+    ) {
+      multiplier += 0.25 * lateLevel(this.lateUpgrades, 'execute');
+    }
+    return multiplier;
+  }
+
   private relicDamageMultiplier(): number {
     const thunder = this.relics.includes('thunder-emblem') ? this.thunderStacks * 0.12 : 0;
     const prism = this.relics.includes('prism') && this.prismTime > 0 ? 0.2 : 0;
     const greed = this.relics.includes('greed') ? 0.2 : 0;
     const orphan = this.orphanLateLevels * 0.06;
-    return 1 + thunder + prism + greed + orphan;
+    const core = this.build.core;
+    const mark = core?.key === 'mark' ? 0.01 + core.level * 0.03 : 0;
+    const echo = core?.key === 'echo' ? 0.03 * core.level : 0;
+    return 1 + thunder + prism + greed + orphan + mark + echo;
+  }
+
+  private refreshCoreAura(): void {
+    this.coreAura?.destroy();
+    this.coreAura = undefined;
+    const core = this.build.core;
+    if (!core) {
+      setCore(null);
+      return;
+    }
+    const def = CORES[core.key];
+    setCore(def, core.level);
+    const ring = this.add
+      .circle(0, 0, 30, 0x000000, 0)
+      .setStrokeStyle(2, Number.parseInt(def.color.slice(1), 16), 0.6);
+    this.playerRoot.add(ring);
+    this.coreAura = ring;
+  }
+
+  private updateCores(dt: number): void {
+    const core = this.build.core;
+    if (!core) return;
+    this.coreTimer -= dt;
+    if (this.coreTimer > 0) return;
+    const level = core.level;
+    if (core.key === 'orbit') {
+      this.coreTimer = 0.8 - 0.05 * level;
+      const targets = this.enemies
+        .filter(
+          (enemy) =>
+            !enemy.dead &&
+            Phaser.Math.Distance.Between(
+              enemy.root.x,
+              enemy.root.y,
+              this.playerRoot.x,
+              this.playerRoot.y
+            ) < 120 + level * 12
+        )
+        .slice(0, 2 + level);
+      for (const target of targets) {
+        this.applyDamage(target, 3 + level * 3, 'blast');
+      }
+      if (targets.length) {
+        const ring = this.add
+          .circle(this.playerRoot.x, this.playerRoot.y - 8, 42, 0x000000, 0)
+          .setStrokeStyle(1.5, 0xb69bff, 0.55);
+        this.addFx(ring);
+        this.tweens.add({
+          targets: ring,
+          scale: 2.2,
+          alpha: 0,
+          duration: 260,
+          onComplete: () => ring.destroy()
+        });
+      }
+      return;
+    }
+    if (core.key === 'storm') {
+      this.coreTimer = 2.6 - 0.2 * level;
+      const targets = [...this.enemies]
+        .filter((enemy) => !enemy.dead)
+        .sort((a, b) => this.distanceToPlayer(a) - this.distanceToPlayer(b))
+        .slice(0, level);
+      for (const target of targets) {
+        this.drawLightning(
+          this.playerRoot.x,
+          this.playerRoot.y - 20,
+          target.root.x,
+          target.root.y - 10
+        );
+        this.applyDamage(target, 10 + level * 8, 'hit');
+      }
+      return;
+    }
+    if (core.key === 'nova') {
+      this.coreTimer = 3.4 - 0.2 * level;
+      const radius = 120 + level * 30;
+      for (const enemy of [...this.enemies]) {
+        if (enemy.dead) continue;
+        if (
+          Phaser.Math.Distance.Between(
+            enemy.root.x,
+            enemy.root.y,
+            this.playerRoot.x,
+            this.playerRoot.y
+          ) <= radius
+        ) {
+          this.applyDamage(enemy, 4 + level * 4, 'blast');
+          enemy.frostTime = Math.max(enemy.frostTime, 1.2);
+          enemy.frostSlow = Math.max(enemy.frostSlow, 0.35);
+        }
+      }
+      const ring = this.add
+        .circle(this.playerRoot.x, this.playerRoot.y - 8, radius, 0x000000, 0)
+        .setStrokeStyle(2, 0x8ceafa, 0.55);
+      this.addFx(ring);
+      this.tweens.add({
+        targets: ring,
+        scale: 1.15,
+        alpha: 0,
+        duration: 420,
+        onComplete: () => ring.destroy()
+      });
+      return;
+    }
+    if (core.key === 'trail') {
+      this.coreTimer = 0.9 - 0.1 * level;
+      if (this.lastMove.lengthSq() > 0.1) {
+        this.spawnFirePatch(
+          this.playerRoot.x,
+          this.playerRoot.y + 8,
+          36 + level * 8,
+          2.2
+        );
+      }
+      return;
+    }
+    this.coreTimer = 1;
   }
 
   private updateRelicTimers(dt: number): void {
@@ -3651,6 +3870,7 @@ export class M0Scene extends Phaser.Scene {
       return;
     }
     let dealt = enemy.shieldTime > 0 ? amount * 0.6 : amount;
+    if (enemy.affix === 'linked') dealt *= 0.8;
     if (!ENEMY_SPECS[enemy.kind].boss) {
       const guarded = this.enemies.some(
         (item) =>
@@ -3668,7 +3888,7 @@ export class M0Scene extends Phaser.Scene {
     }
     if (
       enemy === this.bossRef &&
-      enemy.kind === 'source' &&
+      (enemy.kind === 'source' || enemy.kind === 'worldEater') &&
       !this.sourceBerserkTriggered
     ) {
       const threshold = enemy.maxHp * 0.15;
@@ -3709,6 +3929,26 @@ export class M0Scene extends Phaser.Scene {
     } else {
       this.spawnDamageNumber(x, y, String(Math.round(dealt)), '#ff9a5c', 15);
     }
+    if (
+      enemy.hp > 0 &&
+      enemy.affix === 'teleporter' &&
+      enemy.summonCd <= 0 &&
+      combatRandom() < 0.3
+    ) {
+      enemy.summonCd = 3;
+      const angle = combatRandom() * Math.PI * 2;
+      enemy.root.x = Phaser.Math.Clamp(
+        this.playerRoot.x + Math.cos(angle) * 180,
+        70,
+        this.arenaSize - 70
+      );
+      enemy.root.y = Phaser.Math.Clamp(
+        this.playerRoot.y + Math.sin(angle) * 180,
+        90,
+        this.arenaSize - 70
+      );
+      this.spawnTeleportFlash(enemy.root.x, enemy.root.y, COLORS.purple);
+    }
     if (enemy.hp <= 0) {
       this.killEnemy(enemy);
     }
@@ -3734,6 +3974,18 @@ export class M0Scene extends Phaser.Scene {
     audio.play('death');
     this.kills += 1;
     if (enemy.countsTowardQuota) this.roomKills += 1;
+    const core = this.build.core;
+    if (core?.key === 'fold') {
+      this.dashCooldown = Math.max(0, this.dashCooldown - 0.2 * core.level);
+    } else if (core?.key === 'leech') {
+      this.hp = Math.min(this.maxHp, this.hp + core.level);
+      setHp(this.hp, this.maxHp);
+    }
+    const siphon = lateLevel(this.lateUpgrades, 'siphon');
+    if (siphon > 0) {
+      this.hp = Math.min(this.maxHp, this.hp + siphon);
+      setHp(this.hp, this.maxHp);
+    }
     this.registerKillStreak();
     this.refreshRoomHud();
 
@@ -3767,6 +4019,31 @@ export class M0Scene extends Phaser.Scene {
       this.spawnStatusSpark(this.playerRoot.x, this.playerRoot.y - 18, COLORS.orange);
     }
 
+    if (enemy.affix === 'volatile') {
+      this.spawnExplosion(x, y - 8, 84);
+      if (
+        Phaser.Math.Distance.Between(
+          x,
+          y,
+          this.playerRoot.x,
+          this.playerRoot.y
+        ) < 150
+      ) {
+        this.hurtPlayer(10, x, y, 'explosion');
+      }
+    } else if (enemy.affix === 'summoner') {
+      for (let index = 0; index < 2; index += 1) {
+        const angle = combatRandom() * Math.PI * 2;
+        this.spawnEnemy(
+          'spawnling',
+          Phaser.Math.Clamp(x + Math.cos(angle) * 34, 70, this.arenaSize - 70),
+          Phaser.Math.Clamp(y + Math.sin(angle) * 34, 90, this.arenaSize - 70),
+          false
+        );
+      }
+    } else if (enemy.affix === 'toxic') {
+      this.spawnFirePatch(x, y + 8, 50, 2.4);
+    }
     if (enemy.kind === 'splitter') {
       for (let index = 0; index < 2; index += 1) {
         const angle = combatRandom() * Math.PI * 2;
@@ -4060,11 +4337,13 @@ export class M0Scene extends Phaser.Scene {
           ) < 32
         ) {
           pickup.dead = true;
-          this.hp = Math.min(this.maxHp, this.hp + 14);
+          const healAmount =
+            14 + 3 * lateLevel(this.lateUpgrades, 'magnet');
+          this.hp = Math.min(this.maxHp, this.hp + healAmount);
           setHp(this.hp, this.maxHp);
           this.refreshRoomHud();
           audio.play('pickup');
-          showRuleToast('heal', '生命碎片', '恢复 14 点生命');
+          showRuleToast('heal', '生命碎片', `恢复 ${healAmount} 点生命`);
           pickup.root.destroy(true);
         }
       }
@@ -4129,6 +4408,7 @@ export class M0Scene extends Phaser.Scene {
     this.spawnedTotal += 1;
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
+    const affix = elite && !spec.boss ? pickAffix(combatRandom) : null;
     const mutator = getMutator(this.mutatorLevel);
     const chapterHpScale = this.chapterIndex >= 1 ? 1.15 : 1;
     const thirdHpScale = this.build.secondary ? 1.05 : 1;
@@ -4142,7 +4422,10 @@ export class M0Scene extends Phaser.Scene {
       chapterHpScale *
       thirdHpScale *
       hordeHpScale;
-    const baseSpeed = spec.speed * mutator.enemySpeed;
+    const baseSpeed =
+      spec.speed *
+      mutator.enemySpeed *
+      (affix?.id === 'frenzied' ? 1.25 : affix?.id === 'linked' ? 0.8 : 1);
     const hover =
       kind === 'bat' ||
       kind === 'wisp' ||
@@ -4262,10 +4545,12 @@ export class M0Scene extends Phaser.Scene {
       burnTick: 0,
       frostTime: 0,
       frostSlow: 0,
-      shieldTime: 0,
+      shieldTime: affix?.id === 'shielded' ? 3 : 0,
       elite,
       chargesLeft: 0,
       trailCd: 1.2,
+      summonCd: 0,
+      affix: affix?.id ?? null,
       countsTowardQuota,
       knockX: 0,
       knockY: 0,
@@ -4346,6 +4631,14 @@ export class M0Scene extends Phaser.Scene {
         enemy.knockY *= 0.82;
       }
       enemy.contactCd = Math.max(0, enemy.contactCd - dt);
+      if (enemy.affix === 'vampiric') {
+        enemy.summonCd -= dt;
+        if (enemy.summonCd <= 0) {
+          enemy.summonCd = 2;
+          enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.maxHp * 0.02);
+          enemy.hpFill.setScale(enemy.hp / enemy.maxHp, 1);
+        }
+      }
       if (enemy.elite && this.mutatorLevel > 0) {
         enemy.attackCd -= dt * 0.12 * this.mutatorLevel;
       }
@@ -4419,6 +4712,15 @@ export class M0Scene extends Phaser.Scene {
           break;
         case 'hexer':
           this.updateHexer(enemy, dt);
+          break;
+        case 'broodQueen':
+          this.updateBrood(enemy, dt);
+          break;
+        case 'bastion':
+          this.updateBulwark(enemy, dt);
+          break;
+        case 'worldEater':
+          this.updateWorldEater(enemy, dt);
           break;
       }
       enemy.root.x = Phaser.Math.Clamp(enemy.root.x, 58, this.arenaSize - 58);
@@ -5185,6 +5487,49 @@ export class M0Scene extends Phaser.Scene {
     this.refreshBossHud();
   }
 
+  private updateWorldEater(enemy: EnemyUnit, dt: number): void {
+    const ratio = enemy.hp / enemy.maxHp;
+    const phase = ratio > 0.7 ? 1 : ratio > 0.35 ? 2 : 3;
+    if (phase !== this.bossPhase) {
+      this.bossPhase = phase;
+      this.onSourcePhase(phase);
+    }
+    this.strafeAtRange(enemy, dt, 420, 300, 620);
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    if (enemy.attackCd <= 0) {
+      enemy.attackCd = phase >= 3 ? 1.45 : phase === 2 ? 1.85 : 2.2;
+      this.fireBossFan(enemy, 7 + phase * 2, 1.15);
+    }
+    enemy.trailCd -= dt;
+    if (enemy.trailCd <= 0 && phase >= 2) {
+      enemy.trailCd = phase >= 3 ? 5.5 : 8;
+      summonSourceAdds(this.sourceHost);
+    }
+    if (phase >= 3) {
+      enemy.summonCd = Math.max(0, enemy.summonCd - dt);
+      if (enemy.summonCd <= 0) {
+        enemy.summonCd = 2.8;
+        this.spawnShockZone(
+          this.playerRoot.x,
+          this.playerRoot.y,
+          76,
+          0.95,
+          COLORS.purple,
+          18
+        );
+        this.spawnShockZone(
+          combatInt(140, this.arenaSize - 140),
+          combatInt(160, this.arenaSize - 160),
+          64,
+          1.15,
+          COLORS.purple,
+          18
+        );
+      }
+    }
+    this.updateSourceBerserk(enemy, dt);
+  }
+
   private updateSourceBerserk(enemy: EnemyUnit, dt: number): void {
     if (!this.sourceBerserkTriggered) {
       if (enemy.hp / enemy.maxHp <= 0.15) this.triggerSourceBerserk();
@@ -5225,9 +5570,12 @@ export class M0Scene extends Phaser.Scene {
     this.cameras.main.shake(480, 0.007);
     this.cameras.main.flash(240, 190, 120, 255);
     audio.play('victory');
+    const bossName = this.bossRef
+      ? ENEMY_SPECS[this.bossRef.kind].name
+      : '规则之源';
     showRuleToast(
       'blast',
-      `规则之源 · 第 ${phase} 阶段`,
+      `${bossName} · 第 ${phase} 阶段`,
       phase === 1 ? '源律 · 扇形弹幕' : phase === 2 ? '规则风暴 · 封印与召唤' : '终焉 · 虚空裂隙全覆盖'
     );
     this.refreshBossHud();
@@ -5270,6 +5618,20 @@ export class M0Scene extends Phaser.Scene {
       enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
     }
     enemy.castRing.setVisible(true).setScale(1 + Math.sin(this.time.now * 0.003) * 0.08);
+    if (enemy.kind === 'bastion') {
+      enemy.trailCd -= dt;
+      if (enemy.trailCd <= 0) {
+        enemy.trailCd = 3.8;
+        this.spawnShockZone(
+          enemy.root.x,
+          enemy.root.y,
+          130,
+          1.0,
+          COLORS.cyan,
+          16
+        );
+      }
+    }
     if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS + 8) {
       enemy.contactCd = 1.1;
       this.hurtPlayer(9, enemy.root.x, enemy.root.y, 'melee');
@@ -5290,6 +5652,21 @@ export class M0Scene extends Phaser.Scene {
       this.spawnEnemy('spawnling', x, y, false);
     }
     this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.orange);
+    if (enemy.kind === 'broodQueen') {
+      const base = Math.atan2(
+        this.playerRoot.y - enemy.root.y,
+        this.playerRoot.x - enemy.root.x
+      );
+      for (const offset of [-0.28, 0, 0.28]) {
+        this.fireEnemyBolt(enemy, {
+          angle: base + offset,
+          speed: 165,
+          damage: 9,
+          tint: COLORS.orange,
+          scale: 1.3
+        });
+      }
+    }
   }
 
   private updateBurrower(enemy: EnemyUnit, dt: number): void {
@@ -6097,6 +6474,18 @@ export class M0Scene extends Phaser.Scene {
     if (this.relics.includes('greed')) {
       amount = Math.round(amount * 1.2);
     }
+    const ward = lateLevel(this.lateUpgrades, 'ward');
+    const greedLate = lateLevel(this.lateUpgrades, 'greed-late');
+    const core = this.build.core;
+    const aegis = core?.key === 'aegis' ? 0.04 * core.level : 0;
+    amount = Math.max(
+      1,
+      Math.round(
+        amount *
+          Math.max(0.5, 1 - ward * 0.05 - aegis) *
+          (1 + greedLate * 0.06)
+      )
+    );
     this.damageTaken[source] += amount;
     this.hp = Math.max(0, this.hp - amount);
     this.invuln = 1.0;
@@ -6377,6 +6766,9 @@ export class M0Scene extends Phaser.Scene {
         .map((ref) => (ref?.ascended ? getAscensionForRule(ref.key)?.name ?? null : null))
         .filter((name): name is string => Boolean(name)),
       lateUpgrades: this.lateUpgradeSummary(),
+      core: this.build.core
+        ? `${CORES[this.build.core.key].name} Lv.${this.build.core.level}`
+        : null,
       rulesSeen: [
         ...new Set(
           [
@@ -6696,6 +7088,7 @@ export class M0Scene extends Phaser.Scene {
     this.updateSpawns(dt);
     this.updateRoomHazard(dt);
     this.updateRoomModifier(dt);
+    this.updateCores(dt);
     this.updateHud(dt);
   }
 }

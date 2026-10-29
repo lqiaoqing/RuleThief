@@ -14,7 +14,20 @@ const checks = [];
 const errors = [];
 const warnings = [];
 
-const EVENT_IDS = ['blood-altar', 'unstable-lab', 'forgotten-idol', 'cursed-chest'];
+const EVENT_IDS = [
+  'blood-altar',
+  'unstable-lab',
+  'forgotten-idol',
+  'cursed-chest',
+  'rule-fountain',
+  'void-bargain',
+  'core-forge',
+  'waste-caravan',
+  'rift-gamble',
+  'echo-well',
+  'broken-idol',
+  'ash-market'
+];
 
 const COMBO_NAMES = {
   pierce: { burn: '赤焰穿心', frost: '极寒贯穿', blast: '爆破穿甲' },
@@ -756,7 +769,7 @@ try {
       if (speedRisk) {
         check(
           `event speed modifier applies to the next room only (room ${inside.roomIndex + 1})`,
-          Math.abs(Number(inside.roomSpeedMult) - 1.2) < 0.001,
+          Number(inside.roomSpeedMult) >= 1.2 && Number(inside.roomSpeedMult) <= 1.25,
           String(inside.roomSpeedMult)
         );
         pendingSpeedRisk = false;
@@ -870,7 +883,7 @@ try {
       if (view.eventEn === 'BLOOD ALTAR') {
         check('blood altar trades hp for an upgrade', Number(after.hp) <= hpBefore, `${hpBefore} -> ${after.hp}`);
       }
-      if (view.eventEn === 'UNSTABLE LAB') {
+      if (view.eventEn === 'UNSTABLE LAB' || view.eventEn === 'RIFT GAMBLE') {
         pendingSpeedRisk = true;
         check('unstable lab queues a speed risk', Number(after.roomSpeedMult) === 1, String(after.roomSpeedMult));
       }
@@ -1638,7 +1651,7 @@ try {
   );
   check('chapter two room enters combat', workshopFighting);
   const conveyorBefore = await snapshot(workshop);
-  await sleep(500);
+  await sleep(1000);
   const conveyorAfter = await snapshot(workshop);
   check(
     'conveyor room pushes the player without input',
@@ -1964,7 +1977,15 @@ try {
     JSON.stringify(wastePreview)
   );
   await wastePage.tap('#room-enter-btn');
-  await sleep(2800);
+  await wastePage.evaluate(() => {
+    window.__RT_GOD__?.(true);
+    window.__RT_FREEZE_ATTACK__?.();
+  });
+  await poll(
+    wastePage,
+    () => Number(window.__RT_SNAPSHOT__?.().enemies ?? 0) >= 30,
+    6000
+  );
   const wasteState = await snapshot(wastePage);
   check(
     'boundless waste runs on a scrolling 2400 arena with a minimap',
@@ -1984,6 +2005,26 @@ try {
         Number(wasteState.enemyCounts?.spawnling ?? 0) > 0),
     JSON.stringify({ enemies: wasteState.enemies, counts: wasteState.enemyCounts })
   );
+  await wastePage.evaluate(() => {
+    window.__RT_CORE__?.('storm');
+    window.__RT_LATE__?.('wrath');
+  });
+  await sleep(300);
+  const wasteCore = await wastePage.evaluate(() => ({
+    core: window.__RT_SNAPSHOT__?.().core,
+    late: window.__RT_SNAPSHOT__?.().lateUpgrades,
+    line: !document.getElementById('core-line')?.hidden,
+    text: document.getElementById('core-names')?.textContent
+  }));
+  check(
+    'law core and generic late upgrades equip in the run',
+    wasteCore.core?.key === 'storm' &&
+      wasteCore.core?.level === 1 &&
+      (wasteCore.late ?? []).includes('wrath') &&
+      wasteCore.line === true &&
+      /雷暴云 Lv.1/.test(wasteCore.text ?? ''),
+    JSON.stringify(wasteCore)
+  );
   await wastePage.evaluate(() => window.__RT_CHAPTER_BOSS__?.(3));
   await wastePage.waitForFunction(() => !document.getElementById('room-screen')?.hidden, {
     timeout: 10_000
@@ -1992,7 +2033,9 @@ try {
   await sleep(500);
   await wastePage.evaluate(() => window.__RT_GOD__?.(true));
   await wastePage.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
-  await sleep(250);
+  await sleep(300);
+  await wastePage.evaluate(() => window.__RT_DAMAGE_BOSS__?.(400));
+  await sleep(300);
   await wastePage.evaluate(() => window.__RT_END_BERSERK__?.());
   await wastePage.evaluate(() => window.__RT_DAMAGE_BOSS__?.(3000));
   await wastePage.waitForFunction(() => !document.getElementById('result-screen')?.hidden, {

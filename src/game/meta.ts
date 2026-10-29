@@ -155,11 +155,11 @@ function sanitize(value: unknown): MetaState {
     : [];
   const maxStartChapter = Math.max(
     0,
-    Math.min(2, Math.floor(Number(source.maxStartChapter) || 0))
+    Math.min(3, Math.floor(Number(source.maxStartChapter) || 0))
   );
   const selectedStartChapter = Math.min(
     maxStartChapter,
-    Math.max(0, Math.min(2, Math.floor(Number(source.selectedStartChapter) || 0)))
+    Math.max(0, Math.min(3, Math.floor(Number(source.selectedStartChapter) || 0)))
   );
   return {
     version: 1,
@@ -251,9 +251,9 @@ export function applyRunToMeta(state: MetaState, input: MetaRunInput): RunMetaRe
     maxMutator: fullVictory
       ? Math.max(state.maxMutator, Math.min(5, muLevel + 1))
       : state.maxMutator,
-    maxStartChapter: Math.max(state.maxStartChapter, Math.min(2, reached)),
+    maxStartChapter: Math.max(state.maxStartChapter, Math.min(3, reached)),
     selectedStartChapter: Math.min(
-      Math.max(state.maxStartChapter, Math.min(2, reached)),
+      Math.max(state.maxStartChapter, Math.min(3, reached)),
       Math.max(state.selectedStartChapter, startChapter)
     ),
     dailyBest:

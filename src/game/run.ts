@@ -7,7 +7,13 @@ export type EventId =
   | 'forgotten-idol'
   | 'cursed-chest'
   | 'rule-fountain'
-  | 'void-bargain';
+  | 'void-bargain'
+  | 'core-forge'
+  | 'waste-caravan'
+  | 'rift-gamble'
+  | 'echo-well'
+  | 'broken-idol'
+  | 'ash-market';
 
 export type EventEffect =
   | { kind: 'none' }
@@ -167,6 +173,162 @@ export const EVENTS: Record<EventId, EventDef> = {
       }
     ]
   },
+  'core-forge': {
+    id: 'core-forge',
+    name: '律核熔炉',
+    en: 'CORE FORGE',
+    subtitle: '熔炉只认规则，不认人；它会把一条规则烧得更锋利。',
+    options: [
+      {
+        id: 'forge',
+        label: 'A',
+        title: '投入 15 生命',
+        description: '随机升级一条已装备规则。',
+        detail: '没有可升级规则时改为回复 20 生命。',
+        tone: 'risk',
+        effect: { kind: 'loseHpUpgrade', hp: 15 }
+      },
+      {
+        id: 'cool',
+        label: 'B',
+        title: '冷却熔炉',
+        description: '回复 20 生命。',
+        detail: '安全但没有额外成长。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 20 }
+      }
+    ]
+  },
+  'waste-caravan': {
+    id: 'waste-caravan',
+    name: '荒原商队',
+    en: 'WASTE CARAVAN',
+    subtitle: '商队用遗物换命，也用命换遗物。',
+    options: [
+      {
+        id: 'trade',
+        label: 'A',
+        title: '用 15 生命换遗物',
+        description: '获得一件未装备的遗物；遗物满时回复 30 生命。',
+        detail: '遗物从已解锁池中随机抽取。',
+        tone: 'risk',
+        effect: { kind: 'relicOrHeal', hp: 15, heal: 30 }
+      },
+      {
+        id: 'rest',
+        label: 'B',
+        title: '在商队休整',
+        description: '回复 25 生命。',
+        detail: '不改变构筑。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 25 }
+      }
+    ]
+  },
+  'rift-gamble': {
+    id: 'rift-gamble',
+    name: '裂隙赌局',
+    en: 'RIFT GAMBLE',
+    subtitle: '裂隙愿意给你一次升级，但会在下一房收走一点速度。',
+    options: [
+      {
+        id: 'bet',
+        label: 'A',
+        title: '押注裂隙',
+        description: '随机升级一条规则，下一房敌人移速 +25%。',
+        detail: '风险持续一个房间。',
+        tone: 'risk',
+        effect: { kind: 'upgradeAndSpeedRisk', percent: 25 }
+      },
+      {
+        id: 'fold',
+        label: 'B',
+        title: '收起赌注',
+        description: '不发生任何变化。',
+        detail: '保守但安全。',
+        tone: 'safe',
+        effect: { kind: 'none' }
+      }
+    ]
+  },
+  'echo-well': {
+    id: 'echo-well',
+    name: '回声井',
+    en: 'ECHO WELL',
+    subtitle: '井底回响着你上一局的构筑。',
+    options: [
+      {
+        id: 'trade',
+        label: 'A',
+        title: '以血换声',
+        description: '失去 10 生命，随机升级一条规则。',
+        detail: '没有可升级规则时回复 15 生命。',
+        tone: 'risk',
+        effect: { kind: 'loseHpUpgrade', hp: 10 }
+      },
+      {
+        id: 'drink',
+        label: 'B',
+        title: '饮下回声',
+        description: '回复 30 生命。',
+        detail: '回声不改变规则。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 30 }
+      }
+    ]
+  },
+  'broken-idol': {
+    id: 'broken-idol',
+    name: '破碎神像',
+    en: 'BROKEN IDOL',
+    subtitle: '神像只剩半张脸，仍然记得怎么替换规则。',
+    options: [
+      {
+        id: 'swap',
+        label: 'A',
+        title: '献上 10 生命',
+        description: '随机更换一条规则，并回复 10 生命。',
+        detail: '可能换到更好的组合，也可能换走关键规则。',
+        tone: 'risk',
+        effect: { kind: 'swapRuleHeal', heal: 10 }
+      },
+      {
+        id: 'leave',
+        label: 'B',
+        title: '不碰神像',
+        description: '不发生任何变化。',
+        detail: '保守但安全。',
+        tone: 'safe',
+        effect: { kind: 'none' }
+      }
+    ]
+  },
+  'ash-market': {
+    id: 'ash-market',
+    name: '灰烬集市',
+    en: 'ASH MARKET',
+    subtitle: '集市只收生命，找零是遗物或恢复。',
+    options: [
+      {
+        id: 'buy',
+        label: 'A',
+        title: '花 15 生命买遗物',
+        description: '获得一件未装备的遗物；遗物满时回复 25 生命。',
+        detail: '遗物从已解锁池中随机抽取。',
+        tone: 'risk',
+        effect: { kind: 'relicOrHeal', hp: 15, heal: 25 }
+      },
+      {
+        id: 'leave',
+        label: 'B',
+        title: '逛完离开',
+        description: '回复 15 生命。',
+        detail: '不改变构筑。',
+        tone: 'safe',
+        effect: { kind: 'heal', amount: 15 }
+      }
+    ]
+  },
   'void-bargain': {
     id: 'void-bargain',
     name: '虚空交易',
@@ -201,7 +363,13 @@ export const EVENT_IDS: EventId[] = [
   'forgotten-idol',
   'cursed-chest',
   'rule-fountain',
-  'void-bargain'
+  'void-bargain',
+  'core-forge',
+  'waste-caravan',
+  'rift-gamble',
+  'echo-well',
+  'broken-idol',
+  'ash-market'
 ];
 
 export function hasUpgradeableRule(build: PlayerBuild): boolean {

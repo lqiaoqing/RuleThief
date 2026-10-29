@@ -14,6 +14,7 @@ export interface PlayerBuild {
   trajectory: RuleRef<TrajectoryKey> | null;
   impact: RuleRef<ImpactKey> | null;
   secondary?: RuleRef | null;
+  core?: import('./cores').CoreRef | null;
 }
 
 export interface RuleDefinition {
@@ -331,6 +332,7 @@ export function cloneBuild(build: PlayerBuild): PlayerBuild {
     impact: build.impact ? { ...build.impact } : null
   };
   if (build.secondary) next.secondary = { ...build.secondary };
+  if (build.core) next.core = { ...build.core };
   return next;
 }
 

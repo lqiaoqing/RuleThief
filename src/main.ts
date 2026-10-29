@@ -104,6 +104,7 @@ declare global {
     __RT_RELIC__?: (id: RelicId) => void;
     __RT_ASCEND__?: (key: RuleKey) => void;
     __RT_LATE__?: (id: LateUpgradeId) => void;
+    __RT_CORE__?: (id: import('./game/cores').CoreId) => void;
     __RT_EXPORT__?: () => string;
     __RT_SPAWN_ENEMY_BOLT__?: () => void;
     __RT_ENTER_ROOM__?: () => void;
@@ -246,8 +247,13 @@ if (mutatorParam !== null) {
   saveMeta(meta);
 }
 if (startParam !== null) {
-  const requested = Math.max(0, Math.min(2, Math.floor(Number(startParam) || 0)));
-  meta.selectedStartChapter = Math.min(requested, meta.maxStartChapter);
+  const requested = Math.max(0, Math.min(3, Math.floor(Number(startParam) || 0)));
+  if (autoArena) {
+    meta.maxStartChapter = Math.max(meta.maxStartChapter, requested);
+    meta.selectedStartChapter = requested;
+  } else {
+    meta.selectedStartChapter = Math.min(requested, meta.maxStartChapter);
+  }
   saveMeta(meta);
 }
 const INTRO_KEY = 'rulethief.intro.v1';
@@ -377,7 +383,7 @@ function showResult(payload: RunEndPayload): void {
   }`;
   resultLate.textContent = `后期强化 · ${
     payload.lateUpgrades.length ? payload.lateUpgrades.join(' / ') : '无'
-  }`;
+  }${payload.core ? ` · 律核 ${payload.core}` : ''}`;
   const totalTaken = payload.damage.reduce((sum, entry) => sum + entry.amount, 0);
   const damageLine = totalTaken
     ? payload.damage
@@ -826,6 +832,7 @@ function handleReady(): void {
   window.__RT_RELIC__ = (id) => scene?.debugGrantRelic(id);
   window.__RT_ASCEND__ = (key) => scene?.debugAscendRule(key);
   window.__RT_LATE__ = (id) => scene?.debugGrantLate(id);
+  window.__RT_CORE__ = (id) => scene?.debugGrantCore(id);
   window.__RT_EXPORT__ = () => JSON.stringify(collectPlaytestData(), null, 2);
   window.__RT_SPAWN_ENEMY_BOLT__ = () => scene?.debugSpawnEnemyBolt();
   window.__RT_ENTER_ROOM__ = () => enterRoom();

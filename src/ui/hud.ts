@@ -12,6 +12,7 @@ import { ENEMY_SPECS, type EnemyKind } from '../game/rooms';
 import type { MutationDef } from '../game/mutations';
 import type { RelicDef } from '../game/relics';
 import { MAX_LATE_UPGRADES, type LateUpgradeDef } from '../game/lateUpgrades';
+import type { CoreDef } from '../game/cores';
 import { formatTime } from '../game/theme';
 
 export type RuleToastKind = RuleKey | 'heal';
@@ -122,6 +123,10 @@ const relicNames = byId<HTMLElement>('relic-names');
 const lateLine = byId<HTMLElement>('late-line');
 const lateCount = byId<HTMLElement>('late-count');
 const lateNames = byId<HTMLElement>('late-names');
+const coreLine = byId<HTMLElement>('core-line');
+const coreCount = byId<HTMLElement>('core-count');
+const coreNames = byId<HTMLElement>('core-names');
+const coreIcon = document.getElementById('core-icon') as SVGUseElement | null;
 const itemTip = byId<HTMLElement>('item-tip');
 
 interface ItemTipData {
@@ -642,4 +647,17 @@ export function resetM0Hud(): void {
   setMutation(null);
   setSealedRule(null, false);
   hideRuleToast();
+}
+
+export function setCore(def: CoreDef | null, level = 0): void {
+  coreLine.hidden = !def;
+  if (!def) return;
+  coreCount.textContent = `${level} / 3`;
+  coreNames.textContent = `${def.name} Lv.${level}`;
+  if (coreIcon) coreIcon.setAttribute('href', def.icon);
+  bindItemTip(coreLine, () => ({
+    title: `律核 · ${def.name}`,
+    lines: [`${def.descriptions[Math.max(0, level - 1)]}
+${def.detail}`]
+  }));
 }

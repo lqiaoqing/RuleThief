@@ -217,6 +217,30 @@ function ascensionCard(reward: Extract<Reward, { kind: 'ascension' }>, index: nu
   return card;
 }
 
+function coreCard(reward: Extract<Reward, { kind: 'core' }>, index: number) {
+  const core = reward.core;
+  const card = el('button', 'rule-card action-late');
+  card.type = 'button';
+  card.style.setProperty('--rule-color', core.color);
+  card.dataset.key = core.id;
+  card.dataset.action = 'core';
+  card.dataset.kind = 'core';
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(core.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '律核 · CORE'),
+    el('span', 'rule-card-name', `${core.name} Lv.${reward.nextLevel}`)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action upgrade', '律核'));
+  card.append(head, el('p', 'rule-card-desc', core.descriptions[reward.nextLevel - 1]));
+  card.append(el('span', 'rule-card-now', core.detail));
+  card.append(el('div', 'rule-card-combo', '不占规则槽 · 每 4 个战斗房出现一次'));
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 function resonanceCard(
   reward: Extract<Reward, { kind: 'resonance' }>,
   index: number
@@ -334,6 +358,8 @@ export function renderRewards(rewards: readonly Reward[], onPick: (reward: Rewar
                 ? lateCard(reward, index)
                 : reward.kind === 'resonance'
                   ? resonanceCard(reward, index)
+                  : reward.kind === 'core'
+                    ? coreCard(reward, index)
                   : reward.kind === 'reforge'
                     ? reforgeCard(reward, index)
                     : supportCard(reward, index);

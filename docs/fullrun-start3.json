@@ -1,0 +1,538 @@
+{
+  "result": {
+    "title": "规则终结",
+    "rooms": "22 / 22"
+  },
+  "chapters": [],
+  "chapterRewards": [],
+  "rewardStates": [
+    {
+      "label": "ROOM 1 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 2 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 9 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 1
+        }
+      }
+    },
+    {
+      "label": "ROOM 10 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 11 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 13 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 14 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 15 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "rift-echo"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "chain",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 16 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 1
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 17 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 2
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 18 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 2
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 19 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 20 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 21 / 22 已清空",
+      "relics": [
+        "thunder-emblem",
+        "greed"
+      ],
+      "ascensions": [],
+      "lateUpgrades": [
+        "spread-resonance",
+        "frost-ring"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3
+        },
+        "core": {
+          "key": "aegis",
+          "level": 3
+        }
+      }
+    }
+  ],
+  "chapterIndex": 3,
+  "chaptersTotal": 4,
+  "startChapter": 3,
+  "expectedSteps": 22,
+  "roomsCleared": 19,
+  "picks": 18,
+  "seconds": 35,
+  "relics": [
+    "thunder-emblem",
+    "greed"
+  ],
+  "ascensions": [],
+  "lateUpgrades": [
+    "spread-resonance",
+    "frost-ring"
+  ],
+  "core": {
+    "key": "aegis",
+    "level": 3
+  },
+  "errors": []
+}

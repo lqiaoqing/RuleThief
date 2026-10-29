@@ -1,19 +1,22 @@
 # 验收矩阵（设计文档 → 证据）
 
-日期：2026-10-29（M10.2 章节峰值与加量版）
+日期：2026-10-30（M11 五倍扩张版）
 用途：把 M0–M9 的功能条款逐条映射到可复现的命令与结果。标记为「自动」的项由脚本验证；标记为「人工」的项需要真人或真机。
 
 ## A. 当前自动化结果
 
 ```text
-npm test                       174/174 通过（16 个测试文件）
+npm test                       181/181 通过（17 个测试文件）
 npm run build                  tsc + vite build 通过（dist 1.96MB）
 npm run verify                 31/31 静态资源检查通过
-npm run smoke                  230/230 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 6 项后期强化等级池 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目/过载 + 规则共鸣/散华/爆裂/W2 血量 + 高压房计时与奖励 + 后期强化转移 + 规则之源暴走 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
-npm run fullrun                36/36 三章结构性全流程通过（约 54 秒，非真实时长；升阶规则跨三章保留，后期强化实拿 6 级）
-npm run fullrun-start1         26/26 从第二世界起点跑到终点
-npm run fullrun-start2         13/13 从第三世界起点跑到终点
+npm run smoke                  234/234 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 18 项后期强化 + 9 律核 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目/过载 + 规则共鸣/散华/爆裂/W2 血量 + 高压房计时与奖励 + 后期强化转移 + 规则之源暴走 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
+npm run fullrun                58/58 四世界结构性全流程通过（约 91 秒，非真实时长；W4 大世界与最终 BOSS 覆盖，律核 Lv.3）
+npm run fullrun-start1         48/48 从第二世界起点跑到终点（含 W4）
+npm run fullrun-start2         35/35 从第三世界起点跑到终点（含 W4）
+npm run fullrun-start3         22/22 从第四世界起点跑到终点
 scripts/stress.mjs             45 敌：avg 59.3 / min 59 fps
+W4 headless                    55 敌同屏：avg 59.4 / min 59 fps（2400×2400 + 小地图）
+W4 节奏探测                     首房 95 秒 / 418 杀（含追加）→ 18 房约 28 分钟 + W1–W3 约 10 分钟（docs/raid-probe.json）
 scripts/lowend.mjs             CPU ×1/×4/×6：59.2 / 56.7 / 44.0 fps（60Hz headful，34 敌，min 40；与旧 120Hz 数据不可直接横比）
 scripts/soak.mjs               2 分钟（怪潮）：监听器 +0、堆 7–32MB 随 GC 波动、143fps（高刷显示器）
 scripts/combo-bench.mjs        9 组合 DPS：40–105（旧逐只模式木桩基准）
@@ -89,6 +92,10 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M10.2 | BOSS 前高压遭遇 | 自动 | 过载熔炉（38s）/ 逆律风暴（40s）连续波次、保底精英、倒计时清场、四选一奖励；预览显示 `高压`/时长；冒烟「abyss surge room preview exposes its timer」「surge room starts a timed continuous horde」「surge room pays out at least four reward cards」 |
 | M10.2 | 规则之源暴走 | 自动 | 15% 血量进入 6 秒免伤暴走：17 发环形弹幕 + 召唤 + 虚空裂隙，结束后可击杀；BOSS 条显示 `PHASE III · 暴走`；冒烟暴走触发/免伤/结束断言 |
 | M10.2 | 换规则不产生死卡 | 自动 | 重铸/事件换规则时，旧规则后期强化自动转移到新规则同类，溢出转「规则余响」每级全伤害 +6%；冒烟「replacing a rule transfers its late upgrade to the new rule」 |
+| M11 | 大世界与五倍怪潮 | 自动 | W4 2400×2400、22 步、190–250 杀/房、10–14 波、同屏 45（追加至 55）；相机滚动/边界、小地图；冒烟「boundless waste runs on a scrolling 2400 arena with a minimap」 |
+| M11 | 新怪物与 BOSS | 自动 | 8 种新敌人 + 8 个精英词缀 + 巢母女王/壁垒巨像/荒原吞世者；冒烟「boundless waste fills the screen with a large horde and new enemies」「clearing the boundless waste completes the four-world campaign」 |
+| M11 | 更高阶升级 | 自动 | 第 4 槽律核 9×3、后期强化 18×3，内容池 90（5×）；冒烟「law core and generic late upgrades equip in the run」；fullrun 律核 Lv.3 |
+| M11 | 事件扩容 | 自动 | 事件 6→12；W1/W2/W3 抽 2、W4 抽 3；`run.test.ts` 12 事件与冒烟事件分支 |
 | M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 6,298 行，超过蓝图约束，普通敌人 AI/渲染与高压房宿主待后续拆分 |
 
 ## D. 性能与长时运行
@@ -113,14 +120,14 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 
 ## F. 已知偏差
 
-- `M0Scene.ts` 约 6,298 行，仍超过蓝图「不扩大巨型场景类」的工程约束。WaveDirector、Arbiter / Core / Source 已独立成模块，但怪潮/高压房宿主、连杀/掩体反馈、普通敌人 AI 与渲染仍在场景类内；彻底拆分需要单独里程碑，不能靠一次补丁完成。
+- `M0Scene.ts` 约 7,094 行，仍超过蓝图「不扩大巨型场景类」的工程约束。WaveDirector、Arbiter / Core / Source 已独立成模块，但怪潮/高压房宿主、连杀/掩体反馈、普通敌人 AI 与渲染仍在场景类内；彻底拆分需要单独里程碑，不能靠一次补丁完成。
 - 遗物与升阶的 9 项战斗效果均已有定向战斗断言；真人手感、效果强度与组合强弱仍需外部试玩。
 - 自动试玩机器人在 +10% 配额下止步第 2 房（2/13），不作为难度或时长结论。
-- M10.2 将 W2/W3 扩为各 13 步、全程 36 步，但仍使用 800×800 地图；可滚动大地图与商店仍未做。
+- M11 将完整局扩为 58 步，W4 使用 2400×2400 大世界；W1–W3 仍为 800×800，商店/可视化地图导航未做。
 - 怪潮密度按“W1 后段 28 只、W2/W3 同屏 16”实现；真人可能在 W2 机械怪潮或 38–40 秒高压房中感到过挤/过肉，需要试玩确认。
-- M10.2 的「9–10 分钟单局」是设计目标，自动 fullrun 仅 54 秒（脚本直接清房），不能证明真人节奏。
+- M11 的「35–45 分钟完整局」是设计目标，自动 fullrun 仅 91 秒（脚本直接清房），不能证明真人节奏；W4 大地图视觉/节奏仍需真人试玩。
 - 本轮 lowend 在 60Hz headful 环境测得 CPU×6 44.0fps（min 40）；旧 120Hz 的 58fps 数据不可直接对比。W1 45 敌压力仍为 59.3fps，W2/W3 同屏上限 16，实际压力低于 lowend 的 34 敌。
-- M10.1/M10.2 的规则共鸣、血量曲线、高压房时长与 BOSS 暴走尚未经过真人节奏验收；自动断言只能证明机制生效，不能证明手感不腻。
+- M11 的 W4 大世界、45 敌、新敌人/词缀、小 BOSS 与最终 BOSS 暴走尚未经过真人节奏验收；自动断言只能证明机制生效，不能证明手感不腻。
 
 ## G. 复现步骤
 

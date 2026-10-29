@@ -1,0 +1,14 @@
+{
+  "capturedAt": "2026-10-30",
+  "mode": "headless / god mode / auto-move bot",
+  "chapter": 3,
+  "room": "waste-gate",
+  "arenaSize": 2400,
+  "seconds": 95,
+  "kills": 418,
+  "roomKills": 186,
+  "quota": 190,
+  "enemies": 26,
+  "hp": 100,
+  "extrapolation": "18 W4 rooms x 95s = ~28.5 min + W1-W3 ~10 min = ~38.5 min"
+}

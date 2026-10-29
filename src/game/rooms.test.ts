@@ -28,14 +28,16 @@ describe('enemy catalogue', () => {
     expect(ENEMY_RULES.bomber).toBe('blast');
   });
 
-  it('marks exactly three elites, all carrying a normal rule', () => {
+  it('marks the elite leaders, all carrying a normal rule', () => {
     const elites = (Object.keys(ENEMY_SPECS) as EnemyKind[]).filter(
       (kind) => ENEMY_SPECS[kind].elite && !ENEMY_SPECS[kind].boss
     );
-    expect(elites).toEqual(['sunder', 'thunder', 'seer']);
+    expect(elites).toEqual(['sunder', 'thunder', 'seer', 'broodQueen', 'bastion']);
     expect(ENEMY_RULES.sunder).toBe('pierce');
     expect(ENEMY_RULES.thunder).toBe('chain');
     expect(ENEMY_RULES.seer).toBe('frost');
+    expect(ENEMY_RULES.broodQueen).toBe('spread');
+    expect(ENEMY_RULES.bastion).toBe('frost');
   });
 
   it('elites are tougher and larger than their base enemies', () => {
@@ -104,7 +106,7 @@ describe('room definitions', () => {
 
   it('elite rooms declare a leader and four reward choices', () => {
     const eliteRooms = ROOMS.filter((room) => room.elite);
-    expect(eliteRooms).toHaveLength(4);
+    expect(eliteRooms).toHaveLength(6);
     for (const room of eliteRooms) {
       expect(room.leader).toBeDefined();
       expect(room.rewardCount).toBe(4);

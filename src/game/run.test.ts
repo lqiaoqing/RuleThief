@@ -29,7 +29,7 @@ const midBuild: PlayerBuild = {
 
 describe('event definitions', () => {
   it('ships six events with two options each', () => {
-    expect(EVENT_IDS).toHaveLength(6);
+    expect(EVENT_IDS).toHaveLength(12);
     for (const id of EVENT_IDS) {
       const event = EVENTS[id];
       expect(event.options).toHaveLength(2);

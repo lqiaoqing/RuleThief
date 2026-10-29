@@ -18,6 +18,7 @@
     "fullrun": "node scripts/fullrun.mjs",
     "fullrun-start1": "node scripts/fullrun.mjs 1",
     "fullrun-start2": "node scripts/fullrun.mjs 2",
+    "fullrun-start3": "node scripts/fullrun.mjs 3",
     "world-shots": "node scripts/world-shots.mjs"
   },
   "dependencies": {

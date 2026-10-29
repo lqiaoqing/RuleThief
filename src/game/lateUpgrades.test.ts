@@ -22,10 +22,10 @@ const maxed: PlayerBuild = {
 
 describe('late upgrades', () => {
   it('ships six late upgrades with three levels each', () => {
-    expect(LATE_UPGRADE_IDS).toHaveLength(6);
-    expect(new Set(LATE_UPGRADE_IDS.map((id) => LATE_UPGRADES[id].name)).size).toBe(6);
+    expect(LATE_UPGRADE_IDS).toHaveLength(18);
+    expect(new Set(LATE_UPGRADE_IDS.map((id) => LATE_UPGRADES[id].name)).size).toBe(18);
     expect(MAX_LATE_LEVEL).toBe(3);
-    expect(MAX_LATE_UPGRADES).toBe(9);
+    expect(MAX_LATE_UPGRADES).toBe(18);
   });
 
   it('is only eligible with two maxed rules and two relics', () => {
@@ -46,23 +46,22 @@ describe('late upgrades', () => {
   });
 
   it('pools only upgrades that match the equipped rules', () => {
-    expect(
-      lateUpgradePool(maxed, [])
-        .map((def) => def.id)
-        .sort()
-    ).toEqual(['ember-spread', 'rift-echo']);
-    expect(
-      lateUpgradePool(
-        {
-          trajectory: { key: 'spread', level: 3 },
-          impact: { key: 'blast', level: 3 },
-          secondary: { key: 'pierce', level: 3 }
-        },
-        []
-      )
-        .map((def) => def.id)
-        .sort()
-    ).toEqual(['blast-resonance', 'pierce-momentum', 'spread-resonance']);
+    const pool = lateUpgradePool(maxed, []).map((def) => def.id);
+    expect(pool).toContain('ember-spread');
+    expect(pool).toContain('rift-echo');
+    expect(pool).toContain('wrath');
+    expect(pool).not.toContain('pierce-momentum');
+    const spreadPool = lateUpgradePool(
+      {
+        trajectory: { key: 'spread', level: 3 },
+        impact: { key: 'blast', level: 3 },
+        secondary: { key: 'pierce', level: 3 }
+      },
+      []
+    ).map((def) => def.id);
+    expect(spreadPool).toEqual(
+      expect.arrayContaining(['blast-resonance', 'pierce-momentum', 'spread-resonance'])
+    );
   });
 
   it('stops pooling an upgrade once it reaches level 3', () => {
@@ -70,7 +69,7 @@ describe('late upgrades', () => {
       lateUpgradePool(maxed, ['ember-spread', 'ember-spread', 'ember-spread']).map(
         (def) => def.id
       )
-    ).toEqual(['rift-echo']);
+    ).not.toContain('ember-spread');
     expect(
       lateLevel(['ember-spread', 'ember-spread', 'rift-echo'], 'ember-spread')
     ).toBe(2);
@@ -121,14 +120,7 @@ describe('late upgrades', () => {
   it('stops chapter late offers once the matching pool is maxed', () => {
     const rewards = buildChapterRewards(maxed, ['prism', 'frost-crown'], random, {
       lateEligible: true,
-      lateUpgrades: [
-        'ember-spread',
-        'ember-spread',
-        'ember-spread',
-        'rift-echo',
-        'rift-echo',
-        'rift-echo'
-      ]
+      lateUpgrades: LATE_UPGRADE_IDS.flatMap((id) => [id, id, id])
     });
     expect(rewards.some((reward) => reward.kind === 'late')).toBe(false);
   });

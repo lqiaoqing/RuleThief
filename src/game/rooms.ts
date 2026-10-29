@@ -10,6 +10,7 @@ import {
   type RuleSlot
 } from './rules';
 import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
+import type { CoreDef } from './cores';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionDef, type AscensionId } from './ascensions';
 import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
 import {
@@ -42,7 +43,10 @@ export type EnemyKind =
   | 'burrower'
   | 'artillery'
   | 'mirror'
-  | 'hexer';
+  | 'hexer'
+  | 'broodQueen'
+  | 'bastion'
+  | 'worldEater';
 
 export interface EnemySpec {
   name: string;
@@ -219,6 +223,43 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     speed: 0,
     sprite: 'boss',
     displaySize: 312,
+    elite: true,
+    boss: true
+  },
+  broodQueen: {
+    name: '巢母女王',
+    rule: 'spread',
+    ruleName: '孵育',
+    hint: '小 BOSS · 产卵与酸液',
+    hp: 1400,
+    radius: 52,
+    speed: 0,
+    sprite: 'spore',
+    displaySize: 220,
+    elite: true
+  },
+  bastion: {
+    name: '壁垒巨像',
+    rule: 'frost',
+    ruleName: '护壁',
+    hint: '小 BOSS · 减伤光环与震波',
+    hp: 1700,
+    radius: 56,
+    speed: 30,
+    sprite: 'sunder',
+    displaySize: 220,
+    elite: true
+  },
+  worldEater: {
+    name: '荒原吞世者',
+    rule: 'blast',
+    ruleName: '吞世',
+    hint: '最终 BOSS · 规则风暴与暴走',
+    hp: 3200,
+    radius: 72,
+    speed: 0,
+    sprite: 'boss',
+    displaySize: 340,
     elite: true,
     boss: true
   },
@@ -1119,13 +1160,13 @@ const WASTE_ROOMS: readonly RoomDef[] = [
   ], { modifier: 'rule-null' }),
   wasteRoom('world-scar', '世界伤痕', 'WORLD SCAR', '世界的伤口正在呼吸，裂隙会跟着它开合。', 230, [
     { kind: 'phase', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'bat', weight: 3 }
-  ]),
+  ], { leader: 'broodQueen', elite: true, rewardCount: 4 }),
   wasteRoom('broken-sky', '破碎苍穹', 'BROKEN SKY', '天空碎成弹片，落点没有一块是安全的。', 230, [
     { kind: 'sunder', weight: 4 }, { kind: 'warden', weight: 4 }, { kind: 'bomber', weight: 3 }
   ]),
   wasteRoom('last-bastion', '最后壁垒', 'LAST BASTION', '最后的壁垒挡不住潮汐，只能挡一瞬。', 230, [
     { kind: 'warden', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'phase', weight: 3 }
-  ], { hazard: 'shock-grid' }),
+  ], { hazard: 'shock-grid', leader: 'bastion', elite: true, rewardCount: 4 }),
   wasteRoom('void-throne', '虚空王座', 'VOID THRONE', '王座周围没有规则，只有被抽空的站位。', 240, [
     { kind: 'phase', weight: 4 }, { kind: 'bomber', weight: 4 }, { kind: 'wisp', weight: 3 }
   ], { modifier: 'rule-null' }),
@@ -1244,6 +1285,7 @@ export type Reward =
   | { kind: 'ascension'; ascension: AscensionDef }
   | { kind: 'late'; upgrade: LateUpgradeDef }
   | { kind: 'resonance'; upgrade: LateUpgradeDef }
+  | { kind: 'core'; core: CoreDef; nextLevel: 1 | 2 | 3 }
   | { kind: 'reforge'; offer: ReforgeOffer; remaining: number };
 
 export interface RoomPreview {

@@ -57,7 +57,8 @@ async function pickBestCard(page) {
           (card) =>
             card.getAttribute('data-kind') === 'ascension' ||
             card.getAttribute('data-kind') === 'relic' ||
-            card.getAttribute('data-kind') === 'late'
+            card.getAttribute('data-kind') === 'late' ||
+            card.getAttribute('data-kind') === 'core'
         ) ?? cards[0];
       pick?.click();
     });
@@ -207,6 +208,7 @@ try {
     relics: finalState.relics ?? [],
     ascensions: finalState.ascensions ?? [],
     lateUpgrades: finalState.lateUpgrades ?? [],
+    core: finalState.core ?? null,
     errors
   };
   console.log(JSON.stringify(summary, null, 2));
