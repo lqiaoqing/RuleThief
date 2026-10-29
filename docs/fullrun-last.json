@@ -15,11 +15,11 @@
       },
       {
         "kind": "relic",
-        "name": "疾行之羽"
+        "name": "贪婪契约"
       },
       {
         "kind": "reforge",
-        "name": "贯穿 → 冰霜"
+        "name": "贯穿 → 爆裂"
       }
     ],
     [
@@ -28,12 +28,12 @@
         "name": "雷霆领域"
       },
       {
-        "kind": "reforge",
-        "name": "弹射 → 爆裂"
+        "kind": "relic",
+        "name": "疾行之羽"
       },
       {
-        "kind": "support",
-        "name": "规则韧性"
+        "kind": "reforge",
+        "name": "弹射 → 爆裂"
       }
     ]
   ],
@@ -103,7 +103,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -122,12 +122,10 @@
     },
     {
       "label": "ROOM 7 / 10 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -146,12 +144,10 @@
     },
     {
       "label": "ROOM 8 / 10 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -170,12 +166,10 @@
     },
     {
       "label": "ROOM 9 / 10 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -194,14 +188,12 @@
     },
     {
       "label": "审判废墟 · 章节奖励",
-      "relics": [
-        "bloodflame-heart"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -221,14 +213,12 @@
     },
     {
       "label": "ROOM 1 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -248,14 +238,12 @@
     },
     {
       "label": "ROOM 2 / 12 已清空",
-      "relics": [
-        "bloodflame-heart"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -275,16 +263,12 @@
     },
     {
       "label": "ROOM 4 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -304,16 +288,12 @@
     },
     {
       "label": "ROOM 5 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -333,16 +313,12 @@
     },
     {
       "label": "ROOM 6 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -362,16 +338,12 @@
     },
     {
       "label": "ROOM 8 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -391,16 +363,12 @@
     },
     {
       "label": "ROOM 9 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -420,16 +388,12 @@
     },
     {
       "label": "ROOM 10 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -449,16 +413,12 @@
     },
     {
       "label": "ROOM 11 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -478,17 +438,13 @@
     },
     {
       "label": "失序工坊 · 章节奖励",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -509,17 +465,13 @@
     },
     {
       "label": "ROOM 1 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -540,17 +492,13 @@
     },
     {
       "label": "ROOM 2 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -571,22 +519,18 @@
     },
     {
       "label": "ROOM 4 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
-          "key": "spread",
-          "level": 3
+          "key": "pierce",
+          "level": 2
         },
         "impact": {
           "key": "burn",
@@ -602,22 +546,18 @@
     },
     {
       "label": "ROOM 5 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 1
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -633,22 +573,18 @@
     },
     {
       "label": "ROOM 6 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
         "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -664,25 +600,23 @@
     },
     {
       "label": "ROOM 8 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -693,16 +627,13 @@
     },
     {
       "label": "ROOM 9 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -710,8 +641,9 @@
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -722,16 +654,13 @@
     },
     {
       "label": "ROOM 10 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -739,8 +668,9 @@
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -751,16 +681,13 @@
     },
     {
       "label": "ROOM 11 / 12 已清空",
-      "relics": [
-        "bloodflame-heart",
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [
+        "burn",
         "chain"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "frost-ring"
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -768,8 +695,9 @@
           "level": 3
         },
         "impact": {
-          "key": "frost",
-          "level": 1
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
           "key": "chain",
@@ -785,17 +713,14 @@
   "expectedSteps": 34,
   "roomsCleared": 28,
   "picks": 27,
-  "seconds": 52,
-  "relics": [
-    "bloodflame-heart",
-    "greed"
-  ],
+  "seconds": 53,
+  "relics": [],
   "ascensions": [
+    "burn",
     "chain"
   ],
   "lateUpgrades": [
-    "ember-spread",
-    "frost-ring"
+    "pierce-momentum"
   ],
   "errors": []
 }

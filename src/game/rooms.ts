@@ -498,7 +498,11 @@ export const ROOMS: readonly RoomDef[] = [
     ],
     hazard: 'shock-grid',
     modifier: 'conveyor',
-    conveyor: { x: 42, y: 0 }
+    conveyor: { x: 42, y: 0 },
+    cover: [
+      { x: 180, y: 560, radius: 34 },
+      { x: 620, y: 240, radius: 34 }
+    ]
   },
   {
     id: 'conveyor-hall',
@@ -589,6 +593,10 @@ export const ROOMS: readonly RoomDef[] = [
     mix: [
       { kind: 'bomber', weight: 5 },
       { kind: 'phase', weight: 4 }
+    ],
+    cover: [
+      { x: 190, y: 590, radius: 34 },
+      { x: 610, y: 250, radius: 34 }
     ]
   },
   {
@@ -697,7 +705,11 @@ export const ROOMS: readonly RoomDef[] = [
       { kind: 'phase', weight: 3 }
     ],
     hazard: 'void-rift',
-    modifier: 'rule-null'
+    modifier: 'rule-null',
+    cover: [
+      { x: 200, y: 560, radius: 34 },
+      { x: 600, y: 240, radius: 34 }
+    ]
   },
   {
     id: 'mirror-hall',
