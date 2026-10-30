@@ -579,6 +579,15 @@ export const CHAPTERS: readonly ChapterDef[] = [
   }
 ];
 
+export const CHAPTER_STEPS: readonly number[] = CHAPTERS.map(
+  (chapter) => chapter.buildPlan(() => 0.5).length
+);
+
+export function totalStepsFrom(startChapter = 0): number {
+  const start = Math.max(0, Math.min(CHAPTERS.length - 1, Math.floor(startChapter)));
+  return CHAPTER_STEPS.slice(start).reduce((sum, count) => sum + count, 0);
+}
+
 export function buildRunPlan(random: () => number = Math.random): RunStep[] {
   return CHAPTERS[0].buildPlan(random);
 }

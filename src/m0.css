@@ -563,15 +563,17 @@
 
 .result-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 9px;
 }
 
 .result-actions .primary {
-  flex: 1;
+  flex: 1 1 100%;
 }
 
 .result-actions .ghost {
-  flex: 0 0 126px;
+  flex: 1 1 calc((100% - 18px) / 3);
+  min-width: 0;
 }
 
 @keyframes lowHpPulse {
@@ -1063,7 +1065,8 @@
     margin-bottom: 15px;
   }
 
-  .rule-offers {
+  .rule-offers,
+  .rule-offers[data-count="4"] {
     grid-template-columns: 1fr;
     gap: 8px;
   }
@@ -1071,6 +1074,10 @@
   .rule-card {
     min-height: 0;
     padding: 12px;
+  }
+
+  .rule-card-key {
+    display: none;
   }
 
   .rule-card-name {
@@ -1159,9 +1166,31 @@
   box-shadow: 0 0 16px rgba(255, 79, 107, 0.6);
 }
 
+.boss-bar.is-elite {
+  border-color: rgba(233, 189, 107, 0.4);
+  background: rgba(12, 11, 14, 0.78);
+}
+
+.boss-bar.is-elite .boss-bar-name {
+  color: #ffe7b4;
+}
+
+.boss-bar.is-elite .boss-bar-phase {
+  color: #d4a95f;
+}
+
+.boss-bar.is-elite .boss-bar-track i {
+  background: linear-gradient(90deg, #b9893b, #e9bd6b 60%, #ffe8b8);
+  box-shadow: 0 0 14px rgba(233, 189, 107, 0.45);
+}
+
 .boss-pips {
   display: flex;
   gap: 5px;
+}
+
+.boss-pips[hidden] {
+  display: none;
 }
 
 .boss-pips i {

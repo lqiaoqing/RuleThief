@@ -134,7 +134,7 @@
               </div>
 
               <div class="run-actions">
-                <div class="style-badge">10<br />STEP</div>
+                <div class="style-badge" id="style-badge">10<br />STEP</div>
                 <button class="icon-btn sound-btn" id="sound-btn" aria-label="静音" aria-pressed="false">
                   <svg class="sound-on"><use href="#i-sound" /></svg>
                   <svg class="sound-off" hidden><use href="#i-mute" /></svg>
@@ -167,6 +167,11 @@
                 <span class="mini-ico"><svg><use id="mini-secondary-icon" href="#i-shard" /></svg></span>
                 <span><span id="mini-secondary-name">副规则</span> <b id="mini-secondary-status">空槽</b></span>
               </div>
+              <div class="mini-slot core is-locked" id="mini-core">
+                <span class="mini-ico"><svg><use id="mini-core-icon" href="#i-shard" /></svg></span>
+                <span><span id="mini-core-name">律核</span> <b id="mini-core-status">空槽</b></span>
+              </div>
+              <span class="mobile-extras" id="mobile-extras">遗物 0 · 后期 0</span>
             </div>
 
             <div class="mobile-boss">
@@ -334,16 +339,6 @@
             <p class="objective-note">怪潮成组出现，清空后三选一；连续击杀会加快攻击，后期混入头目。</p>
           </section>
 
-          <section class="panel notes-panel">
-            <div class="panel-head"><span>当前验证</span><span class="panel-sub">QA</span></div>
-            <ul class="check-list">
-              <li><i></i>6 种敌人 + 2 精英 + 3 阶段 BOSS</li>
-              <li><i></i>精英房领袖必出，四选一奖励</li>
-              <li><i></i>史莱姆火焰地面 / 冰霜减速弹 / 爆裂自爆</li>
-              <li><i></i>规则审判者三阶段 · 第三阶段封印规则</li>
-            </ul>
-          </section>
-
           <div class="sidebar-foot">
             <span>BUILD v0.5</span>
             <b>BLENDER + PROCEDURAL</b>
@@ -376,7 +371,7 @@
       <div class="intro-screen" id="intro-screen" hidden>
         <div class="intro-card">
           <div class="eyebrow"><span class="eyebrow-dot"></span> FIELD MANUAL / 训练须知</div>
-          <h2>三条就够了</h2>
+          <h2>六条就够用了</h2>
           <div class="intro-list">
             <div class="intro-row">
               <b>1</b>
@@ -388,7 +383,7 @@
             </div>
             <div class="intro-row">
               <b>3</b>
-              <div><strong>9 种组合 × 3 条突变</strong><span>精英房必给突变；最终 BOSS 第三阶段会短暂封印你的一条规则。</span></div>
+              <div><strong>9 种组合 × 3 条突变 × 律核</strong><span>精英房必给突变；BOSS 第三阶段会短暂封印规则；后期还有第 4 槽律核。</span></div>
             </div>
             <div class="intro-row">
               <b>4</b>
@@ -396,11 +391,11 @@
             </div>
             <div class="intro-row">
               <b>5</b>
-              <div><strong>满级后继续共鸣</strong><span>第 4 房后每 3 房出现规则共鸣；重复获得可升到 Lv.3，不占新槽位。</span></div>
+              <div><strong>满级后继续强化</strong><span>第 4 房后每 3 房出现规则共鸣；后期还有 18 项强化与律核，重复获得可升 Lv.3，不占新槽位。</span></div>
             </div>
             <div class="intro-row">
               <b>6</b>
-              <div><strong>后期有峰值</strong><span>W2/W3 BOSS 前各有 38–40 秒高压房；规则之源低血量会进入 6 秒免伤暴走。</span></div>
+              <div><strong>四世界 58 步</strong><span>W2/W3 有 38–40 秒高压房；W4 是 2400 大地图、45+ 怪群与最终吞世者，单局 35–45 分钟。</span></div>
             </div>
           </div>
           <button class="primary compact" id="intro-start-btn">
@@ -555,19 +550,19 @@
             <em>让每一次命中，都改写战斗。</em>
           </p>
 
-          <div class="slice-chip"><span class="slice-dot"></span>第一世界 10 步 · 7 场战斗 + 2 事件 + BOSS</div>
+          <div class="slice-chip"><span class="slice-dot"></span>四世界 58 步 · 第一世界 10 步 · 完整征程 35–45 分钟</div>
 
           <div class="stats-row">
-            <div class="stat"><b>10</b><span>第一世界步数</span></div>
-            <div class="stat"><b>6</b><span>可掠夺敌人</span></div>
+            <div class="stat"><b>4</b><span>世界</span></div>
+            <div class="stat"><b>58</b><span>完整步数</span></div>
             <div class="stat"><b>9</b><span>规则组合</span></div>
-            <div class="stat"><b>3</b><span>突变天赋</span></div>
+            <div class="stat"><b>90</b><span>升级内容池</span></div>
           </div>
 
           <div class="menu-actions">
             <button class="primary" id="enter-btn">
               <span class="btn-ico"><svg><use href="#i-play" /></svg></span>
-              <span class="btn-copy"><b>进入训练回廊</b><small>10-STEP RUN</small></span>
+              <span class="btn-copy"><b>开始完整征程</b><small>4 WORLDS · 58 STEPS</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
             <button class="ghost" id="menu-note-btn">这是什么？</button>
@@ -613,7 +608,7 @@
 
         <div class="menu-status">
           <span class="status-dot"></span>
-          第一世界 10 步 · 6 敌人 1 精英 4 事件 · 竖屏 / 横屏双端适配
+          四世界 58 步 · 26 种敌人 · 70 个房间 · 竖屏 / 横屏双端适配
         </div>
 
         <div class="note-modal" id="note-modal" hidden>
@@ -624,20 +619,20 @@
             <div class="eyebrow"><span class="eyebrow-dot"></span> WHAT IS THIS</div>
             <h2>一局怎么玩</h2>
             <p>
-              走完第一世界 10 步路线：7 场战斗、2 个随机事件、最多 1 位精英，最后挑战规则审判者。清空房间后三选一，规则只来自本房真实敌人；精英房四选一并保底一张突变。
+              完整征程 58 步：第一世界学规则，之后进入失序工坊、逆律深渊与无界荒原，最后挑战荒原吞世者。清空房间后三选一，规则只来自本房真实敌人；精英房四选一并保底一张突变。
             </p>
             <ul class="note-list">
-              <li><b>目标</b>在第 9 步挑战精英，击穿三阶段 BOSS，结算显示 10 / 10</li>
+              <li><b>目标</b>走完四世界 58 步；第一世界 10 步是训练段，之后还有 18 项后期强化与 9 个律核</li>
               <li><b>弹道</b>贯穿沿线穿击、弹射目标间跳跃、散射扇形多发</li>
               <li><b>命中</b>燃烧持续掉血、冰霜减速、爆裂范围引爆</li>
               <li><b>突变</b>过载核心 / 疾行强化 / 绝境斗志，每局最多 1 条</li>
-              <li><b>事件</b>血色祭坛、不稳定实验、遗忘神像、诅咒宝箱，每局遇到 2 种</li>
+              <li><b>律核</b>第 4 槽不占规则位，每 4 个战斗房提供一次，9 种律核可升到 Lv.3</li>
+              <li><b>事件</b>同一条路线每局遇到 2–3 种；W4 另有律核熔炉、荒原商队、裂隙赌局等</li>
               <li><b>怪潮</b>整波同侧压入；10/25 连杀追加怪潮并触发规则爆发；18 秒内清房额外给一张奖励卡</li>
-              <li><b>限制</b>单次攻击最多结算 3 次命中效果，持续与爆炸不会再触发规则</li>
               <li><b>操作</b>WASD / 摇杆移动，Space / 按钮闪避，1–4 选择奖励，Esc 暂停查看构筑</li>
             </ul>
             <button class="primary compact" id="note-enter-btn">
-              <span class="btn-copy"><b>进入训练回廊</b><small>10-STEP RUN</small></span>
+              <span class="btn-copy"><b>开始完整征程</b><small>4 WORLDS · 58 STEPS</small></span>
               <span class="btn-arrow"><svg><use href="#i-arrow" /></svg></span>
             </button>
           </div>

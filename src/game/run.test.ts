@@ -10,7 +10,8 @@ import {
   hasUpgradeableRule,
   planNodeCount,
   planStepCount,
-  stepEncounters
+  stepEncounters,
+  totalStepsFrom
 } from './run';
 import { ROOMS } from './rooms';
 import { buildRoomRewards } from './rooms';
@@ -160,6 +161,13 @@ describe('run plan', () => {
   });
 
 
+  it('counts the full staircase from each start world', () => {
+    expect(totalStepsFrom(0)).toBe(58);
+    expect(totalStepsFrom(1)).toBe(48);
+    expect(totalStepsFrom(2)).toBe(35);
+    expect(totalStepsFrom(3)).toBe(22);
+  });
+
   it('builds a boundless waste chapter of 22 steps on large maps', () => {
     const plan = buildChapterPlan(3, random);
     expect(planStepCount(plan)).toBe(22);
@@ -172,7 +180,7 @@ describe('run plan', () => {
     const last = plan[plan.length - 1];
     expect(last.kind).toBe('encounter');
     if (last.kind === 'encounter' && last.encounter.kind === 'room') {
-      expect(last.encounter.room.boss).toBe('source');
+      expect(last.encounter.room.boss).toBe('worldEater');
       expect(last.encounter.room.arenaSize).toBe(2400);
     }
     const events = plan

@@ -343,6 +343,10 @@ function showResult(payload: RunEndPayload): void {
       chaptersTotal: payload.chaptersTotal,
       startChapter: payload.startChapter
     }),
+    reachedChapter:
+      payload.victory && !stageOnly
+        ? payload.chaptersTotal
+        : Math.min(payload.chaptersTotal, payload.chapterIndex + 1),
     startChapter: payload.startChapter,
     stageOnly,
     relics: payload.relics,
@@ -1018,7 +1022,7 @@ window.addEventListener('keydown', (event) => {
     return;
   }
   if (isRewardVisible()) {
-    const slot = ['Digit1', 'Digit2', 'Digit3'].indexOf(event.code);
+    const slot = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(event.code);
     if (slot >= 0) {
       event.preventDefault();
       pickReward(slot);

@@ -86,6 +86,15 @@ describe('run telemetry', () => {
     expect(line).toContain('异变 5');
   });
 
+  it('uses the absolute reached world for the deepest record', () => {
+    const summary = summarize([
+      record({ chaptersCleared: 1, reachedChapter: 3, startChapter: 1 }),
+      record({ chaptersCleared: 1, reachedChapter: 2, startChapter: 1 })
+    ]);
+    expect(summary.bestChapters).toBe(3);
+    expect(formatRecordLine(summary)).toContain('最深 W3');
+  });
+
   it('persists the extended run fields for playtest analysis', () => {
     const storage = store();
     saveRun(

@@ -55,6 +55,7 @@ const objectiveKills = byId<HTMLElement>('objective-kills');
 const mobileKills = byId<HTMLElement>('mobile-kills');
 const threatLevel = byId<HTMLElement>('threat-level');
 const buildCount = byId<HTMLElement>('build-count');
+const styleBadge = byId<HTMLElement>('style-badge');
 
 const slotTrajectory = byId<HTMLElement>('slot-trajectory');
 const slotImpact = byId<HTMLElement>('slot-impact');
@@ -87,6 +88,21 @@ const miniSecondaryName = byId<HTMLElement>('mini-secondary-name');
 const miniTrajectoryStatus = byId<HTMLElement>('mini-trajectory-status');
 const miniImpactStatus = byId<HTMLElement>('mini-impact-status');
 const miniSecondaryStatus = byId<HTMLElement>('mini-secondary-status');
+const miniCore = byId<HTMLElement>('mini-core');
+const miniCoreIcon = byId<SVGUseElement>('mini-core-icon');
+const miniCoreName = byId<HTMLElement>('mini-core-name');
+const miniCoreStatus = byId<HTMLElement>('mini-core-status');
+const mobileExtras = byId<HTMLElement>('mobile-extras');
+
+let mobileRelicCount = 0;
+let mobileLateCount = 0;
+let mobileMutationName = '无';
+let mobileComboLabel = '基础魔弹';
+
+function renderMobileExtras(): void {
+  const mutation = mobileMutationName === '无' ? '' : ` · 突变 ${mobileMutationName}`;
+  mobileExtras.textContent = `${mobileComboLabel} · 遗物 ${mobileRelicCount} · 后期 ${mobileLateCount}${mutation}`;
+}
 
 const comboKicker = byId<HTMLElement>('combo-kicker');
 const comboName = byId<HTMLElement>('combo-name');
@@ -181,8 +197,18 @@ function bindItemTip(anchor: HTMLElement, getData: () => ItemTipData | null): vo
   };
 }
 
-const PHASE_LABELS = ['秩序', '混乱', '规则剥夺'];
+const PHASE_LABELS: Record<string, readonly string[]> = {
+  arbiter: ['秩序', '混乱', '规则剥夺'],
+  core: ['脉冲', '过载', '失序'],
+  source: ['源律', '规则风暴', '终焉'],
+  worldEater: ['荒潮', '裂世', '吞世']
+};
+const DEFAULT_PHASE_LABELS = PHASE_LABELS.arbiter;
 const PHASE_NUMERALS = ['I', 'II', 'III'];
+
+export function bossPhaseLabels(kind: string): readonly string[] {
+  return PHASE_LABELS[kind] ?? DEFAULT_PHASE_LABELS;
+}
 
 export function setBossBar(
   state: {
@@ -191,27 +217,43 @@ export function setBossBar(
     maxHp: number;
     phase: number;
     enraged?: boolean;
+    phaseLabels?: readonly string[];
+    variant?: 'boss' | 'elite';
   } | null
 ): void {
   document.body.classList.toggle('boss-active', Boolean(state));
   if (!state) {
     bossBar.hidden = true;
+    bossBar.classList.remove('is-elite');
+    bossPips.forEach((pip) => {
+      pip.hidden = false;
+    });
     return;
   }
   bossBar.hidden = false;
   bossBarName.textContent = state.name;
+  const elite = state.variant === 'elite';
   const index = Math.max(0, Math.min(2, state.phase - 1));
-  bossBarPhase.textContent = state.enraged
-    ? 'PHASE III · 暴走'
-    : `PHASE ${PHASE_NUMERALS[index]} · ${PHASE_LABELS[index]}`;
+  const labels = state.phaseLabels ?? DEFAULT_PHASE_LABELS;
+  bossBarPhase.textContent = elite
+    ? 'MINI BOSS · 领袖'
+    : state.enraged
+      ? 'PHASE III · 暴走'
+      : `PHASE ${PHASE_NUMERALS[index]} · ${labels[index] ?? labels[labels.length - 1]}`;
   bossBarPhase.dataset.phase = String(state.phase);
   bossBar.classList.toggle('is-enraged', Boolean(state.enraged));
+  bossBar.classList.toggle('is-elite', elite);
+  bossPips.forEach((pip, pipIndex) => {
+    pip.hidden = elite;
+    pip.classList.toggle('active', !elite && pipIndex < state.phase);
+  });
   bossBarFill.style.width = `${Math.max(0, Math.min(100, (state.hp / state.maxHp) * 100))}%`;
-  bossPips.forEach((pip, pipIndex) => pip.classList.toggle('active', pipIndex < state.phase));
 }
 
 export function setMutation(def: MutationDef | null): void {
   mutationLine.hidden = !def;
+  mobileMutationName = def ? def.name : '无';
+  renderMobileExtras();
   bindItemTip(mutationLine, () =>
     def
       ? {
@@ -228,6 +270,8 @@ export function setMutation(def: MutationDef | null): void {
 
 export function setRelics(relics: readonly RelicDef[]): void {
   relicLine.hidden = relics.length === 0;
+  mobileRelicCount = relics.length;
+  renderMobileExtras();
   relicCount.textContent = `${relics.length} / 2`;
   relicNames.textContent = relics.length ? relics.map((relic) => relic.name).join(' · ') : '—';
   bindItemTip(relicLine, () =>
@@ -250,6 +294,8 @@ export function setLate(upgrades: readonly LateUpgradeDef[]): void {
     else grouped.set(upgrade.id, { def: upgrade, level: 1 });
   }
   const entries = [...grouped.values()];
+  mobileLateCount = entries.length;
+  renderMobileExtras();
   lateNames.textContent = entries.length
     ? entries
         .map(({ def, level }) => (level > 1 ? `${def.name} Lv.${level}` : def.name))
@@ -340,8 +386,12 @@ export function setRoomProgress(progress: RoomProgress): void {
       : '';
   const mutatorPrefix = progress.mutator ? `${progress.mutator} · ` : '';
   objectiveRoom.textContent = `${mutatorPrefix}${chapterPrefix}ROOM ${progress.index} / ${progress.total}`;
-  objectiveTime.textContent = `${progress.cleared} / ${progress.quota}`;
+  objectiveTime.textContent = `${Math.min(progress.cleared, progress.quota)} / ${progress.quota}`;
   survivalFill.style.width = `${Math.min(100, (progress.cleared / progress.quota) * 100)}%`;
+  if (styleBadge) {
+    styleBadge.innerHTML = `${progress.total}<br />STEP`;
+    styleBadge.setAttribute('aria-label', `本世界 ${progress.total} 步`);
+  }
   threatLevel.textContent = ROMAN[progress.index - 1] ?? String(progress.index);
   phasePips.forEach((pip, index) => {
     pip.classList.toggle('active', index < progress.index);
@@ -534,7 +584,7 @@ export function setBuild(build: PlayerBuild, acquired: ReadonlySet<RuleKey> = ne
     miniSecondaryStatus.textContent = '空槽';
   }
 
-  buildCount.textContent = `等级 ${buildLevelSum(build)} / 9`;
+  buildCount.textContent = `规则 Lv.${buildLevelSum(build)} / 9`;
   const combo = getBuildCombo(build);
   comboKicker.textContent = combo.complete ? 'CURRENT RULE COMBO' : 'CURRENT RULE';
   comboName.textContent = combo.name;
@@ -542,6 +592,8 @@ export function setBuild(build: PlayerBuild, acquired: ReadonlySet<RuleKey> = ne
   comboSub.textContent = `${combo.description}${thirdLabel}`;
   mobileComboName.textContent = combo.name;
   mobileComboSub.textContent = `${combo.description}${thirdLabel}`;
+  mobileComboLabel = combo.name;
+  renderMobileExtras();
   comboBanner.classList.toggle('is-empowered', combo.complete);
 
   renderCodex(acquired);
@@ -645,13 +697,30 @@ export function resetM0Hud(): void {
   resetHordeHud();
   setBossBar(null);
   setMutation(null);
+  setRelics([]);
+  setLate([]);
+  setCore(null);
   setSealedRule(null, false);
   hideRuleToast();
 }
 
 export function setCore(def: CoreDef | null, level = 0): void {
   coreLine.hidden = !def;
-  if (!def) return;
+  if (!def) {
+    miniCore.classList.add('is-locked');
+    miniCore.classList.remove('is-owned');
+    miniCore.style.setProperty('--rule-color', '#60748c');
+    miniCoreIcon.setAttribute('href', '#i-shard');
+    miniCoreName.textContent = '律核';
+    miniCoreStatus.textContent = '空槽';
+    return;
+  }
+  miniCore.classList.remove('is-locked');
+  miniCore.classList.add('is-owned');
+  miniCore.style.setProperty('--rule-color', '#e9bd6b');
+  miniCoreIcon.setAttribute('href', def.icon);
+  miniCoreName.textContent = def.name;
+  miniCoreStatus.textContent = `Lv.${level}`;
   coreCount.textContent = `${level} / 3`;
   coreNames.textContent = `${def.name} Lv.${level}`;
   if (coreIcon) coreIcon.setAttribute('href', def.icon);

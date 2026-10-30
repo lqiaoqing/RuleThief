@@ -222,7 +222,7 @@ export function reachedChapterCount(input: RunDepthInput): number {
 }
 
 export function clearedChapterCount(input: RunDepthInput): number {
-  const start = Math.max(0, Math.min(2, Math.floor(input.startChapter ?? 0)));
+  const start = Math.max(0, Math.min(3, Math.floor(input.startChapter ?? 0)));
   return Math.max(0, reachedChapterCount(input) - start);
 }
 

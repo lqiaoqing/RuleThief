@@ -1114,7 +1114,7 @@ try {
     'stopping after chapter one settles as a stage clear',
     bossVictory.kicker === 'CHAPTER COMPLETE' &&
       /阶段完成/.test(bossVictory.title ?? '') &&
-      bossVictory.rooms === '10 / 10',
+      bossVictory.rooms === '10 / 58',
     JSON.stringify(bossVictory)
   );
   check(
@@ -1214,7 +1214,7 @@ try {
     rooms: document.getElementById('result-rooms')?.textContent
   }));
   check('death shows the defeat result', defeat.title === '规则耗尽' && defeat.cls.includes('is-defeat'), JSON.stringify(defeat));
-  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 10', String(defeat.rooms));
+  check('defeat reports zero rooms cleared', defeat.rooms === '0 / 58', String(defeat.rooms));
 
   const damageLine = await page.$eval('#result-damage', (el) => el.textContent);
   check(
@@ -1595,7 +1595,7 @@ try {
   }));
   check(
     'boss race settles as a stage clear with all ten steps',
-    raceResult.kicker === 'CHAPTER COMPLETE' && raceResult.rooms === '10 / 10',
+    raceResult.kicker === 'CHAPTER COMPLETE' && raceResult.rooms === '10 / 58',
     JSON.stringify(raceResult)
   );
   await bossPractice.close();
@@ -2051,7 +2051,7 @@ try {
     'clearing the boundless waste completes the four-world campaign',
     wasteResult.title === '规则终结' &&
       wasteResult.kicker === 'RUN COMPLETE' &&
-      wasteResult.rooms === '22 / 22' &&
+      wasteResult.rooms === '22 / 58' &&
       (wasteResult.sub ?? '').includes('吞世者'),
     JSON.stringify(wasteResult)
   );
@@ -2626,7 +2626,7 @@ try {
   check(
     'third impact rule applies alongside the main impact',
     Boolean(thirdEnemy?.burning && thirdEnemy?.slowed) &&
-      thirdHud.count === '等级 9 / 9' &&
+      thirdHud.count === '规则 Lv.9 / 9' &&
       thirdHud.slot === '冰霜',
     JSON.stringify({ thirdEnemy, thirdHud })
   );

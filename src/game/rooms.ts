@@ -1193,7 +1193,7 @@ const WASTE_ROOMS: readonly RoomDef[] = [
     spawnInterval: 99,
     mix: [],
     arenaSize: 2400,
-    boss: 'source',
+    boss: 'worldEater',
     rewardCount: 0
   }
 ];
@@ -1211,26 +1211,22 @@ export const FRONTIER_KINDS: readonly EnemyKind[] = [
   'hexer'
 ];
 
-export function getRoomRuleKeys(room: RoomDef): RuleKey[] {
-  const keys = new Set<RuleKey>();
-  const source = room.arenaSize && room.arenaSize > 1000 && !room.boss
-    ? FRONTIER_KINDS
-    : room.mix.map((entry) => entry.kind);
-  for (const kind of source) {
-    keys.add(ENEMY_SPECS[kind].rule);
+export function getRoomEnemyKinds(room: RoomDef): EnemyKind[] {
+  const kinds: EnemyKind[] = [];
+  if (room.boss) kinds.push(room.boss);
+  if (room.leader && !kinds.includes(room.leader)) kinds.push(room.leader);
+  for (const entry of room.mix) {
+    if (!kinds.includes(entry.kind)) kinds.push(entry.kind);
   }
-  if (room.leader) keys.add(ENEMY_SPECS[room.leader].rule);
-  return [...keys];
+  return kinds;
 }
 
-export function getRoomEnemyKinds(room: RoomDef): EnemyKind[] {
-  const kinds =
-    room.arenaSize && room.arenaSize > 1000 && !room.boss
-      ? [...FRONTIER_KINDS]
-      : room.mix.map((entry) => entry.kind);
-  if (room.leader && !kinds.includes(room.leader)) kinds.push(room.leader);
-  if (room.boss && !kinds.includes(room.boss)) kinds.push(room.boss);
-  return kinds;
+export function getRoomRuleKeys(room: RoomDef): RuleKey[] {
+  const keys = new Set<RuleKey>();
+  for (const kind of getRoomEnemyKinds(room)) {
+    keys.add(ENEMY_SPECS[kind].rule);
+  }
+  return [...keys];
 }
 
 export function pickSpawnKind(room: RoomDef, random: () => number = Math.random): EnemyKind {

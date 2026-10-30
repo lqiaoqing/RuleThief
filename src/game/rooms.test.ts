@@ -70,12 +70,13 @@ describe('room definitions', () => {
     }
   });
 
-  it('ends with the source of rules boss room', () => {
+  it('ends with the world eater boss room', () => {
     const bossRoom = ROOMS[ROOMS.length - 1];
-    expect(bossRoom.boss).toBe('source');
+    expect(bossRoom.id).toBe('world-eater');
+    expect(bossRoom.boss).toBe('worldEater');
     expect(bossRoom.quota).toBe(1);
     expect(bossRoom.mix).toHaveLength(0);
-    expect(getRoomEnemyKinds(bossRoom)).toEqual(['source']);
+    expect(getRoomEnemyKinds(bossRoom)).toEqual(['worldEater']);
     expect(buildRoomRewards(createEmptyBuild(), bossRoom, random)).toHaveLength(0);
   });
 
@@ -349,5 +350,19 @@ describe('boundless waste rooms', () => {
     const combat = waste.filter((room) => !room.boss);
     expect(combat.every((room) => room.quota >= 180)).toBe(true);
     expect(combat.every((room) => room.maxAlive >= 45)).toBe(true);
+  });
+
+  it('uses each waste room mix in its preview instead of one shared roster', () => {
+    const byId = (id: string) => ROOMS.find((room) => room.id === id)!;
+    const gate = getRoomEnemyKinds(byId('waste-gate'));
+    const bones = getRoomEnemyKinds(byId('bone-field'));
+    const dunes = getRoomEnemyKinds(byId('iron-dunes'));
+    expect(gate).toEqual(expect.arrayContaining(['brood', 'spawnling']));
+    expect(bones).toEqual(expect.arrayContaining(['splitter', 'bulwark']));
+    expect(dunes).toEqual(expect.arrayContaining(['bulwark', 'artillery', 'phase']));
+    expect(gate).not.toEqual(dunes);
+    const mini = byId('world-scar');
+    expect(getRoomEnemyKinds(mini)[0]).toBe('broodQueen');
+    expect(getRoomEnemyKinds(byId('last-bastion'))[0]).toBe('bastion');
   });
 });

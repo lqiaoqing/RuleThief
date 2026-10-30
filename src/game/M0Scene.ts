@@ -3,6 +3,7 @@ import { ARENA, ASSETS, COLORS, formatTime } from './theme';
 import {
   resetM0Hud,
   setBossBar,
+  bossPhaseLabels,
   setBuild,
   setDash,
   setHp,
@@ -79,9 +80,9 @@ import {
   updateSource as updateSourceBoss,
   type SourceHost
 } from './bosses/source';
-import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, MAX_REFORGES, type CoverDef, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
+import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, FRONTIER_KINDS, MAX_REFORGES, type CoverDef, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
 import { WaveDirector, buildWavePlan } from './waves';
-import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
+import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, totalStepsFrom, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
   MUTATIONS,
@@ -440,6 +441,7 @@ export class M0Scene extends Phaser.Scene {
   private mutation: MutationState = createMutationState();
   private bossPhase = 0;
   private bossRef: EnemyUnit | null = null;
+  private leaderRef: EnemyUnit | null = null;
   private roomSpeedMult = 1;
   private roomBonusCards = 0;
   private roomHazardCd = 0;
@@ -1396,7 +1398,16 @@ export class M0Scene extends Phaser.Scene {
     if (room.leader) {
       this.spawnEnemy(room.leader, anchorX, anchorY);
       this.roomSpawned += 1;
+      const leader = this.enemies[this.enemies.length - 1] ?? null;
+      this.leaderRef = leader && ENEMY_SPECS[leader.kind].hp >= 1000 ? leader : null;
       this.spawnLeaderBurst(anchorX, anchorY);
+      if (this.leaderRef) {
+        showRuleToast(
+          'blast',
+          `小 BOSS · ${ENEMY_SPECS[this.leaderRef.kind].name}`,
+          '精英领袖已压上 · 优先处理或先清场'
+        );
+      }
     }
     if (room.boss) {
       this.spawnEnemy(room.boss, anchorX, anchorY + 25);
@@ -1455,18 +1466,29 @@ export class M0Scene extends Phaser.Scene {
 
     if (this.hordeEnabled && !room.boss && !room.surge) {
       const remaining = Math.max(0, room.quota - this.roomSpawned);
-      this.waveDirector =
-        remaining > 0
-          ? new WaveDirector(
-              buildWavePlan(
-                remaining,
-                this.chapterIndex,
-                Boolean(room.elite),
-                this.waveCountForRoom(room)
-              )
-            )
-          : null;
+      if (remaining > 0) {
+        const wavePlan = buildWavePlan(
+          remaining,
+          this.chapterIndex,
+          Boolean(room.elite),
+          this.waveCountForRoom(room)
+        );
+        if (this.narrowScreen) {
+          wavePlan.maxAlive = Math.min(wavePlan.maxAlive, 30);
+        }
+        this.waveDirector = new WaveDirector(wavePlan);
+      } else {
+        this.waveDirector = null;
+      }
     }
+  }
+
+  private get narrowScreen(): boolean {
+    return this.scale.width < 700;
+  }
+
+  private get aliveCap(): number {
+    return this.narrowScreen ? 30 : Number.MAX_SAFE_INTEGER;
   }
 
   private spawnLeaderBurst(x: number, y: number): void {
@@ -2268,6 +2290,7 @@ export class M0Scene extends Phaser.Scene {
     this.sealZone = null;
     this.bossRef = null;
     this.bossPhase = 0;
+    this.leaderRef = null;
     this.playerSprite?.clearTint();
 
     for (const child of [...this.fxLayer.list, ...this.enemyLayer.list]) {
@@ -2622,15 +2645,16 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
+    const auraSize = this.narrowScreen ? 210 : 170;
     const shadow = this.add
       .image(0, 32, 'shadow')
       .setDisplaySize(88, 30)
       .setAlpha(0.6);
     const aura = this.add
       .image(0, 3, 'glow')
-      .setDisplaySize(170, 170)
+      .setDisplaySize(auraSize, auraSize)
       .setTint(COLORS.cyan)
-      .setAlpha(0.13)
+      .setAlpha(this.narrowScreen ? 0.2 : 0.13)
       .setBlendMode(Phaser.BlendModes.ADD);
     const sprite = this.add.image(0, -10, 'player').setDisplaySize(98, 98);
 
@@ -2660,11 +2684,11 @@ export class M0Scene extends Phaser.Scene {
 
     const ring = this.add.graphics();
     ring.setPosition(0, 28);
-    ring.lineStyle(1, COLORS.cyan, 0.2);
+    ring.lineStyle(this.narrowScreen ? 2 : 1, COLORS.cyan, this.narrowScreen ? 0.36 : 0.2);
     for (let i = 0; i < 18; i += 2) {
       const a0 = (i / 18) * Math.PI * 2;
       ring.beginPath();
-      ring.arc(0, 0, 34, a0, a0 + 0.15);
+      ring.arc(0, 0, this.narrowScreen ? 42 : 34, a0, a0 + 0.15);
       ring.strokePath();
     }
     root.addAt(ring, 0);
@@ -4080,6 +4104,10 @@ export class M0Scene extends Phaser.Scene {
       this.onBossDefeated(enemy);
       return;
     }
+    if (enemy === this.leaderRef) {
+      this.leaderRef = null;
+      setBossBar(null);
+    }
 
     if (this.kills > 0 && this.kills % 8 === 0) {
       this.dropHeal(x, y);
@@ -4126,6 +4154,7 @@ export class M0Scene extends Phaser.Scene {
   private spawnOverloadPack(count: number): void {
     const room = this.getRoom();
     if (room.boss || room.mix.length === 0 || this.overloadSpawned >= 2) return;
+    if (this.enemies.length + this.pendingSpawns >= this.aliveCap) return;
     this.overloadSpawned += 1;
     this.totalOverloads += 1;
     for (let index = 0; index < count; index += 1) {
@@ -4456,25 +4485,27 @@ export class M0Scene extends Phaser.Scene {
       kind === 'source';
     const color = RULE_TINTS[spec.rule];
     const spriteY = hover ? -20 : -8;
+    const visualScale = this.narrowScreen ? 0.82 : 1;
+    const visualSize = Math.round(spec.displaySize * visualScale);
 
     const shadow = this.add
       .image(0, hover ? 22 : 31, 'shadow')
-      .setDisplaySize(hover ? 108 : 82, hover ? 30 : 26)
+      .setDisplaySize(hover ? 108 * visualScale : 82 * visualScale, hover ? 30 : 26)
       .setAlpha(hover ? 0.38 : 0.52);
     const aura = this.add
       .image(0, hover ? 0 : 8, 'glow')
-      .setDisplaySize(spec.displaySize * 1.08, spec.displaySize * 1.08)
+      .setDisplaySize(visualSize * 1.08, visualSize * 1.08)
       .setTint(color)
       .setAlpha(elite ? 0.2 : 0.1)
       .setBlendMode(Phaser.BlendModes.ADD);
     const warning = this.add.graphics();
-    const sprite = this.add.image(0, spriteY, spec.sprite).setDisplaySize(spec.displaySize, spec.displaySize);
+    const sprite = this.add.image(0, spriteY, spec.sprite).setDisplaySize(visualSize, visualSize);
     const castRing = this.add
       .circle(0, hover ? 14 : 22, spec.radius + 12, 0x000000, 0)
       .setStrokeStyle(1, elite ? COLORS.gold : color, elite ? 0.45 : 0.22);
 
-    const barWidth = Math.max(46, Math.round(spec.displaySize * 0.52));
-    const barY = -Math.round(spec.displaySize * 0.42) - 14;
+    const barWidth = Math.max(40, Math.round(visualSize * 0.52));
+    const barY = -Math.round(visualSize * 0.42) - 14;
     const hpBg = this.add
       .rectangle(0, barY, barWidth, 5, 0x0a121f, 0.82)
       .setStrokeStyle(1, elite ? 0x6d5326 : 0x2a3d55, 0.5);
@@ -5503,7 +5534,12 @@ export class M0Scene extends Phaser.Scene {
     this.cameras.main.shake(520, 0.008);
     this.cameras.main.flash(260, 255, 80, 90);
     audio.play('victory');
-    showRuleToast('blast', '规则之源 · 暴走', '核心免伤 6 秒 · 躲开弹幕与召唤');
+    const bossName = this.bossRef ? ENEMY_SPECS[this.bossRef.kind].name : '规则之源';
+    const sub =
+      this.bossRef?.kind === 'worldEater'
+        ? '吞世者免伤 6 秒 · 躲开环形弹幕与裂隙'
+        : '核心免伤 6 秒 · 躲开弹幕与召唤';
+    showRuleToast('blast', `${bossName} · 暴走`, sub);
     this.refreshBossHud();
   }
 
@@ -5593,11 +5629,19 @@ export class M0Scene extends Phaser.Scene {
     const bossName = this.bossRef
       ? ENEMY_SPECS[this.bossRef.kind].name
       : '规则之源';
-    showRuleToast(
-      'blast',
-      `${bossName} · 第 ${phase} 阶段`,
-      phase === 1 ? '源律 · 扇形弹幕' : phase === 2 ? '规则风暴 · 封印与召唤' : '终焉 · 虚空裂隙全覆盖'
-    );
+    const worldEater = this.bossRef?.kind === 'worldEater';
+    const phaseSub = worldEater
+      ? phase === 1
+        ? '荒潮 · 扇形弹幕'
+        : phase === 2
+          ? '裂隙 · 召唤与落点'
+          : '吞世 · 环形弹幕与裂隙'
+      : phase === 1
+        ? '源律 · 扇形弹幕'
+        : phase === 2
+          ? '规则风暴 · 封印与召唤'
+          : '终焉 · 虚空裂隙全覆盖';
+    showRuleToast('blast', `${bossName} · 第 ${phase} 阶段`, phaseSub);
     this.refreshBossHud();
   }
 
@@ -5664,7 +5708,7 @@ export class M0Scene extends Phaser.Scene {
     if (enemy.attackCd > 0) return;
     enemy.attackCd = 3.2;
     const alive = this.enemies.filter((item) => !item.dead && item.kind === 'spawnling').length;
-    if (alive >= 18) return;
+    if (alive >= 18 || (this.narrowScreen && this.enemies.length >= this.aliveCap + 8)) return;
     for (let index = 0; index < 2; index += 1) {
       const angle = combatRandom() * Math.PI * 2;
       const x = Phaser.Math.Clamp(enemy.root.x + Math.cos(angle) * 46, 70, this.arenaSize - 70);
@@ -5905,7 +5949,24 @@ export class M0Scene extends Phaser.Scene {
       hp: boss.hp,
       maxHp: boss.maxHp,
       phase: this.bossPhase,
-      enraged: this.sourceBerserkTime > 0
+      enraged: this.sourceBerserkTime > 0,
+      phaseLabels: bossPhaseLabels(boss.kind)
+    });
+  }
+
+  private refreshLeaderHud(): void {
+    const leader = this.leaderRef;
+    if (!leader || leader.dead) {
+      this.leaderRef = null;
+      setBossBar(null);
+      return;
+    }
+    setBossBar({
+      name: `小 BOSS · ${ENEMY_SPECS[leader.kind].name}`,
+      hp: leader.hp,
+      maxHp: leader.maxHp,
+      phase: 1,
+      variant: 'elite'
     });
   }
 
@@ -6576,7 +6637,12 @@ export class M0Scene extends Phaser.Scene {
     }
     if (this.roomSpawned >= room.quota) return;
     this.spawnCd -= dt;
-    if (this.spawnCd > 0 || this.enemies.length + this.pendingSpawns >= room.maxAlive) return;
+    if (
+      this.spawnCd > 0 ||
+      this.enemies.length + this.pendingSpawns >= Math.min(room.maxAlive, this.aliveCap)
+    ) {
+      return;
+    }
     const kind = pickSpawnKind(room, combatRandom);
     const pos = this.chooseSpawnPosition();
     this.spawnPortal(kind, pos.x, pos.y);
@@ -6593,26 +6659,20 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private pickWaveKind(room: RoomDef): EnemyKind {
-    if (this.chapterIndex >= 3 && combatRandom() < 0.82) {
-      const frontier: EnemyKind[] = [
-        'brood',
-        'spawnling',
-        'splitter',
-        'bulwark',
-        'burrower',
-        'artillery',
-        'mirror',
-        'hexer'
-      ];
-      return frontier[combatInt(0, frontier.length - 1)];
+    if (this.chapterIndex >= 3) {
+      const roll = combatRandom();
+      if (roll < 0.2) {
+        return FRONTIER_KINDS[combatInt(0, FRONTIER_KINDS.length - 1)];
+      }
+      if (roll < 0.3) {
+        const fodder: EnemyKind[] = ['spawnling', 'bat', 'spore', 'slime'];
+        return fodder[combatInt(0, fodder.length - 1)];
+      }
+      return pickSpawnKind(room, combatRandom);
     }
     if (this.chapterIndex > 0 && combatRandom() < 0.5) {
       const fodder: EnemyKind[] =
-        this.chapterIndex === 1
-          ? ['beetle', 'slime', 'bomber']
-          : this.chapterIndex >= 3
-            ? ['spawnling', 'bat', 'spore', 'slime']
-            : ['bat', 'spore', 'wisp'];
+        this.chapterIndex === 1 ? ['beetle', 'slime', 'bomber'] : ['bat', 'spore', 'wisp'];
       return fodder[combatInt(0, fodder.length - 1)];
     }
     return pickSpawnKind(room, combatRandom);
@@ -6632,7 +6692,8 @@ export class M0Scene extends Phaser.Scene {
     this.surgeSpawnCd -= dt;
     if (
       this.surgeSpawnCd <= 0 &&
-      this.enemies.length + this.pendingSpawns < this.getRoom().maxAlive
+      this.enemies.length + this.pendingSpawns <
+        Math.min(this.getRoom().maxAlive, this.aliveCap)
     ) {
       this.surgeSpawnCd = 0.55;
       this.spawnSurgePack();
@@ -6754,7 +6815,11 @@ export class M0Scene extends Phaser.Scene {
         const wave = this.waveDirector.snapshot();
         setWaveStatus(wave.wave, wave.waves, this.enemies.length + this.pendingSpawns);
       }
-      if (this.bossRef) this.refreshBossHud();
+      if (this.bossRef) {
+        this.refreshBossHud();
+      } else if (this.leaderRef) {
+        this.refreshLeaderHud();
+      }
     }
   }
 
@@ -6783,8 +6848,11 @@ export class M0Scene extends Phaser.Scene {
       rules: Number(Boolean(this.build.trajectory)) + Number(Boolean(this.build.impact)),
       combo: getBuildCombo(this.build).name,
       levelSum: buildLevelSum(this.build),
-      roomsCleared: this.stepsClearedBefore + (victory ? this.stepTotal : this.stepIndex),
-      roomsTotal: this.stepsClearedBefore + this.stepTotal,
+      roomsCleared: Math.min(
+        totalStepsFrom(this.startChapter),
+        this.stepsClearedBefore + (victory ? this.stepTotal : this.stepIndex)
+      ),
+      roomsTotal: totalStepsFrom(this.startChapter),
       chapterIndex: this.chapterIndex,
       chaptersTotal: CHAPTERS.length,
       startChapter: this.startChapter,

@@ -12,6 +12,7 @@ export interface RunRecord {
   mutation: string | null;
   topDamage?: string;
   chaptersCleared?: number;
+  reachedChapter?: number;
   startChapter?: number;
   stageOnly?: boolean;
   relics?: string[];
@@ -92,7 +93,9 @@ export function summarize(runs: readonly RunRecord[]): RunSummary {
   const victories = runs.filter((run) => run.victory).length;
   const victoryTimes = runs.filter((run) => run.victory).map((run) => run.seconds);
   const bestSeconds = victoryTimes.length ? Math.min(...victoryTimes) : null;
-  const bestChapters = Math.max(...runs.map((run) => run.chaptersCleared ?? 0));
+  const bestChapters = Math.max(
+    ...runs.map((run) => run.reachedChapter ?? run.chaptersCleared ?? 0)
+  );
   const bestMutator = Math.max(...runs.map((run) => run.mutatorLevel ?? 0));
   const eligible = runs.filter((run) => run.levelSum >= 4);
   const counts = new Map<string, number>();
