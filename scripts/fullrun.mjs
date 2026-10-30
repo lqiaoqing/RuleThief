@@ -32,6 +32,12 @@ async function overlay(page) {
 }
 
 async function finishRoom(page, quota) {
+  const objective = await page.evaluate(() => window.__RT_SNAPSHOT__?.().roomObjective ?? null);
+  if (objective && objective !== 'annihilate') {
+    await page.evaluate(() => window.__RT_COMPLETE_OBJECTIVE__?.());
+    await sleep(250);
+    return true;
+  }
   await page.evaluate((value) => window.__RT_SET_ROOM_KILLS__?.(Math.max(0, value - 1)), quota);
   await page.evaluate(() => window.__RT_END_SURGE__?.());
   await sleep(100);
@@ -50,7 +56,7 @@ async function finishRoom(page, quota) {
 
 async function pickBestCard(page) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await page.evaluate(() => {
+    const picked = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('#rule-offers .rule-card')];
       const pick =
         cards.find(
@@ -60,14 +66,18 @@ async function pickBestCard(page) {
             card.getAttribute('data-kind') === 'late' ||
             card.getAttribute('data-kind') === 'core'
         ) ?? cards[0];
-      pick?.click();
+      if (!pick) return null;
+      const kind = pick.getAttribute('data-kind');
+      pick.click();
+      return { kind };
     });
     await sleep(380);
     const stillOpen = await page.evaluate(
       () => !document.getElementById('altar-screen')?.hidden
     );
-    if (!stillOpen) return;
+    if (!stillOpen) return picked?.kind ?? 'none';
   }
+  return 'none';
 }
 
 const browser = await puppeteer.launch({
@@ -127,6 +137,7 @@ try {
   let roomsCleared = 0;
   let picks = 0;
   let result = null;
+  let previousCore = null;
 
   for (let guard = 0; guard < 400; guard += 1) {
     const view = await overlay(page);
@@ -151,11 +162,25 @@ try {
           }));
         }));
       }
-      await pickBestCard(page);
+      const pickedKind = await pickBestCard(page);
       picks += 1;
       const afterPick = await snapshot(page);
+      const core = afterPick.build?.core ?? null;
+      if (previousCore && !core) {
+        errors.push(`律核丢失：${view.rewardLabel}`);
+      }
+      if (core) previousCore = { ...core };
+      const ruleKeys = [
+        afterPick.build?.trajectory?.key,
+        afterPick.build?.impact?.key,
+        afterPick.build?.secondary?.key
+      ].filter(Boolean);
+      if (new Set(ruleKeys).size !== ruleKeys.length) {
+        errors.push(`规则槽重复：${view.rewardLabel} · ${ruleKeys.join('/')}`);
+      }
       rewardStates.push({
         label: view.rewardLabel,
+        pickedKind,
         relics: afterPick.relics ?? [],
         ascensions: afterPick.ascensions ?? [],
         lateUpgrades: afterPick.lateUpgrades ?? [],

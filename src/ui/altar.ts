@@ -1,5 +1,12 @@
 import { getRuleDef, getRuleName, getRuleSlotLabel, type RuleOffer } from '../game/rules';
-import { ENEMY_SPECS, getRoomEnemyKinds, getRoomRuleKeys, type Reward, type RoomPreview } from '../game/rooms';
+import {
+  ENEMY_SPECS,
+  getRoomEnemyKinds,
+  getRoomObjectiveLabel,
+  getRoomRuleKeys,
+  type Reward,
+  type RoomPreview
+} from '../game/rooms';
 import type { EventPayload, RouteChoicePayload } from '../game/run';
 import { RULE_COLORS } from './hud';
 
@@ -404,7 +411,7 @@ export function renderRoomPreview(payload: RoomPreview): void {
 
   roomEnemies.textContent = '';
   const roomKinds = getRoomEnemyKinds(payload.room);
-  for (const kind of roomKinds.slice(0, 6)) {
+  for (const kind of roomKinds.slice(0, 8)) {
     const spec = ENEMY_SPECS[kind];
     const chip = el('div', `room-enemy${spec.elite ? ' is-elite' : ''}`);
     const img = el('img');
@@ -421,17 +428,23 @@ export function renderRoomPreview(payload: RoomPreview): void {
     chip.append(img, copy, rule);
     roomEnemies.append(chip);
   }
-  if (roomKinds.length > 6) {
-    roomEnemies.append(el('div', 'room-enemy-more', `+${roomKinds.length - 6}`));
+  if (roomKinds.length > 8) {
+    roomEnemies.append(el('div', 'room-enemy-more', `+${roomKinds.length - 8}`));
   }
 
   const foot = roomScreen.querySelector<HTMLElement>('.room-foot span');
   if (foot) {
-    foot.textContent = surge
-      ? '高压遭遇：连续波次 + 保底精英，坚持到计时结束；清场后四选一。'
-      : elite
-        ? '精英房：怪潮与领袖一起压上，清场后四选一。连杀会加快攻击。'
-        : '怪潮成组压上，清空后三选一；连杀会加快攻击，后期怪潮会混入头目。';
+    const objective = getRoomObjectiveLabel(payload.room);
+    const base = objective
+      ? elite
+        ? '完成目标后四选一；连杀会加快攻击。'
+        : '完成目标后三选一；连杀会加快攻击。'
+      : surge
+        ? '高压遭遇：连续波次 + 保底精英，坚持到计时结束；清场后四选一。'
+        : elite
+          ? '精英房：怪潮与领袖一起压上，清场后四选一。连杀会加快攻击。'
+          : '怪潮成组压上，清空后三选一；连杀会加快攻击，后期怪潮会混入头目。';
+    foot.textContent = objective ? `${objective} · ${base}` : base;
   }
 }
 

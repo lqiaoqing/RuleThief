@@ -26,6 +26,7 @@ import {
   applyRuleOffer,
   ascendRule,
   buildLevelSum,
+  cloneBuild,
   createEmptyBuild,
   getBuildCombo,
   getImpactProfile,
@@ -36,10 +37,14 @@ import {
   isTrajectoryKey,
   mergeBurn,
   mergeFrost,
+  preserveBuildCore,
   reforgeRule,
   reforgeSlot,
+  removeDuplicateSecondary,
   selectChainTargets,
+  swapRandomRuleBuild,
   TriggerBudget,
+  upgradeRandomRuleBuild,
   type ChainCandidate,
   type ImpactKey,
   type ImpactProfile,
@@ -80,9 +85,21 @@ import {
   updateSource as updateSourceBoss,
   type SourceHost
 } from './bosses/source';
-import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, ENEMY_SPECS, FRONTIER_KINDS, MAX_REFORGES, type CoverDef, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
+import { ROOMS, buildChapterRewards, buildRoomRewards, pickSpawnKind, getRoomEnemyKinds, getRoomObjectiveLabel, ENEMY_SPECS, FRONTIER_KINDS, MAX_REFORGES, type CoverDef, type EnemyKind, type ReforgeOffer, type Reward, type RoomDef, type SupportId } from './rooms';
 import { WaveDirector, buildWavePlan } from './waves';
 import { EVENTS, CHAPTERS, buildChapterPlan, eventOptionsFor, hasUpgradeableRule, totalStepsFrom, type ChapterDef, type Encounter, type EventDef, type EventEffect, type EventId, type RunStep } from './run';
+import { segmentIntersectsCircle } from './geometry';
+import {
+  updateArtilleryAi,
+  updateBroodAi,
+  updateBulwarkAi,
+  updateBurrowerAi,
+  updateHexerAi,
+  updateMirrorAi,
+  updateSplitterAi,
+  type FrontierAiHost
+} from './frontierAi';
+import { updateCoreEffect, type CoreEffectHost } from './coreEffects';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
   MUTATIONS,
@@ -113,7 +130,7 @@ const DAMAGE_LABELS: Record<DamageSource, string> = {
 };
 type EnemyState = 'approach' | 'telegraph' | 'charge' | 'recover' | 'idle' | 'cast';
 
-interface EnemyUnit {
+export interface EnemyUnit {
   id: number;
   kind: EnemyKind;
   root: Phaser.GameObjects.Container;
@@ -355,6 +372,12 @@ export class M0Scene extends Phaser.Scene {
   private roomSpawned = 0;
   private pendingSpawns = 0;
   private rewardOpen = false;
+  private objectiveRemaining = 0;
+  private objectiveDuration = 0;
+  private objectiveStartDistance = 0;
+  private objectiveCenter = new Phaser.Math.Vector2();
+  private objectiveMarker?: Phaser.GameObjects.Container;
+  private objectiveWarned = false;
 
   private build: PlayerBuild = createEmptyBuild();
   private acquired = new Set<RuleKey>();
@@ -795,8 +818,8 @@ export class M0Scene extends Phaser.Scene {
     this.playerSprite.setAlpha(1).clearTint();
     this.playerSprite.setRotation(0);
     this.playerSprite.setFlipX(false);
-    this.applyStartChapterKit();
     resetM0Hud();
+    this.applyStartChapterKit();
     setRunClock(0);
     setBuild(this.build, this.acquired);
     setDash(1, 0);
@@ -874,6 +897,182 @@ export class M0Scene extends Phaser.Scene {
     };
   }
 
+  private setupRoomObjective(room: RoomDef): void {
+    this.objectiveMarker?.destroy();
+    this.objectiveMarker = undefined;
+    this.objectiveRemaining = 0;
+    this.objectiveDuration = 0;
+    this.objectiveStartDistance = 0;
+    this.objectiveWarned = false;
+    if (!room.objective) return;
+    if (room.objective === 'hunt') {
+      const label = getRoomObjectiveLabel(room);
+      if (label) showRuleToast('blast', '猎杀目标', `${label} · 击杀领袖后立即清场`);
+      return;
+    }
+    if (room.objective !== 'defend' && room.objective !== 'breakout') return;
+    const centerX = this.arenaSize * 0.5;
+    const centerY =
+      room.objective === 'defend' ? this.arenaSize * 0.52 : this.arenaSize * 0.25;
+    this.objectiveCenter.set(centerX, centerY);
+    this.objectiveDuration = room.objectiveDuration ?? 40;
+    this.objectiveRemaining = this.objectiveDuration;
+    this.objectiveStartDistance = Phaser.Math.Distance.Between(
+      this.playerRoot.x,
+      this.playerRoot.y,
+      centerX,
+      centerY
+    );
+    const radius = room.objectiveRadius ?? (room.objective === 'defend' ? 240 : 90);
+    const color = room.objective === 'defend' ? COLORS.cyan : COLORS.gold;
+    const ring = this.add.graphics();
+    ring.fillStyle(color, 0.055);
+    ring.fillCircle(0, 0, radius);
+    ring.lineStyle(3, color, 0.58);
+    ring.strokeCircle(0, 0, radius);
+    ring.lineStyle(1, color, 0.24);
+    ring.strokeCircle(0, 0, radius * 0.64);
+    const label = this.add
+      .text(0, -radius - 18, room.objective === 'defend' ? '律核祭坛' : '荒原信标', {
+        fontFamily: '"Noto Sans SC", sans-serif',
+        fontSize: '18px',
+        color: '#ffe0a8',
+        stroke: '#0a1018',
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+    const marker = this.add.container(centerX, centerY, [ring, label]);
+    marker.setDepth(8);
+    this.world.add(marker);
+    this.objectiveMarker = marker;
+    showRuleToast(
+      'blast',
+      room.objective === 'defend' ? '区域防守' : '荒原突围',
+      room.objective === 'defend'
+        ? `在祭坛圈内坚持 ${this.objectiveDuration} 秒 · 离开会暂停计时`
+        : '抵达荒原信标 · 不要被追兵拖住'
+    );
+  }
+
+  private updateObjective(dt: number): void {
+    if (this.roomState !== 'fighting') return;
+    const room = this.getRoom();
+    if (room.objective === 'defend') {
+      const radius = room.objectiveRadius ?? 240;
+      const distance = Phaser.Math.Distance.Between(
+        this.playerRoot.x,
+        this.playerRoot.y,
+        this.objectiveCenter.x,
+        this.objectiveCenter.y
+      );
+      if (distance <= radius) {
+        this.objectiveWarned = false;
+        this.objectiveRemaining = Math.max(0, this.objectiveRemaining - dt);
+        if (this.objectiveRemaining <= 0) this.completeObjective();
+      } else if (!this.objectiveWarned) {
+        this.objectiveWarned = true;
+        showRuleToast('blast', '离开祭坛', '防守计时已暂停 · 回到祭坛圈内');
+      }
+      return;
+    }
+    if (room.objective === 'breakout') {
+      const radius = room.objectiveRadius ?? 90;
+      const distance = Phaser.Math.Distance.Between(
+        this.playerRoot.x,
+        this.playerRoot.y,
+        this.objectiveCenter.x,
+        this.objectiveCenter.y
+      );
+      if (distance <= radius) this.completeObjective();
+    }
+  }
+
+  private completeObjective(): void {
+    if (this.roomState !== 'fighting') return;
+    this.debugPurgeEnemies();
+    this.clearRoom();
+  }
+
+  public debugCompleteObjective(): boolean {
+    if (this.roomState !== 'fighting' || !this.getRoom().objective) return false;
+    this.completeObjective();
+    return true;
+  }
+
+  public debugSetPlayerPosition(x: number, y: number): void {
+    if (this.runState !== 'playing') return;
+    this.playerRoot.setPosition(x, y);
+  }
+
+  private roomObjectiveHud(
+    room: RoomDef
+  ): { label: string; value: string; progress: number } | undefined {
+    if (room.surge) {
+      const duration = room.surgeDuration ?? 40;
+      return {
+        label: 'HIGH PRESSURE · 高压',
+        value: `${Math.ceil(Math.max(0, this.surgeRemaining))} 秒`,
+        progress: 1 - this.surgeRemaining / Math.max(1, duration)
+      };
+    }
+    if (room.objective === 'annihilate') {
+      return {
+        label: 'ANNIHILATE · 歼灭',
+        value: `${Math.min(this.roomKills, room.quota)} / ${room.quota}`,
+        progress: Math.min(1, this.roomKills / Math.max(1, room.quota))
+      };
+    }
+    if (room.objective === 'hunt') {
+      const name = room.leader ? ENEMY_SPECS[room.leader].name : '领袖';
+      const leader = this.leaderRef;
+      const maxHp = leader?.maxHp ?? (room.leader ? ENEMY_SPECS[room.leader].hp : 1);
+      const hp = leader ? Math.max(0, leader.hp) : 0;
+      return {
+        label: 'HUNT · 猎杀',
+        value: leader ? `${name} ${Math.ceil(hp)} / ${Math.round(maxHp)}` : `${name} 已清除`,
+        progress: leader ? 1 - hp / maxHp : 1
+      };
+    }
+    if (room.objective === 'defend') {
+      const radius = room.objectiveRadius ?? 240;
+      const inside =
+        Phaser.Math.Distance.Between(
+          this.playerRoot.x,
+          this.playerRoot.y,
+          this.objectiveCenter.x,
+          this.objectiveCenter.y
+        ) <= radius;
+      return {
+        label: 'DEFEND · 守坛',
+        value: inside
+          ? `${Math.ceil(this.objectiveRemaining)} 秒`
+          : `${Math.ceil(this.objectiveRemaining)} 秒 · 回坛`,
+        progress: 1 - this.objectiveRemaining / Math.max(1, this.objectiveDuration)
+      };
+    }
+    if (room.objective === 'breakout') {
+      const radius = room.objectiveRadius ?? 90;
+      const dx = this.objectiveCenter.x - this.playerRoot.x;
+      const dy = this.objectiveCenter.y - this.playerRoot.y;
+      const distance = Math.hypot(dx, dy);
+      const directions = ['东', '东南', '南', '西南', '西', '西北', '北', '东北'];
+      const direction =
+        directions[(Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8];
+      return {
+        label: 'BREAKOUT · 突围',
+        value:
+          distance <= radius
+            ? '已抵达'
+            : `${direction} · ${Math.round(Math.max(0, distance - radius))}m`,
+        progress: Math.min(
+          1,
+          Math.max(0, 1 - distance / Math.max(1, this.objectiveStartDistance))
+        )
+      };
+    }
+    return undefined;
+  }
+
   private refreshRoomHud(): void {
     const total = this.stepTotal;
     if (this.encounter?.kind === 'event') {
@@ -907,7 +1106,8 @@ export class M0Scene extends Phaser.Scene {
       quota: room.quota,
       kills: this.kills,
       hp: this.hp,
-      maxHp: this.maxHp
+      maxHp: this.maxHp,
+      objective: this.roomObjectiveHud(room)
     });
   }
 
@@ -1054,66 +1254,23 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private upgradeRandomRule(): boolean {
-    const slots: ('trajectory' | 'impact' | 'secondary')[] = [];
-    if (this.build.trajectory && this.build.trajectory.level < 3) slots.push('trajectory');
-    if (this.build.impact && this.build.impact.level < 3) slots.push('impact');
-    if (this.build.secondary && this.build.secondary.level < 3) slots.push('secondary');
-    if (!slots.length) return false;
-    const slot = slots[combatInt(0, slots.length - 1)];
-    const ref =
-      slot === 'trajectory'
-        ? this.build.trajectory
-        : slot === 'impact'
-          ? this.build.impact
-          : this.build.secondary;
-    if (!ref) return false;
-    const next: PlayerBuild = {
-      trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-      impact: this.build.impact ? { ...this.build.impact } : null,
-      secondary: this.build.secondary ? { ...this.build.secondary } : undefined
-    };
-    const level = (ref.level + 1) as RuleLevel;
-    if (slot === 'trajectory') {
-      next.trajectory = { key: ref.key as TrajectoryKey, level };
-    } else if (slot === 'impact') {
-      next.impact = { key: ref.key as ImpactKey, level };
-    } else {
-      next.secondary = { key: ref.key, level };
-    }
-    this.applyBuildState(next, {
-      key: ref.key,
+    const change = upgradeRandomRuleBuild(this.build, combatRandom);
+    if (!change) return false;
+    this.applyBuildState(change.build, {
+      key: change.key,
       title: '事件 · 规则升级',
-      sub: `${getRuleDef(ref.key).name} Lv.${level}`
+      sub: `${getRuleDef(change.key).name} Lv.${change.level}`
     });
     return true;
   }
 
   private swapRandomRule(): boolean {
-    const slots: ('trajectory' | 'impact')[] = [];
-    if (this.build.trajectory) slots.push('trajectory');
-    if (this.build.impact) slots.push('impact');
-    if (!slots.length) return false;
-    const slot = slots[combatInt(0, slots.length - 1)];
-    const current = slot === 'trajectory' ? this.build.trajectory : this.build.impact;
-    if (!current) return false;
-    const pool: RuleKey[] =
-      slot === 'trajectory' ? ['pierce', 'chain', 'spread'] : ['burn', 'frost', 'blast'];
-    const options = pool.filter((key) => key !== current.key);
-    const key = options[combatInt(0, options.length - 1)];
-    const next: PlayerBuild = {
-      trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-      impact: this.build.impact ? { ...this.build.impact } : null,
-      secondary: this.build.secondary ? { ...this.build.secondary } : undefined
-    };
-    if (slot === 'trajectory') {
-      next.trajectory = { key: key as TrajectoryKey, level: 1 };
-    } else {
-      next.impact = { key: key as ImpactKey, level: 1 };
-    }
-    this.applyBuildState(next, {
-      key,
+    const change = swapRandomRuleBuild(this.build, combatRandom);
+    if (!change) return false;
+    this.applyBuildState(change.build, {
+      key: change.key,
       title: '事件 · 规则更换',
-      sub: `${getRuleDef(key).name} Lv.1`
+      sub: `${getRuleDef(change.key).name} Lv.1`
     });
     return true;
   }
@@ -1384,6 +1541,7 @@ export class M0Scene extends Phaser.Scene {
     this.drawConveyor();
     this.covers = room.cover ?? [];
     this.drawCovers();
+    this.setupRoomObjective(room);
     setRoomEnemies(getRoomEnemyKinds(room));
     this.refreshRoomHud();
     this.refreshCoreAura();
@@ -1525,6 +1683,8 @@ export class M0Scene extends Phaser.Scene {
       this.hp + 10 + 8 * lateLevel(this.lateUpgrades, 'regen')
     );
     setHp(this.hp, this.maxHp);
+    this.objectiveMarker?.destroy();
+    this.objectiveMarker = undefined;
     this.pauseScene();
     audio.play('rule');
     const clearSeconds = this.elapsed - this.roomStartedAt;
@@ -1627,8 +1787,7 @@ export class M0Scene extends Phaser.Scene {
         showRuleToast('chain', `遗物 · ${reward.relic.name}`, reward.relic.description);
       }
     } else if (reward.kind === 'ascension') {
-      this.build = ascendRule(this.build, reward.ascension.rule);
-      this.applyBuildState(this.build, {
+      this.applyBuildState(ascendRule(this.build, reward.ascension.rule), {
         key: reward.ascension.rule,
         title: '规则升阶',
         sub: `${reward.ascension.name} · ${reward.ascension.en}`
@@ -1708,10 +1867,7 @@ export class M0Scene extends Phaser.Scene {
 
   public debugGrantRule(rule: RuleKey): void {
     const def = getRuleDef(rule);
-    const next = {
-      trajectory: this.build.trajectory ? { ...this.build.trajectory } : null,
-      impact: this.build.impact ? { ...this.build.impact } : null
-    };
+    const next = cloneBuild(this.build);
     if (def.slot === 'trajectory' && (rule === 'pierce' || rule === 'chain' || rule === 'spread')) {
       const level =
         next.trajectory?.key === rule
@@ -1742,7 +1898,8 @@ export class M0Scene extends Phaser.Scene {
   ): void {
     const next: PlayerBuild = {
       trajectory: trajectory ? { key: trajectory, level: trajectoryLevel } : null,
-      impact: impact ? { key: impact, level: impactLevel } : null
+      impact: impact ? { key: impact, level: impactLevel } : null,
+      core: null
     };
     this.applyBuildState(next);
   }
@@ -2138,6 +2295,8 @@ export class M0Scene extends Phaser.Scene {
       roomKills: this.roomKills,
       roomQuota: this.getRoom().quota,
       roomId: this.getRoom().id,
+      roomObjective: this.getRoom().objective ?? null,
+      objectiveRemaining: Math.round(this.objectiveRemaining * 10) / 10,
       wave: this.waveDirector?.snapshot() ?? null,
       alive: this.enemies.length + this.pendingSpawns,
       killStreak: this.killStreak,
@@ -2291,6 +2450,8 @@ export class M0Scene extends Phaser.Scene {
     this.bossRef = null;
     this.bossPhase = 0;
     this.leaderRef = null;
+    this.objectiveMarker?.destroy();
+    this.objectiveMarker = undefined;
     this.playerSprite?.clearTint();
 
     for (const child of [...this.fxLayer.list, ...this.enemyLayer.list]) {
@@ -3024,6 +3185,13 @@ export class M0Scene extends Phaser.Scene {
     let bestDist = Number.POSITIVE_INFINITY;
     for (const enemy of this.enemies) {
       if (enemy.dead || enemy === exclude) continue;
+      if (
+        this.covers.some((cover) =>
+          segmentIntersectsCircle(x, y, enemy.root.x, enemy.root.y, cover, 4)
+        )
+      ) {
+        continue;
+      }
       const dist = Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y);
       if (dist < bestDist) {
         bestDist = dist;
@@ -3668,105 +3836,43 @@ export class M0Scene extends Phaser.Scene {
     this.coreAura = ring;
   }
 
+  private coreEffectHost?: CoreEffectHost;
+
+  private getCoreEffectHost(): CoreEffectHost {
+    if (!this.coreEffectHost) {
+      const scene = this;
+      this.coreEffectHost = {
+        playerX: () => scene.playerRoot.x,
+        playerY: () => scene.playerRoot.y,
+        enemies: () => scene.enemies,
+        distanceToPlayer: (enemy) => scene.distanceToPlayer(enemy),
+        applyDamage: (enemy, amount, kind) => scene.applyDamage(enemy, amount, kind),
+        spawnRing: (x, y, radius, color, lineWidth, scale, duration) => {
+          const ring = scene.add
+            .circle(x, y, radius, 0x000000, 0)
+            .setStrokeStyle(lineWidth, color, 0.55);
+          scene.addFx(ring);
+          scene.tweens.add({
+            targets: ring,
+            scale,
+            alpha: 0,
+            duration,
+            onComplete: () => ring.destroy()
+          });
+        },
+        drawLightning: (x1, y1, x2, y2) => scene.drawLightning(x1, y1, x2, y2),
+        spawnFirePatch: (x, y, radius, duration) =>
+          scene.spawnFirePatch(x, y, radius, duration),
+        lastMoveLength: () => scene.lastMove.lengthSq()
+      };
+    }
+    return this.coreEffectHost;
+  }
+
   private updateCores(dt: number): void {
     const core = this.build.core;
     if (!core) return;
-    this.coreTimer -= dt;
-    if (this.coreTimer > 0) return;
-    const level = core.level;
-    if (core.key === 'orbit') {
-      this.coreTimer = 0.8 - 0.05 * level;
-      const targets = this.enemies
-        .filter(
-          (enemy) =>
-            !enemy.dead &&
-            Phaser.Math.Distance.Between(
-              enemy.root.x,
-              enemy.root.y,
-              this.playerRoot.x,
-              this.playerRoot.y
-            ) < 120 + level * 12
-        )
-        .slice(0, 2 + level);
-      for (const target of targets) {
-        this.applyDamage(target, 3 + level * 3, 'blast');
-      }
-      if (targets.length) {
-        const ring = this.add
-          .circle(this.playerRoot.x, this.playerRoot.y - 8, 42, 0x000000, 0)
-          .setStrokeStyle(1.5, 0xb69bff, 0.55);
-        this.addFx(ring);
-        this.tweens.add({
-          targets: ring,
-          scale: 2.2,
-          alpha: 0,
-          duration: 260,
-          onComplete: () => ring.destroy()
-        });
-      }
-      return;
-    }
-    if (core.key === 'storm') {
-      this.coreTimer = 2.6 - 0.2 * level;
-      const targets = [...this.enemies]
-        .filter((enemy) => !enemy.dead)
-        .sort((a, b) => this.distanceToPlayer(a) - this.distanceToPlayer(b))
-        .slice(0, level);
-      for (const target of targets) {
-        this.drawLightning(
-          this.playerRoot.x,
-          this.playerRoot.y - 20,
-          target.root.x,
-          target.root.y - 10
-        );
-        this.applyDamage(target, 10 + level * 8, 'hit');
-      }
-      return;
-    }
-    if (core.key === 'nova') {
-      this.coreTimer = 3.4 - 0.2 * level;
-      const radius = 120 + level * 30;
-      for (const enemy of [...this.enemies]) {
-        if (enemy.dead) continue;
-        if (
-          Phaser.Math.Distance.Between(
-            enemy.root.x,
-            enemy.root.y,
-            this.playerRoot.x,
-            this.playerRoot.y
-          ) <= radius
-        ) {
-          this.applyDamage(enemy, 4 + level * 4, 'blast');
-          enemy.frostTime = Math.max(enemy.frostTime, 1.2);
-          enemy.frostSlow = Math.max(enemy.frostSlow, 0.35);
-        }
-      }
-      const ring = this.add
-        .circle(this.playerRoot.x, this.playerRoot.y - 8, radius, 0x000000, 0)
-        .setStrokeStyle(2, 0x8ceafa, 0.55);
-      this.addFx(ring);
-      this.tweens.add({
-        targets: ring,
-        scale: 1.15,
-        alpha: 0,
-        duration: 420,
-        onComplete: () => ring.destroy()
-      });
-      return;
-    }
-    if (core.key === 'trail') {
-      this.coreTimer = 0.9 - 0.1 * level;
-      if (this.lastMove.lengthSq() > 0.1) {
-        this.spawnFirePatch(
-          this.playerRoot.x,
-          this.playerRoot.y + 8,
-          36 + level * 8,
-          2.2
-        );
-      }
-      return;
-    }
-    this.coreTimer = 1;
+    this.coreTimer = updateCoreEffect(core, dt, this.coreTimer, this.getCoreEffectHost());
   }
 
   private updateRelicTimers(dt: number): void {
@@ -4105,14 +4211,21 @@ export class M0Scene extends Phaser.Scene {
       return;
     }
     if (enemy === this.leaderRef) {
+      const huntObjective = this.getRoom().objective === 'hunt';
       this.leaderRef = null;
       setBossBar(null);
+      if (huntObjective) {
+        this.completeObjective();
+        return;
+      }
     }
 
     if (this.kills > 0 && this.kills % 8 === 0) {
       this.dropHeal(x, y);
     }
+    const objective = this.getRoom().objective;
     if (
+      (!objective || objective === 'annihilate') &&
       !this.victoryLocked &&
       !this.surgeEnding &&
       this.roomKills >= this.getRoom().quota &&
@@ -4158,9 +4271,10 @@ export class M0Scene extends Phaser.Scene {
     this.overloadSpawned += 1;
     this.totalOverloads += 1;
     for (let index = 0; index < count; index += 1) {
+      if (this.enemies.length + this.pendingSpawns >= this.aliveCap) break;
       const kind = this.pickWaveKind(room);
       const pos = this.chooseSpawnPosition();
-      this.spawnPortal(kind, pos.x, pos.y, true);
+      this.spawnPortal(kind, pos.x, pos.y, true, false);
     }
   }
 
@@ -4275,11 +4389,12 @@ export class M0Scene extends Phaser.Scene {
     notice?: { key: RuleKey; title: string; sub: string }
   ): void {
     const previous = this.build;
-    const trajectoryChanged = previous.trajectory?.key !== next.trajectory?.key;
-    const impactChanged = previous.impact?.key !== next.impact?.key;
-    this.build = next;
-    if (next.trajectory) this.acquired.add(next.trajectory.key);
-    if (next.impact) this.acquired.add(next.impact.key);
+    const merged = removeDuplicateSecondary(preserveBuildCore(next, previous));
+    const trajectoryChanged = previous.trajectory?.key !== merged.trajectory?.key;
+    const impactChanged = previous.impact?.key !== merged.impact?.key;
+    this.build = merged;
+    if (merged.trajectory) this.acquired.add(merged.trajectory.key);
+    if (merged.impact) this.acquired.add(merged.impact.key);
     if (trajectoryChanged) {
       this.clearPlayerBolts();
     }
@@ -4397,7 +4512,13 @@ export class M0Scene extends Phaser.Scene {
     this.pickups = this.pickups.filter((pickup) => !pickup.dead);
   }
 
-  private spawnPortal(kind: EnemyKind, x: number, y: number, quiet = false): void {
+  private spawnPortal(
+    kind: EnemyKind,
+    x: number,
+    y: number,
+    quiet = false,
+    countsTowardQuota = true
+  ): void {
     const token = this.runToken;
     const portal = this.portalToken;
     const color = RULE_TINTS[ENEMY_SPECS[kind].rule];
@@ -4438,7 +4559,7 @@ export class M0Scene extends Phaser.Scene {
         this.runState === 'playing' &&
         !this.victoryLocked;
       if (!active) return;
-      this.spawnEnemy(kind, x, y);
+      this.spawnEnemy(kind, x, y, countsTowardQuota);
       if (
         !this.surgeEnding &&
         this.enemies.length === 0 &&
@@ -5659,195 +5780,64 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
-  private updateSplitter(enemy: EnemyUnit, dt: number): void {
-    const dx = this.playerRoot.x - enemy.root.x;
-    const dy = this.playerRoot.y - enemy.root.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
-    enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
-    enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
-    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
-      enemy.contactCd = 1;
-      this.hurtPlayer(6, enemy.root.x, enemy.root.y, 'melee');
+  private frontierHost?: FrontierAiHost;
+
+  private getFrontierHost(): FrontierAiHost {
+    if (!this.frontierHost) {
+      const scene = this;
+      this.frontierHost = {
+        playerX: () => scene.playerRoot.x,
+        playerY: () => scene.playerRoot.y,
+        arenaSize: () => scene.arenaSize,
+        now: () => scene.time.now,
+        random: () => combatRandom(),
+        int: (min, max) => combatInt(min, max),
+        hurtPlayer: (amount, x, y, source) => scene.hurtPlayer(amount, x, y, source),
+        enemyCount: () => scene.enemies.length,
+        spawnlingCount: () =>
+          scene.enemies.filter((enemy) => !enemy.dead && enemy.kind === 'spawnling').length,
+        narrowScreen: () => scene.narrowScreen,
+        aliveCap: () => scene.aliveCap,
+        spawnEnemy: (kind, x, y, countsTowardQuota) =>
+          scene.spawnEnemy(kind, x, y, countsTowardQuota),
+        spawnLeaderBurst: (x, y) => scene.spawnLeaderBurst(x, y),
+        spawnStatusSpark: (x, y, color) => scene.spawnStatusSpark(x, y, color),
+        strafeAtRange: (enemy, dt, preferred, near, far) =>
+          scene.strafeAtRange(enemy, dt, preferred, near, far),
+        spawnShockZone: (x, y, radius, delay, color, damage) =>
+          scene.spawnShockZone(x, y, radius, delay, color, damage),
+        fireEnemyBolt: (enemy, options) => scene.fireEnemyBolt(enemy, options)
+      };
     }
+    return this.frontierHost;
+  }
+
+  private updateSplitter(enemy: EnemyUnit, dt: number): void {
+    updateSplitterAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateBulwark(enemy: EnemyUnit, dt: number): void {
-    const dx = this.playerRoot.x - enemy.root.x;
-    const dy = this.playerRoot.y - enemy.root.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
-    if (dist > 140) {
-      enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
-      enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
-    }
-    enemy.castRing.setVisible(true).setScale(1 + Math.sin(this.time.now * 0.003) * 0.08);
-    if (enemy.kind === 'bastion') {
-      enemy.trailCd -= dt;
-      if (enemy.trailCd <= 0) {
-        enemy.trailCd = 3.8;
-        this.spawnShockZone(
-          enemy.root.x,
-          enemy.root.y,
-          130,
-          1.0,
-          COLORS.cyan,
-          16
-        );
-      }
-    }
-    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS + 8) {
-      enemy.contactCd = 1.1;
-      this.hurtPlayer(9, enemy.root.x, enemy.root.y, 'melee');
-    }
+    updateBulwarkAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateBrood(enemy: EnemyUnit, dt: number): void {
-    enemy.attackCd -= dt;
-    enemy.castRing.setVisible(true).setScale(1 + Math.sin(this.time.now * 0.004) * 0.1);
-    if (enemy.attackCd > 0) return;
-    enemy.attackCd = 3.2;
-    const alive = this.enemies.filter((item) => !item.dead && item.kind === 'spawnling').length;
-    if (alive >= 18 || (this.narrowScreen && this.enemies.length >= this.aliveCap + 8)) return;
-    for (let index = 0; index < 2; index += 1) {
-      const angle = combatRandom() * Math.PI * 2;
-      const x = Phaser.Math.Clamp(enemy.root.x + Math.cos(angle) * 46, 70, this.arenaSize - 70);
-      const y = Phaser.Math.Clamp(enemy.root.y + Math.sin(angle) * 46, 90, this.arenaSize - 70);
-      this.spawnEnemy('spawnling', x, y, false);
-    }
-    this.spawnStatusSpark(enemy.root.x, enemy.root.y - 10, COLORS.orange);
-    if (enemy.kind === 'broodQueen') {
-      const base = Math.atan2(
-        this.playerRoot.y - enemy.root.y,
-        this.playerRoot.x - enemy.root.x
-      );
-      for (const offset of [-0.28, 0, 0.28]) {
-        this.fireEnemyBolt(enemy, {
-          angle: base + offset,
-          speed: 165,
-          damage: 9,
-          tint: COLORS.orange,
-          scale: 1.3
-        });
-      }
-    }
+    updateBroodAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateBurrower(enemy: EnemyUnit, dt: number): void {
-    const dx = this.playerRoot.x - enemy.root.x;
-    const dy = this.playerRoot.y - enemy.root.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const slow = enemy.frostTime > 0 ? 1 - enemy.frostSlow : 1;
-    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
-    if (enemy.state === 'cast') {
-      enemy.stateTimer -= dt;
-      enemy.sprite.setAlpha(0.35);
-      if (enemy.stateTimer <= 0) {
-        enemy.state = 'approach';
-        enemy.sprite.setAlpha(1);
-        const angle = combatRandom() * Math.PI * 2;
-        enemy.root.x = Phaser.Math.Clamp(
-          this.playerRoot.x + Math.cos(angle) * 110,
-          70,
-          this.arenaSize - 70
-        );
-        enemy.root.y = Phaser.Math.Clamp(
-          this.playerRoot.y + Math.sin(angle) * 110,
-          90,
-          this.arenaSize - 70
-        );
-        this.spawnLeaderBurst(enemy.root.x, enemy.root.y);
-        enemy.attackCd = 4.2;
-      }
-      return;
-    }
-    if (dist > 4) {
-      enemy.root.x += (dx / dist) * enemy.speed * slow * dt;
-      enemy.root.y += (dy / dist) * enemy.speed * slow * dt;
-    }
-    if (enemy.attackCd <= 0) {
-      enemy.state = 'cast';
-      enemy.stateTimer = 0.7;
-      return;
-    }
-    if (enemy.contactCd <= 0 && dist < enemy.radius + PLAYER_RADIUS) {
-      enemy.contactCd = 0.9;
-      this.hurtPlayer(7, enemy.root.x, enemy.root.y, 'melee');
-    }
+    updateBurrowerAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateArtillery(enemy: EnemyUnit, dt: number): void {
-    this.strafeAtRange(enemy, dt, 520, 380, 720);
-    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
-    if (enemy.attackCd > 0) return;
-    enemy.attackCd = 3.4;
-    this.spawnShockZone(
-      this.playerRoot.x,
-      this.playerRoot.y,
-      74,
-      0.95,
-      COLORS.orange,
-      14
-    );
-    for (const offset of [-0.12, 0.12]) {
-      this.fireEnemyBolt(enemy, {
-        angle:
-          Math.atan2(this.playerRoot.y - enemy.root.y, this.playerRoot.x - enemy.root.x) +
-          offset,
-        speed: 150,
-        damage: 8,
-        tint: COLORS.orange,
-        scale: 1.35
-      });
-    }
+    updateArtilleryAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateMirror(enemy: EnemyUnit, dt: number): void {
-    this.strafeAtRange(enemy, dt, 320, 220, 540);
-    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
-    if (enemy.attackCd > 0) return;
-    enemy.attackCd = 2.6;
-    const angle = Math.atan2(
-      this.playerRoot.y - enemy.root.y,
-      this.playerRoot.x - enemy.root.x
-    );
-    for (let index = -1; index <= 1; index += 1) {
-      this.fireEnemyBolt(enemy, {
-        angle: angle + index * 0.2,
-        speed: 210,
-        damage: 6,
-        tint: COLORS.cyan,
-        scale: 0.9
-      });
-    }
-    if (combatRandom() < 0.35) {
-      const side = combatRandom() < 0.5 ? 1 : -1;
-      enemy.root.x = Phaser.Math.Clamp(
-        this.playerRoot.x + side * 260,
-        70,
-        this.arenaSize - 70
-      );
-      enemy.root.y = Phaser.Math.Clamp(
-        this.playerRoot.y + combatInt(-160, 160),
-        90,
-        this.arenaSize - 70
-      );
-    }
+    updateMirrorAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateHexer(enemy: EnemyUnit, dt: number): void {
-    this.strafeAtRange(enemy, dt, 300, 200, 500);
-    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
-    if (enemy.attackCd > 0) return;
-    enemy.attackCd = 2.8;
-    this.fireEnemyBolt(enemy, {
-      speed: 190,
-      damage: 6,
-      tint: COLORS.purple,
-      slow: 0.25,
-      slowDuration: 2.2,
-      scale: 1.05
-    });
+    updateHexerAi(enemy, dt, this.getFrontierHost());
   }
 
   private updateBomber(enemy: EnemyUnit, dt: number): void {
@@ -6609,19 +6599,18 @@ export class M0Scene extends Phaser.Scene {
         this.waveDirector.complete();
         return;
       }
-      const before = this.waveDirector.snapshot().wave;
       this.waveDirector.update(
         dt,
         this.enemies.length + this.pendingSpawns,
-        () => this.spawnWaveEnemy()
+        () => this.spawnWaveEnemy(),
+        (wave, waves) => {
+          const nextSide = combatInt(0, 3);
+          this.waveSide = nextSide === this.waveSide ? (nextSide + 1) % 4 : nextSide;
+          showWaveBanner(wave, waves);
+          audio.play('spawn');
+        }
       );
       const snapshot = this.waveDirector.snapshot();
-      if (snapshot.wave !== before && snapshot.wave > 0) {
-        const nextSide = combatInt(0, 3);
-        this.waveSide = nextSide === this.waveSide ? (nextSide + 1) % 4 : nextSide;
-        showWaveBanner(snapshot.wave, snapshot.waves);
-        audio.play('spawn');
-      }
       if (
         this.chapterIndex === 0 &&
         !this.waveCaptainSpawned &&
@@ -6712,10 +6701,10 @@ export class M0Scene extends Phaser.Scene {
     this.surgePackIndex += 1;
     const pack = combatInt(4, 6);
     for (let index = 0; index < pack; index += 1) {
+      if (this.enemies.length + this.pendingSpawns >= this.aliveCap) break;
       const kind = this.pickWaveKind(room);
       const pos = this.chooseSpawnPosition(side);
-      this.spawnPortal(kind, pos.x, pos.y, true);
-      this.roomSpawned += 1;
+      this.spawnPortal(kind, pos.x, pos.y, true, false);
     }
   }
 
@@ -6819,6 +6808,12 @@ export class M0Scene extends Phaser.Scene {
         this.refreshBossHud();
       } else if (this.leaderRef) {
         this.refreshLeaderHud();
+      }
+      if (
+        this.roomState === 'fighting' &&
+        (this.surgeActive || this.getRoom().objective)
+      ) {
+        this.refreshRoomHud();
       }
     }
   }
@@ -7187,6 +7182,7 @@ export class M0Scene extends Phaser.Scene {
     this.updateSlowFields(dt);
     this.updatePickups(dt);
     this.updateSpawns(dt);
+    this.updateObjective(dt);
     this.updateRoomHazard(dt);
     this.updateRoomModifier(dt);
     this.updateCores(dt);

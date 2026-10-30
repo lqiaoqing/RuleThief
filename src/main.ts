@@ -91,6 +91,8 @@ declare global {
     __RT_DAMAGE_BOSS__?: (amount: number) => void;
     __RT_END_SURGE__?: () => void;
     __RT_END_BERSERK__?: () => void;
+    __RT_COMPLETE_OBJECTIVE__?: () => boolean;
+    __RT_SET_POS__?: (x: number, y: number) => void;
     __RT_VOLLEY__?: () => number;
     __RT_FREEZE_ATTACK__?: () => void;
     __RT_HEAL__?: (amount: number) => void;
@@ -825,6 +827,8 @@ function handleReady(): void {
   window.__RT_SET_ROOM_KILLS__ = (kills) => scene?.debugSetRoomKills(kills);
   window.__RT_DAMAGE_BOSS__ = (amount) => scene?.debugDamageBoss(amount);
   window.__RT_END_SURGE__ = () => scene?.debugEndSurge();
+  window.__RT_COMPLETE_OBJECTIVE__ = () => scene?.debugCompleteObjective() ?? false;
+  window.__RT_SET_POS__ = (x, y) => scene?.debugSetPlayerPosition(x, y);
   window.__RT_END_BERSERK__ = () => scene?.debugEndBerserk();
   window.__RT_VOLLEY__ = () => scene?.debugVolley() ?? -1;
   window.__RT_FREEZE_ATTACK__ = () => scene?.debugFreezeAttack();
@@ -1022,7 +1026,17 @@ window.addEventListener('keydown', (event) => {
     return;
   }
   if (isRewardVisible()) {
-    const slot = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(event.code);
+    const slot = [
+      'Digit1',
+      'Digit2',
+      'Digit3',
+      'Digit4',
+      'Digit5',
+      'Digit6',
+      'Digit7',
+      'Digit8',
+      'Digit9'
+    ].indexOf(event.code);
     if (slot >= 0) {
       event.preventDefault();
       pickReward(slot);

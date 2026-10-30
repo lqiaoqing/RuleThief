@@ -46,7 +46,12 @@ export class WaveDirector {
     };
   }
 
-  update(dt: number, activeCount: number, spawn: () => void): number {
+  update(
+    dt: number,
+    activeCount: number,
+    spawn: () => void,
+    onWaveStart?: (wave: number, waves: number) => void
+  ): number {
     if (this.finished) return 0;
     if (this.remainingInWave <= 0) {
       if (this.waveIndex >= this.plan.groups.length) {
@@ -60,6 +65,7 @@ export class WaveDirector {
       this.remainingInWave = this.plan.groups[this.waveIndex];
       this.waveIndex += 1;
       this.currentWave = this.waveIndex;
+      onWaveStart?.(this.currentWave, this.plan.groups.length);
     }
 
     const capacity = Math.max(0, this.plan.maxAlive - activeCount);
@@ -97,7 +103,7 @@ export function buildWavePlan(
       : count <= 20
         ? 4
         : chapterIndex >= 3
-          ? Math.min(14, Math.max(10, Math.ceil(count / 20)))
+          ? Math.min(14, Math.max(11, Math.ceil(count / 18)))
           : chapterIndex >= 1
             ? count <= 28
               ? 6
@@ -105,7 +111,7 @@ export function buildWavePlan(
             : 4;
   const waveCount = Math.max(
     2,
-    Math.min(10, Math.floor(waveCountOverride ?? defaultWaves))
+    Math.min(14, Math.floor(waveCountOverride ?? defaultWaves))
   );
   const base = Math.floor(count / waveCount);
   const remainder = count % waveCount;

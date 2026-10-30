@@ -8,6 +8,7 @@ import {
   buildChapterRewards,
   buildRoomRewards,
   getRoomEnemyKinds,
+  getRoomObjectiveLabel,
   getRoomRuleKeys,
   pickSpawnKind,
   type EnemyKind
@@ -350,6 +351,18 @@ describe('boundless waste rooms', () => {
     const combat = waste.filter((room) => !room.boss);
     expect(combat.every((room) => room.quota >= 180)).toBe(true);
     expect(combat.every((room) => room.maxAlive >= 45)).toBe(true);
+  });
+
+  it('gives the four showcase waste rooms distinct objectives', () => {
+    const byId = (id: string) => ROOMS.find((room) => room.id === id)!;
+    expect(byId('waste-gate').objective).toBe('annihilate');
+    expect(byId('world-scar').objective).toBe('hunt');
+    expect(byId('waste-core').objective).toBe('defend');
+    expect(byId('waste-core').objectiveDuration).toBe(40);
+    expect(byId('last-march').objective).toBe('breakout');
+    expect(getRoomObjectiveLabel(byId('world-scar'))).toContain('巢母女王');
+    expect(getRoomObjectiveLabel(byId('waste-core'))).toContain('40');
+    expect(getRoomObjectiveLabel(byId('last-march'))).toContain('荒原信标');
   });
 
   it('uses each waste room mix in its preview instead of one shared roster', () => {

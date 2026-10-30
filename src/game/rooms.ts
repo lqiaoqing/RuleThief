@@ -370,6 +370,7 @@ export const ENEMY_RULES: Record<EnemyKind, RuleKey> = Object.fromEntries(
 
 export type RoomHazard = 'shock-grid' | 'void-rift';
 export type RoomModifier = 'rule-null' | 'conveyor';
+export type RoomObjective = 'annihilate' | 'hunt' | 'defend' | 'breakout';
 
 export interface CoverDef {
   x: number;
@@ -397,6 +398,9 @@ export interface RoomDef {
   surge?: boolean;
   surgeDuration?: number;
   arenaSize?: number;
+  objective?: RoomObjective;
+  objectiveDuration?: number;
+  objectiveRadius?: number;
 }
 
 const BASE_ROOMS: readonly RoomDef[] = [
@@ -1115,7 +1119,7 @@ const WASTE_ROOMS: readonly RoomDef[] = [
   wasteRoom('waste-gate', '荒原入口', 'WASTE GATE', '风口之后没有安全区，只有不断压上的潮汐。', 190, [
     { kind: 'sentry', weight: 4 }, { kind: 'phase', weight: 4 }, { kind: 'beetle', weight: 3 },
     { kind: 'brood', weight: 2 }, { kind: 'spawnling', weight: 3 }
-  ]),
+  ], { objective: 'annihilate' }),
   wasteRoom('dust-basin', '尘暴盆地', 'DUST BASIN', '尘暴遮住弹道，重炮在远处校准落点。', 200, [
     { kind: 'sentry', weight: 4 }, { kind: 'artillery', weight: 3 }, { kind: 'slime', weight: 3 }
   ]),
@@ -1160,7 +1164,7 @@ const WASTE_ROOMS: readonly RoomDef[] = [
   ], { modifier: 'rule-null' }),
   wasteRoom('world-scar', '世界伤痕', 'WORLD SCAR', '世界的伤口正在呼吸，裂隙会跟着它开合。', 230, [
     { kind: 'phase', weight: 4 }, { kind: 'sentry', weight: 4 }, { kind: 'bat', weight: 3 }
-  ], { leader: 'broodQueen', elite: true, rewardCount: 4 }),
+  ], { leader: 'broodQueen', elite: true, rewardCount: 4, objective: 'hunt' }),
   wasteRoom('broken-sky', '破碎苍穹', 'BROKEN SKY', '天空碎成弹片，落点没有一块是安全的。', 230, [
     { kind: 'sunder', weight: 4 }, { kind: 'warden', weight: 4 }, { kind: 'bomber', weight: 3 }
   ]),
@@ -1172,7 +1176,7 @@ const WASTE_ROOMS: readonly RoomDef[] = [
   ], { modifier: 'rule-null' }),
   wasteRoom('waste-core', '荒原核心', 'WASTE CORE', '核心把荒原的规则压成一条线，越过它就会直面吞世者。', 240, [
     { kind: 'sunder', weight: 4 }, { kind: 'warden', weight: 4 }, { kind: 'phase', weight: 3 }
-  ]),
+  ], { objective: 'defend', objectiveDuration: 40, objectiveRadius: 260 }),
   wasteRoom('final-waste', '终末荒原', 'FINAL WASTE', '所有潮汐在这里汇合，没有退路。', 250, [
     { kind: 'brood', weight: 4 }, { kind: 'artillery', weight: 4 }, { kind: 'splitter', weight: 3 },
     { kind: 'bulwark', weight: 2 }, { kind: 'mirror', weight: 2 }
@@ -1182,7 +1186,7 @@ const WASTE_ROOMS: readonly RoomDef[] = [
   ], { hazard: 'shock-grid' }),
   wasteRoom('last-march', '最后行军', 'LAST MARCH', '荒原的潮汐推着所有敌人向前，停下就会被吞没。', 250, [
     { kind: 'sunder', weight: 4 }, { kind: 'bomber', weight: 4 }, { kind: 'phase', weight: 3 }
-  ]),
+  ], { objective: 'breakout', objectiveRadius: 90 }),
   {
     id: 'world-eater',
     name: '荒原吞世者',
@@ -1210,6 +1214,21 @@ export const FRONTIER_KINDS: readonly EnemyKind[] = [
   'mirror',
   'hexer'
 ];
+
+export function getRoomObjectiveLabel(room: RoomDef): string | null {
+  switch (room.objective) {
+    case 'annihilate':
+      return `歼灭 · 清空 ${room.quota} 名敌人`;
+    case 'hunt':
+      return room.leader ? `猎杀 · ${ENEMY_SPECS[room.leader].name}` : '猎杀 · 领袖';
+    case 'defend':
+      return `防守 · 祭坛内坚持 ${room.objectiveDuration ?? 40} 秒`;
+    case 'breakout':
+      return '突围 · 抵达荒原信标';
+    default:
+      return null;
+  }
+}
 
 export function getRoomEnemyKinds(room: RoomDef): EnemyKind[] {
   const kinds: EnemyKind[] = [];

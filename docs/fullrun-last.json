@@ -16,45 +16,46 @@
       },
       {
         "kind": "relic",
-        "name": "破裂棱镜"
+        "name": "血焰之心"
       },
       {
         "kind": "reforge",
-        "name": "贯穿 → 爆裂"
-      }
-    ],
-    [
-      {
-        "kind": "ascension",
-        "name": "雷霆领域"
-      },
-      {
-        "kind": "relic",
-        "name": "贪婪契约"
-      },
-      {
-        "kind": "reforge",
-        "name": "贯穿 → 冰霜"
+        "name": "贯穿 → 弹射"
       }
     ],
     [
       {
         "kind": "late",
-        "name": "巨浪"
+        "name": "壁障"
       },
       {
         "kind": "reforge",
-        "name": "贯穿 → 爆裂"
+        "name": "贯穿 → 冰霜"
       },
       {
         "kind": "support",
-        "name": "瞬时折叠"
+        "name": "规则韧性"
+      }
+    ],
+    [
+      {
+        "kind": "ascension",
+        "name": "极寒禁锢"
+      },
+      {
+        "kind": "late",
+        "name": "贪婪"
+      },
+      {
+        "kind": "reforge",
+        "name": "冰霜 → 弹射"
       }
     ]
   ],
   "rewardStates": [
     {
       "label": "ROOM 1 / 10 已清空",
+      "pickedKind": "rule",
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
@@ -75,6 +76,7 @@
     },
     {
       "label": "ROOM 2 / 10 已清空",
+      "pickedKind": "rule",
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
@@ -95,8 +97,9 @@
     },
     {
       "label": "ROOM 4 / 10 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -117,8 +120,9 @@
     },
     {
       "label": "ROOM 5 / 10 已清空",
+      "pickedKind": "core",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -136,15 +140,16 @@
           "level": 2
         },
         "core": {
-          "key": "nova",
+          "key": "storm",
           "level": 1
         }
       }
     },
     {
       "label": "ROOM 7 / 10 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -160,13 +165,18 @@
         "secondary": {
           "key": "pierce",
           "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 8 / 10 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -182,13 +192,18 @@
         "secondary": {
           "key": "pierce",
           "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 9 / 10 已清空",
+      "pickedKind": "mutation",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [],
       "lateUpgrades": [],
@@ -204,13 +219,18 @@
         "secondary": {
           "key": "pierce",
           "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 1
         }
       }
     },
     {
       "label": "审判废墟 · 章节奖励",
+      "pickedKind": "ascension",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [
         "burn"
@@ -229,13 +249,18 @@
         "secondary": {
           "key": "pierce",
           "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 1
         }
       }
     },
     {
       "label": "ROOM 1 / 13 已清空",
+      "pickedKind": "core",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [
         "burn"
@@ -256,149 +281,25 @@
           "level": 3
         },
         "core": {
-          "key": "orbit",
-          "level": 1
-        }
-      }
-    },
-    {
-      "label": "ROOM 2 / 13 已清空",
-      "relics": [
-        "feather"
-      ],
-      "ascensions": [
-        "burn"
-      ],
-      "lateUpgrades": [],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "pierce",
-          "level": 3
-        },
-        "core": {
-          "key": "orbit",
-          "level": 1
-        }
-      }
-    },
-    {
-      "label": "ROOM 4 / 13 已清空",
-      "relics": [
-        "feather"
-      ],
-      "ascensions": [
-        "burn"
-      ],
-      "lateUpgrades": [
-        "ember-spread"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "pierce",
-          "level": 3
-        },
-        "core": {
-          "key": "orbit",
-          "level": 1
-        }
-      }
-    },
-    {
-      "label": "ROOM 5 / 13 已清空",
-      "relics": [
-        "feather"
-      ],
-      "ascensions": [
-        "burn"
-      ],
-      "lateUpgrades": [
-        "ember-spread"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "pierce",
-          "level": 3
-        },
-        "core": {
-          "key": "orbit",
-          "level": 1
-        }
-      }
-    },
-    {
-      "label": "ROOM 6 / 13 已清空",
-      "relics": [
-        "feather"
-      ],
-      "ascensions": [
-        "burn"
-      ],
-      "lateUpgrades": [
-        "ember-spread"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "spread",
-          "level": 3
-        },
-        "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
-        },
-        "secondary": {
-          "key": "pierce",
-          "level": 3
-        },
-        "core": {
-          "key": "orbit",
+          "key": "storm",
           "level": 2
         }
       }
     },
     {
-      "label": "ROOM 8 / 13 已清空",
+      "label": "ROOM 2 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather"
+        "greed"
       ],
       "ascensions": [
         "burn"
       ],
-      "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
-      ],
+      "lateUpgrades": [],
       "build": {
         "trajectory": {
-          "key": "chain",
-          "level": 1
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -407,26 +308,162 @@
         },
         "secondary": {
           "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 4 / 13 已清空",
+      "pickedKind": "resonance",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 5 / 13 已清空",
+      "pickedKind": "support",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 2
+        }
+      }
+    },
+    {
+      "label": "ROOM 6 / 13 已清空",
+      "pickedKind": "core",
+      "relics": [
+        "greed"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 8 / 13 已清空",
+      "pickedKind": "resonance",
+      "relics": [
+        "greed",
+        "feather"
+      ],
+      "ascensions": [
+        "burn"
+      ],
+      "lateUpgrades": [
+        "pierce-momentum",
+        "ember-spread"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "spread",
+          "level": 3
+        },
+        "impact": {
+          "key": "burn",
+          "level": 3,
+          "ascended": true
+        },
+        "secondary": {
+          "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 9 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
-          "level": 2
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -435,25 +472,31 @@
         },
         "secondary": {
           "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
-        "pierce-momentum"
+        "pierce-momentum",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -463,25 +506,32 @@
         },
         "secondary": {
           "key": "pierce",
+          "level": 3
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 11 / 13 已清空",
+      "pickedKind": "resonance",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
         "ember-spread",
-        "pierce-momentum"
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -494,26 +544,29 @@
           "level": 3
         },
         "core": {
-          "key": "trail",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 12 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
         "ember-spread",
-        "pierce-momentum"
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -526,29 +579,31 @@
           "level": 3
         },
         "core": {
-          "key": "trail",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "失序工坊 · 章节奖励",
+      "pickedKind": "late",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
-        "chain",
         "burn"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
         "ember-spread",
-        "pierce-momentum"
+        "spread-resonance",
+        "ward"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -560,29 +615,31 @@
           "level": 3
         },
         "core": {
-          "key": "trail",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 1 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
-        "chain",
         "burn"
       ],
       "lateUpgrades": [
+        "pierce-momentum",
         "ember-spread",
-        "pierce-momentum"
+        "spread-resonance",
+        "ward"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -594,30 +651,32 @@
           "level": 3
         },
         "core": {
-          "key": "trail",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 2 / 13 已清空",
+      "pickedKind": "resonance",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
-        "chain",
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "pierce-momentum",
-        "rift-echo"
+        "ember-spread",
+        "spread-resonance",
+        "ward",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "chain",
-          "level": 3,
-          "ascended": true
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -629,28 +688,32 @@
           "level": 3
         },
         "core": {
-          "key": "trail",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 4 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "pierce-momentum",
-        "pierce-momentum"
+        "ember-spread",
+        "spread-resonance",
+        "ward",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 1
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -662,14 +725,16 @@
           "level": 3
         },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 5 / 13 已清空",
+      "pickedKind": "reforge",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
@@ -677,13 +742,15 @@
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 2
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "burn",
@@ -691,18 +758,20 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 1
         },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 6 / 13 已清空",
+      "pickedKind": "resonance",
       "relics": [
+        "greed",
         "feather"
       ],
       "ascensions": [
@@ -710,12 +779,15 @@
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -724,32 +796,36 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 1
         },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 8 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -758,32 +834,36 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 2
         },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 9 / 13 已清空",
+      "pickedKind": "rule",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -792,33 +872,37 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
           "level": 3
         },
         "core": {
-          "key": "aegis",
-          "level": 2
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 13 已清空",
+      "pickedKind": "resonance",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
-        "ember-spread"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -827,33 +911,37 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
           "level": 3
         },
         "core": {
-          "key": "aegis",
-          "level": 2
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 11 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
-        "ember-spread"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -862,33 +950,37 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
           "level": 3
         },
         "core": {
-          "key": "aegis",
-          "level": 2
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 12 / 13 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
         "burn"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
-        "ember-spread"
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -897,34 +989,38 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
           "level": 3
         },
         "core": {
-          "key": "aegis",
-          "level": 2
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "逆律深渊 · 章节奖励",
+      "pickedKind": "ascension",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "frost"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
         "ember-spread",
-        "amplify"
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -933,34 +1029,40 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
-          "level": 2
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 1 / 22 已清空",
+      "pickedKind": "resonance",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "frost"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
         "ember-spread",
-        "amplify"
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -969,34 +1071,40 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 2 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "frost"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
         "ember-spread",
-        "amplify"
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1005,34 +1113,40 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 4 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "frost"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
         "ember-spread",
-        "amplify"
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1041,35 +1155,41 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 5 / 22 已清空",
+      "pickedKind": "resonance",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "frost"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
         "ember-spread",
-        "amplify",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1078,35 +1198,41 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 6 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
       "ascensions": [
-        "burn"
+        "burn",
+        "frost"
       ],
       "lateUpgrades": [
         "ember-spread",
-        "pierce-momentum",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
         "ember-spread",
-        "amplify",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1115,285 +1241,380 @@
           "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 8 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
       "lateUpgrades": [
-        "pierce-momentum",
-        "pierce-momentum",
-        "amplify",
-        "pierce-momentum",
-        "blast-resonance",
-        "blast-resonance"
+        "ember-spread",
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 9 / 22 已清空",
+      "pickedKind": "resonance",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
       "lateUpgrades": [
-        "pierce-momentum",
-        "pierce-momentum",
-        "amplify",
-        "pierce-momentum",
-        "blast-resonance",
-        "blast-resonance",
-        "blast-resonance"
+        "ember-spread",
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 10 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
       "lateUpgrades": [
-        "pierce-momentum",
-        "pierce-momentum",
-        "amplify",
-        "pierce-momentum",
-        "blast-resonance",
-        "blast-resonance",
-        "blast-resonance"
+        "ember-spread",
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 11 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "burn",
+        "frost"
+      ],
       "lateUpgrades": [
-        "pierce-momentum",
-        "pierce-momentum",
-        "amplify",
-        "pierce-momentum",
-        "blast-resonance",
-        "blast-resonance",
-        "blast-resonance"
+        "ember-spread",
+        "spread-resonance",
+        "ward",
+        "ember-spread",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance",
+        "ember-spread"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "blast",
-          "level": 2
+          "key": "burn",
+          "level": 3,
+          "ascended": true
         },
         "secondary": {
-          "key": "pierce",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "orbit",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 13 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "pierce-momentum",
-        "pierce-momentum",
-        "amplify",
-        "pierce-momentum",
+        "spread-resonance",
+        "ward",
+        "frost-ring",
+        "spread-resonance",
+        "frost-ring",
+        "frost-ring",
+        "spread-resonance",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
           "key": "blast",
-          "level": 3
+          "level": 1
         },
         "secondary": {
-          "key": "pierce",
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
           "level": 3
         }
       }
     },
     {
       "label": "ROOM 14 / 22 已清空",
+      "pickedKind": "reforge",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "amplify",
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 3
+          "level": 1
         },
         "impact": {
           "key": "blast",
-          "level": 3
+          "level": 1
         },
         "secondary": {
-          "key": "chain",
-          "level": 1
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 15 / 22 已清空",
+      "pickedKind": "rule",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "amplify",
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 3
+          "level": 1
         },
         "impact": {
           "key": "blast",
-          "level": 3
+          "level": 2
         },
         "secondary": {
-          "key": "chain",
-          "level": 2
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 16 / 22 已清空",
+      "pickedKind": "rule",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "amplify",
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
           "key": "pierce",
-          "level": 3
+          "level": 2
         },
         "impact": {
           "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
           "level": 2
         },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 17 / 22 已清空",
+      "pickedKind": "rule",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "amplify",
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -1402,33 +1623,40 @@
         },
         "impact": {
           "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
           "level": 2
         },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 18 / 22 已清空",
+      "pickedKind": "support",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "amplify",
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
       ],
       "build": {
         "trajectory": {
@@ -1437,103 +1665,39 @@
         },
         "impact": {
           "key": "blast",
-          "level": 3
+          "level": 2
         },
         "secondary": {
-          "key": "chain",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
-          "level": 1
+          "key": "storm",
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 19 / 22 已清空",
+      "pickedKind": "rule",
       "relics": [
-        "feather",
-        "greed"
+        "greed",
+        "feather"
       ],
-      "ascensions": [],
+      "ascensions": [
+        "frost"
+      ],
       "lateUpgrades": [
-        "amplify",
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
         "blast-resonance",
         "blast-resonance",
         "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "pierce",
-          "level": 3
-        },
-        "impact": {
-          "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3
-        },
-        "core": {
-          "key": "aegis",
-          "level": 1
-        }
-      }
-    },
-    {
-      "label": "ROOM 20 / 22 已清空",
-      "relics": [
-        "feather",
-        "greed"
-      ],
-      "ascensions": [],
-      "lateUpgrades": [
-        "amplify",
-        "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo"
-      ],
-      "build": {
-        "trajectory": {
-          "key": "pierce",
-          "level": 3
-        },
-        "impact": {
-          "key": "blast",
-          "level": 3
-        },
-        "secondary": {
-          "key": "chain",
-          "level": 3
-        },
-        "core": {
-          "key": "aegis",
-          "level": 2
-        }
-      }
-    },
-    {
-      "label": "ROOM 21 / 22 已清空",
-      "relics": [
-        "feather",
-        "greed"
-      ],
-      "ascensions": [],
-      "lateUpgrades": [
-        "amplify",
-        "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "rift-echo",
-        "rift-echo",
-        "rift-echo",
+        "pierce-momentum",
+        "pierce-momentum",
         "pierce-momentum"
       ],
       "build": {
@@ -1546,12 +1710,97 @@
           "level": 3
         },
         "secondary": {
-          "key": "chain",
-          "level": 3
+          "key": "frost",
+          "level": 3,
+          "ascended": true
         },
         "core": {
-          "key": "aegis",
-          "level": 2
+          "key": "storm",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 20 / 22 已清空",
+      "pickedKind": "support",
+      "relics": [
+        "greed",
+        "feather"
+      ],
+      "ascensions": [
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "blast-resonance",
+        "blast-resonance",
+        "blast-resonance",
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "blast",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
+          "level": 3
+        }
+      }
+    },
+    {
+      "label": "ROOM 21 / 22 已清空",
+      "pickedKind": "support",
+      "relics": [
+        "greed",
+        "feather"
+      ],
+      "ascensions": [
+        "frost"
+      ],
+      "lateUpgrades": [
+        "ward",
+        "frost-ring",
+        "frost-ring",
+        "frost-ring",
+        "blast-resonance",
+        "blast-resonance",
+        "blast-resonance",
+        "pierce-momentum",
+        "pierce-momentum",
+        "pierce-momentum"
+      ],
+      "build": {
+        "trajectory": {
+          "key": "pierce",
+          "level": 3
+        },
+        "impact": {
+          "key": "blast",
+          "level": 3
+        },
+        "secondary": {
+          "key": "frost",
+          "level": 3,
+          "ascended": true
+        },
+        "core": {
+          "key": "storm",
+          "level": 3
         }
       }
     }
@@ -1562,25 +1811,29 @@
   "expectedSteps": 58,
   "roomsCleared": 49,
   "picks": 48,
-  "seconds": 91,
+  "seconds": 92,
   "relics": [
-    "feather",
-    "greed"
+    "greed",
+    "feather"
   ],
-  "ascensions": [],
+  "ascensions": [
+    "frost"
+  ],
   "lateUpgrades": [
-    "amplify",
+    "ward",
+    "frost-ring",
+    "frost-ring",
+    "frost-ring",
     "blast-resonance",
     "blast-resonance",
     "blast-resonance",
-    "rift-echo",
-    "rift-echo",
-    "rift-echo",
+    "pierce-momentum",
+    "pierce-momentum",
     "pierce-momentum"
   ],
   "core": {
-    "key": "aegis",
-    "level": 2
+    "key": "storm",
+    "level": 3
   },
   "errors": []
 }

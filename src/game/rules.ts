@@ -336,6 +336,98 @@ export function cloneBuild(build: PlayerBuild): PlayerBuild {
   return next;
 }
 
+export interface RandomBuildChange {
+  build: PlayerBuild;
+  key: RuleKey;
+  level: RuleLevel;
+}
+
+export function upgradeRandomRuleBuild(
+  build: PlayerBuild,
+  random: () => number = Math.random
+): RandomBuildChange | null {
+  const slots: RuleSlot[] = [];
+  if (build.trajectory && build.trajectory.level < 3) slots.push('trajectory');
+  if (build.impact && build.impact.level < 3) slots.push('impact');
+  if (build.secondary && build.secondary.level < 3) slots.push('secondary');
+  if (!slots.length) return null;
+  const slot = slots[Math.min(slots.length - 1, Math.floor(random() * slots.length))];
+  const ref =
+    slot === 'trajectory'
+      ? build.trajectory
+      : slot === 'impact'
+        ? build.impact
+        : build.secondary;
+  if (!ref) return null;
+  const next = cloneBuild(build);
+  const level = (ref.level + 1) as RuleLevel;
+  if (slot === 'trajectory') {
+    next.trajectory = { key: ref.key as TrajectoryKey, level };
+  } else if (slot === 'impact') {
+    next.impact = { key: ref.key as ImpactKey, level };
+  } else {
+    next.secondary = { key: ref.key, level };
+  }
+  return { build: next, key: ref.key, level };
+}
+
+export function swapRandomRuleBuild(
+  build: PlayerBuild,
+  random: () => number = Math.random
+): RandomBuildChange | null {
+  const slots: RuleSlot[] = [];
+  if (build.trajectory) slots.push('trajectory');
+  if (build.impact) slots.push('impact');
+  if (!slots.length) return null;
+  const slot = slots[Math.min(slots.length - 1, Math.floor(random() * slots.length))];
+  const current = slot === 'trajectory' ? build.trajectory : build.impact;
+  if (!current) return null;
+  const pool: RuleKey[] =
+    slot === 'trajectory' ? ['pierce', 'chain', 'spread'] : ['burn', 'frost', 'blast'];
+  const equipped = new Set(buildRefs(build).map((ref) => ref.key));
+  const options = pool.filter((key) => !equipped.has(key));
+  if (!options.length) return null;
+  const key = options[Math.min(options.length - 1, Math.floor(random() * options.length))];
+  const next = cloneBuild(build);
+  if (slot === 'trajectory') {
+    next.trajectory = { key: key as TrajectoryKey, level: 1 };
+  } else {
+    next.impact = { key: key as ImpactKey, level: 1 };
+  }
+  return { build: next, key, level: 1 };
+}
+
+export function duplicateRuleKeys(build: PlayerBuild): RuleKey[] {
+  const seen = new Set<RuleKey>();
+  const duplicates = new Set<RuleKey>();
+  for (const ref of buildRefs(build)) {
+    if (seen.has(ref.key)) duplicates.add(ref.key);
+    seen.add(ref.key);
+  }
+  return [...duplicates];
+}
+
+export function preserveBuildCore(
+  next: PlayerBuild,
+  previous: PlayerBuild
+): PlayerBuild {
+  const merged = cloneBuild(next);
+  const hasCoreKey = Object.prototype.hasOwnProperty.call(next, 'core');
+  if (!hasCoreKey && previous.core) merged.core = { ...previous.core };
+  return merged;
+}
+
+export function removeDuplicateSecondary(build: PlayerBuild): PlayerBuild {
+  const next = cloneBuild(build);
+  if (
+    next.secondary &&
+    (next.secondary.key === next.trajectory?.key || next.secondary.key === next.impact?.key)
+  ) {
+    next.secondary = undefined;
+  }
+  return next;
+}
+
 function buildRefs(build: PlayerBuild): RuleRef[] {
   return [build.trajectory, build.impact, build.secondary].filter(
     (ref): ref is RuleRef => Boolean(ref)

@@ -1747,11 +1747,14 @@ kbd {
   .mobile-extras {
     display: flex;
     align-items: center;
+    max-width: 118px;
     padding: 0 3px;
+    overflow: hidden;
     color: #7f95ab;
     font-size: 6px;
     letter-spacing: 0.02em;
     white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .mobile-boss {
@@ -1825,6 +1828,19 @@ kbd {
     color: #7e68a9;
     font-size: 7px;
     letter-spacing: 0.08em;
+  }
+
+  .mb-objective {
+    display: block;
+    margin-top: 1px;
+    color: #ffd27a;
+    font-size: 7px;
+    font-style: normal;
+    letter-spacing: 0.03em;
+  }
+
+  .mb-objective[hidden] {
+    display: none;
   }
 
   .mobile-combo {

@@ -28,9 +28,26 @@ describe('wave director', () => {
     expect(late.groups).toHaveLength(7);
     expect(late.maxAlive).toBe(16);
     const waste = buildWavePlan(200, 3);
-    expect(waste.groups.length).toBeGreaterThanOrEqual(10);
+    expect(waste.groups.length).toBeGreaterThanOrEqual(11);
+    expect(waste.groups.length).toBeLessThanOrEqual(14);
     expect(waste.maxAlive).toBe(45);
     expect(waste.gap).toBeCloseTo(0.55, 5);
+    expect(buildWavePlan(190, 3).groups).toHaveLength(11);
+    expect(buildWavePlan(250, 3).groups).toHaveLength(14);
+  });
+
+  it('announces a new wave before spawning its first enemy', () => {
+    const director = new WaveDirector({ groups: [2, 2], maxAlive: 10, gap: 0.1 });
+    const events: string[] = [];
+    let side = 0;
+    const spawn = () => events.push(`spawn:${side}`);
+    const onWaveStart = (wave: number) => {
+      side = wave;
+      events.push(`start:${wave}`);
+    };
+    director.update(0, 0, spawn, onWaveStart);
+    director.update(0.1, 0, spawn, onWaveStart);
+    expect(events).toEqual(['start:1', 'spawn:1', 'spawn:1', 'start:2', 'spawn:2', 'spawn:2']);
   });
 
   it('spawns a whole wave without waiting for kills and keeps a capacity cap', () => {

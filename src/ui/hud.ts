@@ -46,6 +46,7 @@ const roomNum = byId<HTMLElement>('room-num');
 const roomTotal = byId<HTMLElement>('room-total');
 const roomName = byId<HTMLElement>('room-name');
 const mobileRoomName = byId<HTMLElement>('mobile-room-name');
+const mobileObjective = byId<HTMLElement>('mobile-objective');
 const objectiveTime = byId<HTMLElement>('objective-time');
 const objectiveLabel = byId<HTMLElement>('objective-label');
 const objectiveRoom = byId<HTMLElement>('objective-room');
@@ -98,10 +99,12 @@ let mobileRelicCount = 0;
 let mobileLateCount = 0;
 let mobileMutationName = '无';
 let mobileComboLabel = '基础魔弹';
+let mobileObjectiveLabel = '';
 
 function renderMobileExtras(): void {
   const mutation = mobileMutationName === '无' ? '' : ` · 突变 ${mobileMutationName}`;
-  mobileExtras.textContent = `${mobileComboLabel} · 遗物 ${mobileRelicCount} · 后期 ${mobileLateCount}${mutation}`;
+  const objective = mobileObjectiveLabel ? `${mobileObjectiveLabel} · ` : '';
+  mobileExtras.textContent = `${objective}${mobileComboLabel} · 遗物 ${mobileRelicCount} · 后期 ${mobileLateCount}${mutation}`;
 }
 
 const comboKicker = byId<HTMLElement>('combo-kicker');
@@ -371,6 +374,11 @@ export interface RoomProgress {
   kills: number;
   hp: number;
   maxHp: number;
+  objective?: {
+    label: string;
+    value: string;
+    progress: number;
+  };
 }
 
 export function setRoomProgress(progress: RoomProgress): void {
@@ -379,15 +387,31 @@ export function setRoomProgress(progress: RoomProgress): void {
   roomTotal.textContent = `/ ${pad(progress.total)}`;
   roomName.textContent = progress.name;
   mobileRoomName.textContent = progress.name;
-  objectiveLabel.textContent = progress.en;
   const chapterPrefix =
     progress.chapterTotal && progress.chapterTotal > 1
       ? `W${(progress.chapterIndex ?? 0) + 1} · `
       : '';
   const mutatorPrefix = progress.mutator ? `${progress.mutator} · ` : '';
   objectiveRoom.textContent = `${mutatorPrefix}${chapterPrefix}ROOM ${progress.index} / ${progress.total}`;
-  objectiveTime.textContent = `${Math.min(progress.cleared, progress.quota)} / ${progress.quota}`;
-  survivalFill.style.width = `${Math.min(100, (progress.cleared / progress.quota) * 100)}%`;
+  if (progress.objective) {
+    objectiveLabel.textContent = progress.objective.label;
+    objectiveTime.textContent = progress.objective.value;
+    mobileObjectiveLabel = `${progress.objective.label} ${progress.objective.value}`;
+    mobileObjective.textContent = mobileObjectiveLabel;
+    mobileObjective.hidden = false;
+    survivalFill.style.width = `${Math.max(
+      0,
+      Math.min(100, progress.objective.progress * 100)
+    )}%`;
+  } else {
+    objectiveLabel.textContent = progress.en;
+    objectiveTime.textContent = `${Math.min(progress.cleared, progress.quota)} / ${progress.quota}`;
+    mobileObjectiveLabel = '';
+    mobileObjective.textContent = '';
+    mobileObjective.hidden = true;
+    survivalFill.style.width = `${Math.min(100, (progress.cleared / progress.quota) * 100)}%`;
+  }
+  renderMobileExtras();
   if (styleBadge) {
     styleBadge.innerHTML = `${progress.total}<br />STEP`;
     styleBadge.setAttribute('aria-label', `本世界 ${progress.total} 步`);
@@ -610,7 +634,7 @@ export function setRoomEnemies(kinds: EnemyKind[]): void {
 function renderCodex(acquired: ReadonlySet<RuleKey>): void {
   lastAcquired = acquired;
   codexList.textContent = '';
-  for (const kind of codexKinds.slice(0, 4)) {
+  for (const kind of codexKinds) {
     const spec = ENEMY_SPECS[kind];
     const owned = acquired.has(spec.rule);
     const row = document.createElement('div');

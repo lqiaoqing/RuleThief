@@ -7,6 +7,7 @@ import {
   buildLevelSum,
   canAscend,
   createEmptyBuild,
+  duplicateRuleKeys,
   getBuildCombo,
   getComboName,
   getImpactProfile,
@@ -15,9 +16,13 @@ import {
   getTrajectoryProfile,
   mergeBurn,
   mergeFrost,
+  preserveBuildCore,
   reforgeRule,
   reforgeSlot,
+  removeDuplicateSecondary,
   selectChainTargets,
+  swapRandomRuleBuild,
+  upgradeRandomRuleBuild,
   type ChainCandidate,
   type PlayerBuild,
   type RuleOffer
@@ -292,5 +297,61 @@ describe('chain and spread selection', () => {
 
   it('handles single-projectile spreads', () => {
     expect(getSpreadAngles(1.2, 1, 30)).toEqual([1.2]);
+  });
+});
+
+describe('build integrity', () => {
+  const core = { key: 'nova' as const, level: 3 as const };
+
+  it('preserves the core through event upgrades and swaps', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 1 },
+      impact: { key: 'burn', level: 1 },
+      secondary: { key: 'chain', level: 1 },
+      core
+    };
+    const upgraded = upgradeRandomRuleBuild(build, () => 0.2);
+    expect(upgraded?.build.core).toEqual(core);
+    const swapped = swapRandomRuleBuild(build, () => 0.2);
+    expect(swapped?.build.core).toEqual(core);
+  });
+
+  it('does not swap a main rule into the third slot key', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 1 },
+      impact: { key: 'burn', level: 1 },
+      secondary: { key: 'burn', level: 1 },
+      core
+    };
+    const swapped = swapRandomRuleBuild(build, () => 0.99);
+    expect(swapped?.build.impact?.key).not.toBe('burn');
+    expect(duplicateRuleKeys(swapped!.build)).toEqual([]);
+  });
+
+  it('preserves the core through reforge and ascension', () => {
+    const build: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 3 },
+      impact: { key: 'burn', level: 1 },
+      core
+    };
+    expect(reforgeRule(build, 'impact', 'frost').core).toEqual(core);
+    expect(ascendRule(build, 'pierce').core).toEqual(core);
+  });
+
+  it('merges an omitted core and removes accidental duplicate secondary rules', () => {
+    const previous: PlayerBuild = {
+      trajectory: { key: 'pierce', level: 2 },
+      impact: { key: 'burn', level: 1 },
+      core
+    };
+    const next: PlayerBuild = {
+      trajectory: { key: 'chain', level: 1 },
+      impact: { key: 'burn', level: 1 },
+      secondary: { key: 'chain', level: 1 }
+    };
+    const merged = removeDuplicateSecondary(preserveBuildCore(next, previous));
+    expect(merged.core).toEqual(core);
+    expect(merged.secondary).toBeUndefined();
+    expect(duplicateRuleKeys(merged)).toEqual([]);
   });
 });
