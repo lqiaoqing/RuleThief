@@ -11,6 +11,7 @@ import {
 } from './rules';
 import { MUTATIONS, MUTATION_IDS, type MutationDef } from './mutations';
 import type { CoreDef } from './cores';
+import type { FrontierGrowthDef } from './frontierGrowth';
 import { ASCENSION_IDS, getAscensionForRule, type AscensionDef, type AscensionId } from './ascensions';
 import { MAX_RELICS, RELICS, RELIC_IDS, type RelicDef, type RelicId } from './relics';
 import {
@@ -1318,6 +1319,7 @@ export type Reward =
   | { kind: 'late'; upgrade: LateUpgradeDef }
   | { kind: 'resonance'; upgrade: LateUpgradeDef }
   | { kind: 'core'; core: CoreDef; nextLevel: 1 | 2 | 3 }
+  | { kind: 'frontier'; growth: FrontierGrowthDef }
   | { kind: 'reforge'; offer: ReforgeOffer; remaining: number };
 
 export interface RoomPreview {

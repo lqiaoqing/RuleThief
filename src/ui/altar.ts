@@ -348,6 +348,32 @@ function reforgeCard(reward: Extract<Reward, { kind: 'reforge' }>, index: number
   return card;
 }
 
+function frontierCard(
+  reward: Extract<Reward, { kind: 'frontier' }>,
+  index: number
+) {
+  const def = reward.growth;
+  const card = el('button', 'rule-card action-late');
+  card.type = 'button';
+  card.dataset.kind = 'frontier';
+  card.dataset.key = def.id;
+  card.style.setProperty('--rule-color', def.color);
+  const head = el('div', 'rule-card-head');
+  const iconBox = el('div', 'rule-card-icon');
+  iconBox.append(iconSvg(def.icon));
+  const title = el('div', 'rule-card-title');
+  title.append(
+    el('span', 'rule-card-slot', '荒原刻印 · WASTE MARK'),
+    el('span', 'rule-card-name', def.name)
+  );
+  head.append(iconBox, title, el('span', 'rule-card-action upgrade', '刻印'));
+  card.append(head, el('p', 'rule-card-desc', def.description));
+  card.append(el('span', 'rule-card-now', def.detail));
+  card.append(el('div', 'rule-card-combo', 'W4 专属成长 · 不占规则槽'));
+  card.append(el('span', 'rule-card-key', String(index + 1)));
+  return card;
+}
+
 export function renderRewards(rewards: readonly Reward[], onPick: (reward: Reward) => void): void {
   offersWrap.textContent = '';
   offersWrap.dataset.count = String(rewards.length);
@@ -367,9 +393,11 @@ export function renderRewards(rewards: readonly Reward[], onPick: (reward: Rewar
                   ? resonanceCard(reward, index)
                   : reward.kind === 'core'
                     ? coreCard(reward, index)
-                  : reward.kind === 'reforge'
-                    ? reforgeCard(reward, index)
-                    : supportCard(reward, index);
+                    : reward.kind === 'frontier'
+                      ? frontierCard(reward, index)
+                      : reward.kind === 'reforge'
+                        ? reforgeCard(reward, index)
+                        : supportCard(reward, index);
     card.addEventListener('click', () => onPick(reward));
     offersWrap.append(card);
   });

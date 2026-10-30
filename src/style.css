@@ -2409,6 +2409,14 @@ kbd {
   color: #b69bff;
 }
 
+.frontier-line {
+  border-color: rgba(255, 210, 122, 0.34);
+}
+
+.frontier-line .mutation-ico {
+  color: #ffd27a;
+}
+
 .rule-card.action-late {
   border-color: rgba(182, 155, 255, 0.4);
 }

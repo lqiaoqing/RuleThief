@@ -13,6 +13,7 @@ import type { MutationDef } from '../game/mutations';
 import type { RelicDef } from '../game/relics';
 import { MAX_LATE_UPGRADES, type LateUpgradeDef } from '../game/lateUpgrades';
 import type { CoreDef } from '../game/cores';
+import type { FrontierGrowthDef } from '../game/frontierGrowth';
 import { formatTime } from '../game/theme';
 
 export type RuleToastKind = RuleKey | 'heal';
@@ -100,11 +101,13 @@ let mobileLateCount = 0;
 let mobileMutationName = '无';
 let mobileComboLabel = '基础魔弹';
 let mobileObjectiveLabel = '';
+let mobileFrontierCount = 0;
 
 function renderMobileExtras(): void {
   const mutation = mobileMutationName === '无' ? '' : ` · 突变 ${mobileMutationName}`;
   const objective = mobileObjectiveLabel ? `${mobileObjectiveLabel} · ` : '';
-  mobileExtras.textContent = `${objective}${mobileComboLabel} · 遗物 ${mobileRelicCount} · 后期 ${mobileLateCount}${mutation}`;
+  const frontier = mobileFrontierCount ? ` · 刻印 ${mobileFrontierCount}` : '';
+  mobileExtras.textContent = `${objective}${mobileComboLabel} · 遗物 ${mobileRelicCount} · 后期 ${mobileLateCount}${mutation}${frontier}`;
 }
 
 const comboKicker = byId<HTMLElement>('combo-kicker');
@@ -146,6 +149,9 @@ const coreLine = byId<HTMLElement>('core-line');
 const coreCount = byId<HTMLElement>('core-count');
 const coreNames = byId<HTMLElement>('core-names');
 const coreIcon = document.getElementById('core-icon') as SVGUseElement | null;
+const frontierLine = byId<HTMLElement>('frontier-line');
+const frontierCount = byId<HTMLElement>('frontier-count');
+const frontierNames = byId<HTMLElement>('frontier-names');
 const itemTip = byId<HTMLElement>('item-tip');
 
 interface ItemTipData {
@@ -724,8 +730,28 @@ export function resetM0Hud(): void {
   setRelics([]);
   setLate([]);
   setCore(null);
+  setFrontier([]);
   setSealedRule(null, false);
   hideRuleToast();
+}
+
+export function setFrontier(growth: readonly FrontierGrowthDef[]): void {
+  const grouped = new Map<string, { def: FrontierGrowthDef; count: number }>();
+  for (const def of growth) {
+    const entry = grouped.get(def.id);
+    if (entry) entry.count += 1;
+    else grouped.set(def.id, { def, count: 1 });
+  }
+  const entries = [...grouped.values()];
+  frontierLine.hidden = entries.length === 0;
+  frontierCount.textContent = `${entries.length} / 8`;
+  frontierNames.textContent = entries.length
+    ? entries
+        .map(({ def, count }) => (count > 1 ? `${def.name} ×${count}` : def.name))
+        .join(' · ')
+    : '—';
+  mobileFrontierCount = entries.length;
+  renderMobileExtras();
 }
 
 export function setCore(def: CoreDef | null, level = 0): void {

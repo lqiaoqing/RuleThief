@@ -11,26 +11,26 @@
   "chapterRewards": [
     [
       {
-        "kind": "ascension",
-        "name": "烈焰引爆"
+        "kind": "relic",
+        "name": "破裂棱镜"
       },
       {
         "kind": "relic",
-        "name": "血焰之心"
+        "name": "寒霜王冠"
       },
       {
         "kind": "reforge",
-        "name": "贯穿 → 弹射"
+        "name": "爆裂 → 冰霜"
       }
     ],
     [
       {
-        "kind": "late",
-        "name": "壁障"
+        "kind": "reforge",
+        "name": "冰霜 → 爆裂"
       },
       {
-        "kind": "reforge",
-        "name": "贯穿 → 冰霜"
+        "kind": "support",
+        "name": "瞬时折叠"
       },
       {
         "kind": "support",
@@ -44,11 +44,11 @@
       },
       {
         "kind": "late",
-        "name": "贪婪"
+        "name": "壁障"
       },
       {
-        "kind": "reforge",
-        "name": "冰霜 → 弹射"
+        "kind": "support",
+        "name": "规则韧性"
       }
     ]
   ],
@@ -59,6 +59,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -80,6 +81,7 @@
       "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -98,11 +100,10 @@
     {
       "label": "ROOM 4 / 10 已清空",
       "pickedKind": "support",
-      "relics": [
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -114,18 +115,17 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         }
       }
     },
     {
       "label": "ROOM 5 / 10 已清空",
       "pickedKind": "core",
-      "relics": [
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
@@ -137,7 +137,7 @@
         },
         "secondary": {
           "key": "pierce",
-          "level": 2
+          "level": 3
         },
         "core": {
           "key": "storm",
@@ -148,19 +148,18 @@
     {
       "label": "ROOM 7 / 10 已清空",
       "pickedKind": "support",
-      "relics": [
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -175,19 +174,18 @@
     {
       "label": "ROOM 8 / 10 已清空",
       "pickedKind": "support",
-      "relics": [
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -202,19 +200,18 @@
     {
       "label": "ROOM 9 / 10 已清空",
       "pickedKind": "mutation",
-      "relics": [
-        "greed"
-      ],
+      "relics": [],
       "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -228,23 +225,21 @@
     },
     {
       "label": "审判废墟 · 章节奖励",
-      "pickedKind": "ascension",
+      "pickedKind": "relic",
       "relics": [
-        "greed"
+        "prism"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -260,21 +255,19 @@
       "label": "ROOM 1 / 13 已清空",
       "pickedKind": "core",
       "relics": [
-        "greed"
+        "prism"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -290,21 +283,19 @@
       "label": "ROOM 2 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed"
+        "prism"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -320,23 +311,21 @@
       "label": "ROOM 4 / 13 已清空",
       "pickedKind": "resonance",
       "relics": [
-        "greed"
+        "prism"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -352,23 +341,21 @@
       "label": "ROOM 5 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed"
+        "prism"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -384,23 +371,21 @@
       "label": "ROOM 6 / 13 已清空",
       "pickedKind": "core",
       "relics": [
-        "greed"
+        "prism"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum"
+        "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -416,25 +401,23 @@
       "label": "ROOM 8 / 13 已清空",
       "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
+        "frost-ring",
+        "spread-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -448,27 +431,25 @@
     },
     {
       "label": "ROOM 9 / 13 已清空",
-      "pickedKind": "support",
+      "pickedKind": "rule",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
+        "frost-ring",
+        "spread-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 2
         },
         "secondary": {
           "key": "pierce",
@@ -484,25 +465,23 @@
       "label": "ROOM 10 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread"
+        "frost-ring",
+        "spread-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 2
         },
         "secondary": {
           "key": "pierce",
@@ -518,26 +497,24 @@
       "label": "ROOM 11 / 13 已清空",
       "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread",
-        "spread-resonance"
+        "frost-ring",
+        "spread-resonance",
+        "pierce-momentum"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 2
         },
         "secondary": {
           "key": "pierce",
@@ -553,26 +530,24 @@
       "label": "ROOM 12 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread",
-        "spread-resonance"
+        "frost-ring",
+        "spread-resonance",
+        "pierce-momentum"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "frost",
+          "level": 2
         },
         "secondary": {
           "key": "pierce",
@@ -586,29 +561,26 @@
     },
     {
       "label": "失序工坊 · 章节奖励",
-      "pickedKind": "late",
+      "pickedKind": "reforge",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread",
         "spread-resonance",
-        "ward"
+        "pierce-momentum",
+        "blast-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -624,27 +596,24 @@
       "label": "ROOM 1 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread",
         "spread-resonance",
-        "ward"
+        "pierce-momentum",
+        "blast-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -660,28 +629,25 @@
       "label": "ROOM 2 / 13 已清空",
       "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread"
+        "pierce-momentum",
+        "blast-resonance",
+        "spread-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 1
         },
         "secondary": {
           "key": "pierce",
@@ -695,30 +661,27 @@
     },
     {
       "label": "ROOM 4 / 13 已清空",
-      "pickedKind": "support",
+      "pickedKind": "rule",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "pierce-momentum",
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread"
+        "pierce-momentum",
+        "blast-resonance",
+        "spread-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "pierce",
@@ -734,28 +697,25 @@
       "label": "ROOM 5 / 13 已清空",
       "pickedKind": "reforge",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -771,29 +731,26 @@
       "label": "ROOM 6 / 13 已清空",
       "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance"
+        "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -809,29 +766,26 @@
       "label": "ROOM 8 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance"
+        "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -847,29 +801,26 @@
       "label": "ROOM 9 / 13 已清空",
       "pickedKind": "rule",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance"
+        "frost-ring"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -885,30 +836,27 @@
       "label": "ROOM 10 / 13 已清空",
       "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -924,30 +872,27 @@
       "label": "ROOM 11 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -963,30 +908,27 @@
       "label": "ROOM 12 / 13 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
-      "ascensions": [
-        "burn"
-      ],
+      "ascensions": [],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1002,31 +944,29 @@
       "label": "逆律深渊 · 章节奖励",
       "pickedKind": "ascension",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
-        "spread-resonance",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
       ],
+      "frontierGrowth": [],
       "build": {
         "trajectory": {
           "key": "spread",
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1041,24 +981,24 @@
     },
     {
       "label": "ROOM 1 / 22 已清空",
-      "pickedKind": "resonance",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter"
       ],
       "build": {
         "trajectory": {
@@ -1066,9 +1006,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1083,24 +1022,25 @@
     },
     {
       "label": "ROOM 2 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken"
       ],
       "build": {
         "trajectory": {
@@ -1108,9 +1048,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1125,24 +1064,26 @@
     },
     {
       "label": "ROOM 4 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
-        "frost-ring"
+        "frost-ring",
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo"
       ],
       "build": {
         "trajectory": {
@@ -1150,9 +1091,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1167,25 +1107,27 @@
     },
     {
       "label": "ROOM 5 / 22 已清空",
-      "pickedKind": "resonance",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance"
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon"
       ],
       "build": {
         "trajectory": {
@@ -1193,9 +1135,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1210,25 +1151,28 @@
     },
     {
       "label": "ROOM 6 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance"
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash"
       ],
       "build": {
         "trajectory": {
@@ -1236,9 +1180,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1253,25 +1196,29 @@
     },
     {
       "label": "ROOM 8 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance"
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill"
       ],
       "build": {
         "trajectory": {
@@ -1279,9 +1226,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1296,26 +1242,30 @@
     },
     {
       "label": "ROOM 9 / 22 已清空",
-      "pickedKind": "resonance",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance",
-        "ember-spread"
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo"
       ],
       "build": {
         "trajectory": {
@@ -1323,9 +1273,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1340,26 +1289,31 @@
     },
     {
       "label": "ROOM 10 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance",
-        "ember-spread"
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo"
       ],
       "build": {
         "trajectory": {
@@ -1367,9 +1321,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1384,26 +1337,32 @@
     },
     {
       "label": "ROOM 11 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "frontier",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
-        "burn",
         "frost"
       ],
       "lateUpgrades": [
-        "ember-spread",
         "spread-resonance",
-        "ward",
-        "ember-spread",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance",
-        "ember-spread"
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
@@ -1411,9 +1370,8 @@
           "level": 3
         },
         "impact": {
-          "key": "burn",
-          "level": 3,
-          "ascended": true
+          "key": "blast",
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1428,25 +1386,33 @@
     },
     {
       "label": "ROOM 13 / 22 已清空",
-      "pickedKind": "support",
+      "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
         "spread-resonance",
-        "ward",
-        "frost-ring",
+        "blast-resonance",
         "spread-resonance",
         "frost-ring",
         "frost-ring",
-        "spread-resonance",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance"
+        "frost-ring"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
@@ -1455,7 +1421,7 @@
         },
         "impact": {
           "key": "blast",
-          "level": 1
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1470,34 +1436,42 @@
     },
     {
       "label": "ROOM 14 / 22 已清空",
-      "pickedKind": "reforge",
+      "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 1
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "blast",
-          "level": 1
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1512,34 +1486,42 @@
     },
     {
       "label": "ROOM 15 / 22 已清空",
-      "pickedKind": "rule",
+      "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 1
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "blast",
-          "level": 2
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1554,34 +1536,43 @@
     },
     {
       "label": "ROOM 16 / 22 已清空",
-      "pickedKind": "rule",
+      "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
-          "level": 2
+          "key": "spread",
+          "level": 3
         },
         "impact": {
           "key": "blast",
-          "level": 2
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1596,34 +1587,43 @@
     },
     {
       "label": "ROOM 17 / 22 已清空",
-      "pickedKind": "rule",
+      "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
           "key": "blast",
-          "level": 2
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1640,32 +1640,41 @@
       "label": "ROOM 18 / 22 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
           "key": "blast",
-          "level": 2
+          "level": 3
         },
         "secondary": {
           "key": "frost",
@@ -1680,29 +1689,39 @@
     },
     {
       "label": "ROOM 19 / 22 已清空",
-      "pickedKind": "rule",
+      "pickedKind": "resonance",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance",
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1724,27 +1743,37 @@
       "label": "ROOM 20 / 22 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance",
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1766,27 +1795,37 @@
       "label": "ROOM 21 / 22 已清空",
       "pickedKind": "support",
       "relics": [
-        "greed",
-        "feather"
+        "prism",
+        "bloodflame-heart"
       ],
       "ascensions": [
         "frost"
       ],
       "lateUpgrades": [
-        "ward",
-        "frost-ring",
+        "spread-resonance",
+        "blast-resonance",
+        "spread-resonance",
         "frost-ring",
         "frost-ring",
         "blast-resonance",
-        "blast-resonance",
-        "blast-resonance",
-        "pierce-momentum",
-        "pierce-momentum",
-        "pierce-momentum"
+        "frost-ring",
+        "spread-resonance",
+        "blast-resonance"
+      ],
+      "frontierGrowth": [
+        "frost-shatter",
+        "core-awaken",
+        "waste-echo",
+        "glass-cannon",
+        "phase-dash",
+        "overkill",
+        "waste-echo",
+        "waste-echo",
+        "blood-pact"
       ],
       "build": {
         "trajectory": {
-          "key": "pierce",
+          "key": "spread",
           "level": 3
         },
         "impact": {
@@ -1811,25 +1850,35 @@
   "expectedSteps": 58,
   "roomsCleared": 49,
   "picks": 48,
-  "seconds": 92,
+  "seconds": 89,
   "relics": [
-    "greed",
-    "feather"
+    "prism",
+    "bloodflame-heart"
   ],
   "ascensions": [
     "frost"
   ],
   "lateUpgrades": [
-    "ward",
-    "frost-ring",
+    "spread-resonance",
+    "blast-resonance",
+    "spread-resonance",
     "frost-ring",
     "frost-ring",
     "blast-resonance",
-    "blast-resonance",
-    "blast-resonance",
-    "pierce-momentum",
-    "pierce-momentum",
-    "pierce-momentum"
+    "frost-ring",
+    "spread-resonance",
+    "blast-resonance"
+  ],
+  "frontierGrowth": [
+    "frost-shatter",
+    "core-awaken",
+    "waste-echo",
+    "glass-cannon",
+    "phase-dash",
+    "overkill",
+    "waste-echo",
+    "waste-echo",
+    "blood-pact"
   ],
   "core": {
     "key": "storm",

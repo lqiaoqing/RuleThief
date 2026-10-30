@@ -5,6 +5,7 @@ import {
   setBossBar,
   bossPhaseLabels,
   setBuild,
+  setFrontier,
   setDash,
   setHp,
   setMutation,
@@ -100,6 +101,15 @@ import {
   type FrontierAiHost
 } from './frontierAi';
 import { updateCoreEffect, type CoreEffectHost } from './coreEffects';
+import {
+  FRONTIER_GROWTH,
+  frontierDamageMultiplier,
+  frontierDamageTakenMultiplier,
+  frontierDashCooldownMultiplier,
+  pickFrontierGrowth,
+  type FrontierGrowthDef,
+  type FrontierGrowthId
+} from './frontierGrowth';
 import { combatBetween, combatInt, combatRandom, random, resetRandomStreams } from './rng';
 import {
   MUTATIONS,
@@ -261,6 +271,7 @@ export interface RunEndPayload {
   relics: string[];
   ascensions: string[];
   lateUpgrades: string[];
+  frontierGrowth: string[];
   core: string | null;
   rulesSeen: RuleKey[];
   rulesAscended: RuleKey[];
@@ -383,6 +394,7 @@ export class M0Scene extends Phaser.Scene {
   private acquired = new Set<RuleKey>();
   private relics: RelicId[] = [];
   private lateUpgrades: LateUpgradeId[] = [];
+  private frontierGrowth: FrontierGrowthId[] = [];
   private orphanLateLevels = 0;
   private pierceMomentum = 0;
   private frostRingCd = 0;
@@ -733,6 +745,7 @@ export class M0Scene extends Phaser.Scene {
     this.acquired.clear();
     this.relics = [];
     this.lateUpgrades = [];
+    this.frontierGrowth = [];
     this.orphanLateLevels = 0;
     this.pierceMomentum = 0;
     this.frostRingCd = 0;
@@ -1748,6 +1761,7 @@ export class M0Scene extends Phaser.Scene {
         showRuleToast('chain', '规则共鸣', `${upgrade.name} · ${upgrade.description}`);
       }
     }
+    this.injectFrontierReward(rewards);
     this.game.events.emit('m2-room-cleared', {
       index: this.stepIndex,
       total: this.stepTotal,
@@ -1803,6 +1817,8 @@ export class M0Scene extends Phaser.Scene {
         `律核 · ${reward.core.name} Lv.${reward.nextLevel}`,
         reward.core.descriptions[reward.nextLevel - 1]
       );
+    } else if (reward.kind === 'frontier') {
+      this.grantFrontierGrowth(reward.growth);
     } else if (reward.kind === 'reforge') {
       this.applyReforge(reward.offer);
     } else {
@@ -2343,6 +2359,7 @@ export class M0Scene extends Phaser.Scene {
       riftEchoCasts: this.riftEchoCasts,
       thirdVolleys: this.thirdVolleys,
       lateUpgrades: [...this.lateUpgrades],
+      frontierGrowth: [...this.frontierGrowth],
       core: this.build.core ? { ...this.build.core } : null,
       reforgeLeft: Math.max(0, MAX_REFORGES - this.reforgesUsed),
       pierceMomentum: this.pierceMomentum,
@@ -3010,7 +3027,8 @@ export class M0Scene extends Phaser.Scene {
     this.dashRemaining = DASH_DURATION;
     this.dashCooldown = Math.max(
       1.2,
-      this.dashCdMax - 0.15 * lateLevel(this.lateUpgrades, 'focus')
+      (this.dashCdMax - 0.15 * lateLevel(this.lateUpgrades, 'focus')) *
+        frontierDashCooldownMultiplier(this.frontierGrowth)
     );
     if (this.relics.includes('feather')) this.featherTime = 2;
     triggerDashfire(this.mutation);
@@ -3023,6 +3041,9 @@ export class M0Scene extends Phaser.Scene {
     setDash(0, this.dashCooldown);
     audio.play('dash');
     this.spawnDashBurst();
+    if (this.frontierGrowth.includes('phase-dash')) {
+      this.frontierDashBlast();
+    }
     if (this.hordeEnabled) {
       const token = this.runToken;
       this.time.delayedCall(80, () => {
@@ -3034,6 +3055,18 @@ export class M0Scene extends Phaser.Scene {
           this.triggerDashNova();
         }
       });
+    }
+  }
+
+  private frontierDashBlast(): void {
+    const x = this.playerRoot.x;
+    const y = this.playerRoot.y;
+    this.spawnExplosion(x, y - 8, 110);
+    for (const enemy of [...this.enemies]) {
+      if (enemy.dead || ENEMY_SPECS[enemy.kind].boss) continue;
+      if (Phaser.Math.Distance.Between(x, y, enemy.root.x, enemy.root.y) <= 110) {
+        this.applyDamage(enemy, 24, 'blast');
+      }
     }
   }
 
@@ -3753,6 +3786,34 @@ export class M0Scene extends Phaser.Scene {
     }
   }
 
+  private grantFrontierGrowth(def: FrontierGrowthDef): void {
+    this.frontierGrowth.push(def.id);
+    if (def.id === 'glass-cannon') {
+      this.maxHp = Math.max(40, Math.round(this.maxHp * 0.75));
+      this.hp = Math.min(this.hp, this.maxHp);
+      setHp(this.hp, this.maxHp);
+    }
+    setFrontier(this.frontierGrowth.map((id) => FRONTIER_GROWTH[id]));
+    audio.play('rule');
+    showRuleToast('chain', `荒原刻印 · ${def.name}`, def.description);
+    this.refreshRoomHud();
+  }
+
+  private injectFrontierReward(rewards: Reward[]): void {
+    if (this.chapterIndex < 3 || this.getRoom().boss) return;
+    const def = pickFrontierGrowth(this.build, this.frontierGrowth, random);
+    if (!def) return;
+    const card: Reward = { kind: 'frontier', growth: def };
+    const maxRewards = this.getRoom().surge ? 5 : 4;
+    if (rewards.length < maxRewards) {
+      rewards.push(card);
+      return;
+    }
+    const supportIndex = rewards.findIndex((reward) => reward.kind === 'support');
+    if (supportIndex >= 0) rewards[supportIndex] = card;
+    else rewards[rewards.length - 1] = card;
+  }
+
   private grantLateUpgrade(upgrade: LateUpgradeDef, source: 'late' | 'resonance'): void {
     if (
       lateLevel(this.lateUpgrades, upgrade.id) >= MAX_LATE_LEVEL ||
@@ -3805,7 +3866,7 @@ export class M0Scene extends Phaser.Scene {
     ) {
       multiplier += 0.25 * lateLevel(this.lateUpgrades, 'execute');
     }
-    return multiplier;
+    return multiplier * frontierDamageMultiplier(this.frontierGrowth);
   }
 
   private relicDamageMultiplier(): number {
@@ -3872,7 +3933,16 @@ export class M0Scene extends Phaser.Scene {
   private updateCores(dt: number): void {
     const core = this.build.core;
     if (!core) return;
-    this.coreTimer = updateCoreEffect(core, dt, this.coreTimer, this.getCoreEffectHost());
+    const awakened =
+      this.frontierGrowth.includes('core-awaken') && core.level >= 3
+        ? ({ key: core.key, level: 4 } as unknown as CoreRef)
+        : core;
+    this.coreTimer = updateCoreEffect(
+      awakened,
+      dt,
+      this.coreTimer,
+      this.getCoreEffectHost()
+    );
   }
 
   private updateRelicTimers(dt: number): void {
@@ -4209,6 +4279,20 @@ export class M0Scene extends Phaser.Scene {
     } else if (ENEMY_SPECS[enemy.kind].boss) {
       this.onBossDefeated(enemy);
       return;
+    }
+    if (!ENEMY_SPECS[enemy.kind].boss) {
+      if (
+        this.frontierGrowth.includes('frost-shatter') &&
+        enemy.frostTime > 0
+      ) {
+        this.explodeAt(x, y - 10, enemy, { radius: 90, damage: 20 });
+      }
+      if (this.frontierGrowth.includes('ember-bloom') && enemy.burnTime > 0) {
+        this.spawnFirePatch(x, y + 8, 50, 2.2);
+      }
+      if (this.frontierGrowth.includes('overkill') && combatRandom() < 0.25) {
+        this.explodeAt(x, y - 10, enemy, { radius: 70, damage: 18 });
+      }
     }
     if (enemy === this.leaderRef) {
       const huntObjective = this.getRoom().objective === 'hunt';
@@ -6554,7 +6638,8 @@ export class M0Scene extends Phaser.Scene {
       Math.round(
         amount *
           Math.max(0.5, 1 - ward * 0.05 - aegis) *
-          (1 + greedLate * 0.06)
+          (1 + greedLate * 0.06) *
+          frontierDamageTakenMultiplier(this.frontierGrowth)
       )
     );
     this.damageTaken[source] += amount;
@@ -6862,6 +6947,7 @@ export class M0Scene extends Phaser.Scene {
         .map((ref) => (ref?.ascended ? getAscensionForRule(ref.key)?.name ?? null : null))
         .filter((name): name is string => Boolean(name)),
       lateUpgrades: this.lateUpgradeSummary(),
+      frontierGrowth: this.frontierGrowth.map((id) => FRONTIER_GROWTH[id].name),
       core: this.build.core
         ? `${CORES[this.build.core.key].name} Lv.${this.build.core.level}`
         : null,

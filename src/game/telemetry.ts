@@ -18,6 +18,7 @@ export interface RunRecord {
   relics?: string[];
   ascensions?: string[];
   lateUpgrades?: string[];
+  frontierGrowth?: string[];
   mutatorLevel?: number;
   mutatorName?: string;
   daily?: boolean;

@@ -354,6 +354,7 @@ function showResult(payload: RunEndPayload): void {
     relics: payload.relics,
     ascensions: payload.ascensions,
     lateUpgrades: payload.lateUpgrades,
+    frontierGrowth: payload.frontierGrowth,
     mutatorLevel: payload.mutatorLevel,
     mutatorName: payload.mutatorName,
     daily: dailyMode,
@@ -392,7 +393,11 @@ function showResult(payload: RunEndPayload): void {
   }`;
   resultLate.textContent = `后期强化 · ${
     payload.lateUpgrades.length ? payload.lateUpgrades.join(' / ') : '无'
-  }${payload.core ? ` · 律核 ${payload.core}` : ''}`;
+  }${payload.core ? ` · 律核 ${payload.core}` : ''}${
+    payload.frontierGrowth.length
+      ? ` · 荒原刻印 ${payload.frontierGrowth.join(' / ')}`
+      : ''
+  }`;
   const totalTaken = payload.damage.reduce((sum, entry) => sum + entry.amount, 0);
   const damageLine = totalTaken
     ? payload.damage

@@ -64,7 +64,8 @@ async function pickBestCard(page) {
             card.getAttribute('data-kind') === 'ascension' ||
             card.getAttribute('data-kind') === 'relic' ||
             card.getAttribute('data-kind') === 'late' ||
-            card.getAttribute('data-kind') === 'core'
+            card.getAttribute('data-kind') === 'core' ||
+            card.getAttribute('data-kind') === 'frontier'
         ) ?? cards[0];
       if (!pick) return null;
       const kind = pick.getAttribute('data-kind');
@@ -184,6 +185,7 @@ try {
         relics: afterPick.relics ?? [],
         ascensions: afterPick.ascensions ?? [],
         lateUpgrades: afterPick.lateUpgrades ?? [],
+        frontierGrowth: afterPick.frontierGrowth ?? [],
         build: afterPick.build ?? null
       });
       continue;
@@ -233,6 +235,7 @@ try {
     relics: finalState.relics ?? [],
     ascensions: finalState.ascensions ?? [],
     lateUpgrades: finalState.lateUpgrades ?? [],
+    frontierGrowth: finalState.frontierGrowth ?? [],
     core: finalState.core ?? null,
     errors
   };
