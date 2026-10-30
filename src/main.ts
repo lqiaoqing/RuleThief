@@ -246,6 +246,9 @@ if (mutatorParam !== null) {
   meta.selectedMutator = Math.min(requested, meta.maxMutator);
   saveMeta(meta);
 }
+if (autoArena && startParam === null) {
+  meta.selectedStartChapter = 0;
+}
 if (startParam !== null) {
   const requested = Math.max(0, Math.min(3, Math.floor(Number(startParam) || 0)));
   if (autoArena) {

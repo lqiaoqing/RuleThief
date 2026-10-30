@@ -403,7 +403,8 @@ export function renderRoomPreview(payload: RoomPreview): void {
   roomKicker.classList.toggle('is-elite', elite);
 
   roomEnemies.textContent = '';
-  for (const kind of getRoomEnemyKinds(payload.room)) {
+  const roomKinds = getRoomEnemyKinds(payload.room);
+  for (const kind of roomKinds.slice(0, 6)) {
     const spec = ENEMY_SPECS[kind];
     const chip = el('div', `room-enemy${spec.elite ? ' is-elite' : ''}`);
     const img = el('img');
@@ -419,6 +420,9 @@ export function renderRoomPreview(payload: RoomPreview): void {
     rule.style.borderColor = `${RULE_COLORS[spec.rule]}59`;
     chip.append(img, copy, rule);
     roomEnemies.append(chip);
+  }
+  if (roomKinds.length > 6) {
+    roomEnemies.append(el('div', 'room-enemy-more', `+${roomKinds.length - 6}`));
   }
 
   const foot = roomScreen.querySelector<HTMLElement>('.room-foot span');
@@ -494,7 +498,8 @@ export function renderRoute(
       card.append(el('div', 'route-option-foot', '不战斗 · 直接二选一'));
     } else {
       const chips = el('div', 'route-enemies');
-      for (const kind of getRoomEnemyKinds(option.room)) {
+      const routeKinds = getRoomEnemyKinds(option.room);
+      for (const kind of routeKinds.slice(0, 5)) {
         const spec = ENEMY_SPECS[kind];
         const chip = el('span', `route-enemy${spec.elite ? ' is-elite' : ''}`);
         const img = el('img');
@@ -502,6 +507,9 @@ export function renderRoute(
         img.alt = spec.name;
         chip.append(img, el('span', undefined, spec.name));
         chips.append(chip);
+      }
+      if (routeKinds.length > 5) {
+        chips.append(el('span', 'route-enemy-more', `+${routeKinds.length - 5}`));
       }
       card.append(chips);
 

@@ -484,6 +484,16 @@ export class M0Scene extends Phaser.Scene {
     this.load.image('wisp', ASSETS.wisp);
     this.load.image('bomber', ASSETS.bomber);
     this.load.image('boss', ASSETS.boss);
+    this.load.image('warden', ASSETS.warden);
+    this.load.image('brood', ASSETS.brood);
+    this.load.image('spawnling', ASSETS.spawnling);
+    this.load.image('splitter', ASSETS.splitter);
+    this.load.image('bulwark', ASSETS.bulwark);
+    this.load.image('burrower', ASSETS.burrower);
+    this.load.image('artillery', ASSETS.artillery);
+    this.load.image('mirror', ASSETS.mirror);
+    this.load.image('hexer', ASSETS.hexer);
+    this.load.image('cover', ASSETS.cover);
   }
 
   create(): void {
@@ -2522,18 +2532,25 @@ export class M0Scene extends Phaser.Scene {
     this.coverLayer.removeAll(true);
     for (const cover of this.covers) {
       const base = this.add
-        .ellipse(cover.x, cover.y + 16, cover.radius * 2.1, cover.radius * 0.8, 0x050a12, 0.6)
+        .ellipse(cover.x, cover.y + 20, cover.radius * 2.25, cover.radius * 0.82, 0x050a12, 0.66)
         .setStrokeStyle(1, COLORS.gold, 0.16);
-      const body = this.add
-        .circle(cover.x, cover.y, cover.radius, 0x263b55, 1)
-        .setStrokeStyle(2, COLORS.gold, 0.5);
-      const top = this.add
-        .ellipse(cover.x, cover.y - cover.radius * 0.48, cover.radius * 1.3, cover.radius * 0.54, 0x3b5675, 0.9)
-        .setStrokeStyle(1, COLORS.cyan, 0.28);
+      const shadow = this.add
+        .ellipse(cover.x + cover.radius * 0.25, cover.y + 12, cover.radius * 1.6, cover.radius * 0.5, 0x000000, 0.28);
+      const glow = this.add
+        .image(cover.x, cover.y - cover.radius * 0.9, 'glow')
+        .setDisplaySize(cover.radius * 4.6, cover.radius * 4.6)
+        .setTint(COLORS.cyan)
+        .setAlpha(0.1)
+        .setBlendMode(Phaser.BlendModes.ADD);
       const ring = this.add
-        .circle(cover.x, cover.y, cover.radius * 0.56, 0x000000, 0)
-        .setStrokeStyle(1, COLORS.cyan, 0.2);
-      this.coverLayer.add([base, body, top, ring]);
+        .circle(cover.x, cover.y, cover.radius * 0.82, 0x000000, 0)
+        .setStrokeStyle(1.5, COLORS.cyan, 0.42);
+      const sprite = this.add
+        .image(cover.x, cover.y - cover.radius * 0.35, 'cover')
+        .setDisplaySize(cover.radius * 3.7, cover.radius * 3.7)
+        .setOrigin(0.5, 0.84)
+        .setTint(0xc4dcee);
+      this.coverLayer.add([base, shadow, glow, ring, sprite]);
     }
   }
 
@@ -4408,7 +4425,10 @@ export class M0Scene extends Phaser.Scene {
     this.spawnedTotal += 1;
     const spec = ENEMY_SPECS[kind];
     const elite = Boolean(spec.elite);
-    const affix = elite && !spec.boss ? pickAffix(combatRandom) : null;
+    const affix =
+      elite && !spec.boss && this.chapterIndex >= 1
+        ? pickAffix(combatRandom)
+        : null;
     const mutator = getMutator(this.mutatorLevel);
     const chapterHpScale = this.chapterIndex >= 1 ? 1.15 : 1;
     const thirdHpScale = this.build.secondary ? 1.05 : 1;
@@ -6573,6 +6593,19 @@ export class M0Scene extends Phaser.Scene {
   }
 
   private pickWaveKind(room: RoomDef): EnemyKind {
+    if (this.chapterIndex >= 3 && combatRandom() < 0.82) {
+      const frontier: EnemyKind[] = [
+        'brood',
+        'spawnling',
+        'splitter',
+        'bulwark',
+        'burrower',
+        'artillery',
+        'mirror',
+        'hexer'
+      ];
+      return frontier[combatInt(0, frontier.length - 1)];
+    }
     if (this.chapterIndex > 0 && combatRandom() < 0.5) {
       const fodder: EnemyKind[] =
         this.chapterIndex === 1

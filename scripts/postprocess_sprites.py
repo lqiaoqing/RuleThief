@@ -22,6 +22,16 @@ ASSETS = [
     ("wisp_raw.png", "wisp.png", 256, 0.88, 5),
     ("bomber_raw.png", "bomber.png", 256, 0.88, 5),
     ("boss_raw.png", "boss.png", 512, 0.92, 7),
+    ("warden_raw.png", "warden.png", 256, 0.9, 5),
+    ("brood_raw.png", "brood.png", 256, 0.9, 5),
+    ("spawnling_raw.png", "spawnling.png", 256, 0.9, 4),
+    ("splitter_raw.png", "splitter.png", 256, 0.9, 5),
+    ("bulwark_raw.png", "bulwark.png", 256, 0.9, 5),
+    ("burrower_raw.png", "burrower.png", 256, 0.9, 5),
+    ("artillery_raw.png", "artillery.png", 256, 0.9, 5),
+    ("mirror_raw.png", "mirror.png", 256, 0.9, 5),
+    ("hexer_raw.png", "hexer.png", 256, 0.9, 5),
+    ("cover_raw.png", "cover.png", 256, 0.9, 5),
 ]
 
 

@@ -7,7 +7,7 @@
 
 ```text
 npm test                       181/181 通过（17 个测试文件）
-npm run build                  tsc + vite build 通过（dist 1.96MB）
+npm run build                  tsc + vite build 通过（dist 2.45MB）
 npm run verify                 31/31 静态资源检查通过
 npm run smoke                  234/234 通过（主流程固定 seed=5 + 9 项遗物/升阶效果 + 18 项后期强化 + 9 律核 + 第三规则槽 + 有限重铸 + 怪潮/连杀/头目/过载 + 规则共鸣/散华/爆裂/W2 血量 + 高压房计时与奖励 + 后期强化转移 + 规则之源暴走 + 每日修正 + W2 机制 + 起点世界 + 导出 + 物品说明）
 npm run fullrun                58/58 四世界结构性全流程通过（约 91 秒，非真实时长；W4 大世界与最终 BOSS 覆盖，律核 Lv.3）
@@ -94,8 +94,8 @@ scripts/combo-run.mjs          9 组合（含第三规则/怪潮）清第 1 房�
 | M10.2 | 规则之源暴走 | 自动 | 15% 血量进入 6 秒免伤暴走：17 发环形弹幕 + 召唤 + 虚空裂隙，结束后可击杀；BOSS 条显示 `PHASE III · 暴走`；冒烟暴走触发/免伤/结束断言 |
 | M10.2 | 换规则不产生死卡 | 自动 | 重铸/事件换规则时，旧规则后期强化自动转移到新规则同类，溢出转「规则余响」每级全伤害 +6%；冒烟「replacing a rule transfers its late upgrade to the new rule」 |
 | M11 | 大世界与五倍怪潮 | 自动 | W4 2400×2400、22 步、190–250 杀/房、10–14 波、同屏 45（追加至 55）；相机滚动/边界、小地图；冒烟「boundless waste runs on a scrolling 2400 arena with a minimap」 |
-| M11 | 新怪物与 BOSS | 自动 | 8 种新敌人 + 8 个精英词缀 + 巢母女王/壁垒巨像/荒原吞世者；冒烟「boundless waste fills the screen with a large horde and new enemies」「clearing the boundless waste completes the four-world campaign」 |
-| M11 | 更高阶升级 | 自动 | 第 4 槽律核 9×3、后期强化 18×3，内容池 90（5×）；冒烟「law core and generic late upgrades equip in the run」；fullrun 律核 Lv.3 |
+| M11 | 新怪物与独立美术 | 自动 | Blender 新增 10 张独立贴图（盾兵/8 新怪/掩体）；`npm run verify` 18 张 sprite；W4 预览显示新怪； 8 种新敌人 + 8 个精英词缀 + 巢母女王/壁垒巨像/荒原吞世者；冒烟「boundless waste fills the screen with a large horde and new enemies」「clearing the boundless waste completes the four-world campaign」 |
+| M11 | 更高阶升级 | 自动 | 第 4 槽律核 9×3、后期强化 18×3，内容池 90（5×）；冒烟「law core and generic late upgrades equip in the run」；fullrun 律核 Lv.2–3 |
 | M11 | 事件扩容 | 自动 | 事件 6→12；W1/W2/W3 抽 2、W4 抽 3；`run.test.ts` 12 事件与冒烟事件分支 |
 | M9.5 | 战斗场景代码不再主要膨胀 | 部分完成 | Arbiter / Core / Source 三段 BOSS 行为已独立成模块；M0Scene 仍约 7,094 行，超过蓝图约束，普通敌人 AI/渲染与高压房宿主待后续拆分 |
 

@@ -244,6 +244,43 @@ m_bomber_body = material("bomber shell", "#211a1c", metallic=0.55, roughness=0.4
 m_bomber_sac = material("bomber sac", "#ffbf86", roughness=0.25,
                         emission="#ff6a15", emission_strength=3.4)
 
+m_shield_steel = material("shield steel", "#2d5368", metallic=0.8, roughness=0.28)
+m_shield_plate = material("shield plate", "#102a3a", metallic=0.55, roughness=0.35)
+m_shield_glow = material("shield glow", "#a8f4ff", roughness=0.16,
+                         emission="#38d9f2", emission_strength=5.0)
+m_brood_flesh = material("brood flesh", "#4b1f45", roughness=0.68)
+m_brood_sac = material("brood sac", "#8a2f6a", roughness=0.38,
+                       emission="#d64f9e", emission_strength=2.2)
+m_brood_egg = material("brood egg", "#ffd0a0", roughness=0.2,
+                       emission="#ff9a52", emission_strength=3.4)
+m_teal_chitin = material("teal chitin", "#143f3c", metallic=0.5, roughness=0.3)
+m_teal_glow = material("teal glow", "#8fffe2", roughness=0.2,
+                       emission="#34d7b0", emission_strength=4.5)
+m_split_flesh = material("split flesh", "#5a1b3a", roughness=0.45)
+m_split_glow = material("split glow", "#ff8fc4", roughness=0.16,
+                        emission="#ff4c9e", emission_strength=4.2)
+m_bronze = material("bronze", "#835b32", metallic=0.85, roughness=0.3)
+m_bone_plate = material("bone plate", "#c8b48a", roughness=0.62)
+m_drill_metal = material("drill metal", "#3b4652", metallic=0.9, roughness=0.22)
+m_drill_glow = material("drill glow", "#ffd27a", roughness=0.16,
+                        emission="#ff9a52", emission_strength=5.0)
+m_cannon = material("cannon", "#4a2022", metallic=0.7, roughness=0.35)
+m_cannon_glow = material("cannon glow", "#ff9a52", roughness=0.16,
+                         emission="#ff4c61", emission_strength=4.5)
+m_mirror = material("mirror glass", "#9fd8ff", metallic=0.25, roughness=0.08,
+                    emission="#5f8cff", emission_strength=1.4)
+m_mirror_frame = material("mirror frame", "#d8b66a", metallic=0.9, roughness=0.24)
+m_hex_robe = material("hex robe", "#1c3a31", roughness=0.8)
+m_hex_glow = material("hex glow", "#9dffb0", roughness=0.16,
+                      emission="#40e07a", emission_strength=4.0)
+m_void = material("void maw", "#08050e", metallic=0.3, roughness=0.5)
+m_void_glow = material("void glow", "#ff7186", roughness=0.12,
+                       emission="#ff2e55", emission_strength=6.0)
+m_cover_stone = material("cover stone", "#3a4a58", roughness=0.85)
+m_cover_rune = material("cover rune", "#7fe8ff", roughness=0.2,
+                        emission="#38d9f2", emission_strength=3.0)
+
+
 # collections
 c_player = collection("PLAYER")
 c_beetle = collection("BEETLE")
@@ -253,6 +290,16 @@ c_spore = collection("SPORE")
 c_slime = collection("SLIME")
 c_wisp = collection("WISP")
 c_bomber = collection("BOMBER")
+c_warden = collection("WARDEN")
+c_brood = collection("BROOD")
+c_spawnling = collection("SPAWNLING")
+c_splitter = collection("SPLITTER")
+c_bulwark = collection("BULWARK")
+c_burrower = collection("BURROWER")
+c_artillery = collection("ARTILLERY")
+c_mirror = collection("MIRROR")
+c_hexer = collection("HEXER")
+c_cover = collection("COVER")
 c_rig = collection("RIG")
 
 # ---------------------------------------------------------------------------
@@ -560,6 +607,132 @@ cylinder("fuse", (0, 0.5, 1.0), 0.028, 0.26, m_dark, c_bomber,
 sphere("fuse spark", (0, 0.56, 1.14), (0.055, 0.055, 0.055), m_bomber_sac, c_bomber,
        segments=12, rings=6)
 
+
+# ---------------------------------------------------------------------------
+# WARDEN · shield soldier
+# ---------------------------------------------------------------------------
+sphere("warden torso", (0, 0, 0.92), (0.58, 0.38, 0.52), m_shield_steel, c_warden)
+sphere("warden head", (0, -0.02, 1.52), (0.24, 0.22, 0.26), m_shield_plate, c_warden)
+cube("warden visor", (0, -0.22, 1.52), (0.34, 0.08, 0.1), m_shield_glow, c_warden)
+for x in (-0.5, 0.5):
+    sphere("warden shoulder", (x, 0, 1.16), (0.22, 0.2, 0.2), m_shield_plate, c_warden)
+    cylinder("warden arm", (x, -0.04, 0.78), 0.1, 0.62, m_shield_steel, c_warden, vertices=12)
+    cylinder("warden leg", (x * 0.45, 0.02, 0.38), 0.12, 0.62, m_shield_plate, c_warden, vertices=12)
+    cube("warden foot", (x * 0.45, -0.1, 0.08), (0.24, 0.36, 0.16), m_shield_plate, c_warden, bevel=0.04)
+cube("warden shield", (0, -0.58, 0.88), (0.84, 0.1, 1.05), m_shield_plate, c_warden, bevel=0.06)
+torus("warden shield rim", (0, -0.66, 0.88), 0.38, 0.035, m_shield_glow, c_warden, rot=(math.radians(90), 0, 0))
+torus("warden shield core", (0, -0.67, 0.88), 0.16, 0.028, m_shield_glow, c_warden, rot=(math.radians(90), 0, 0))
+cube("warden shield boss", (0, -0.68, 0.88), (0.18, 0.06, 0.18), m_shield_glow, c_warden, bevel=0.03)
+
+# ---------------------------------------------------------------------------
+# BROOD · stationary spawner
+# ---------------------------------------------------------------------------
+sphere("brood body", (0, 0, 0.75), (1.0, 0.92, 0.8), m_brood_flesh, c_brood)
+sphere("brood sac left", (-0.58, -0.2, 1.18), (0.36, 0.32, 0.34), m_brood_sac, c_brood)
+sphere("brood sac right", (0.58, -0.2, 1.18), (0.36, 0.32, 0.34), m_brood_sac, c_brood)
+sphere("brood egg", (0, -0.78, 0.62), (0.28, 0.2, 0.24), m_brood_egg, c_brood)
+for x in (-0.42, 0.42):
+    sphere("brood eye", (x, -0.78, 1.0), (0.09, 0.05, 0.09), m_eye_red, c_brood, segments=16, rings=8)
+for i, (x, y, rz) in enumerate([(-0.72, 0.28, -0.4), (0.72, 0.28, 0.4), (-0.62, -0.48, -0.7), (0.62, -0.48, 0.7)]):
+    cone(f"brood tendril {i}", (x, y, 0.3), 0.12, 0.01, 0.7, m_brood_sac, c_brood, rot=(math.radians(80), 0, rz), vertices=8)
+for i, x in enumerate([-0.62, -0.22, 0.22, 0.62]):
+    cone(f"brood spine {i}", (x, 0.35, 1.42), 0.1, 0.005, 0.5, m_brood_sac, c_brood, rot=(math.radians(-18), 0, 0), vertices=8)
+
+# ---------------------------------------------------------------------------
+# SPAWNLING · small swarm unit
+# ---------------------------------------------------------------------------
+sphere("spawnling body", (0, 0, 0.34), (0.38, 0.32, 0.28), m_teal_chitin, c_spawnling)
+sphere("spawnling head", (0, -0.34, 0.4), (0.2, 0.2, 0.18), m_teal_chitin, c_spawnling)
+for x in (-0.22, 0.22):
+    sphere("spawnling eye", (x, -0.48, 0.44), (0.05, 0.035, 0.05), m_teal_glow, c_spawnling, segments=12, rings=6)
+    mesh("spawnling wing", [(x, 0, 0.4), (x * 3.2, 0.28, 0.7), (x * 3.6, 0.52, 0.3), (x * 1.6, 0.28, 0.18)], [(0, 1, 2, 3)], m_teal_glow, c_spawnling, solidify=0.02)
+for x in (-0.16, 0.16):
+    cone("spawnling mandible", (x, -0.56, 0.28), 0.04, 0.004, 0.2, m_teal_glow, c_spawnling, rot=(math.radians(90), 0, 0), vertices=6)
+
+# ---------------------------------------------------------------------------
+# SPLITTER · death splitter
+# ---------------------------------------------------------------------------
+sphere("splitter body", (0, 0, 0.55), (0.72, 0.68, 0.55), m_split_flesh, c_splitter)
+sphere("splitter lobe left", (-0.38, -0.1, 0.78), (0.34, 0.3, 0.3), m_split_flesh, c_splitter)
+sphere("splitter lobe right", (0.38, -0.1, 0.78), (0.34, 0.3, 0.3), m_split_flesh, c_splitter)
+for x in (-0.3, 0.3):
+    sphere("splitter eye", (x, -0.5, 0.72), (0.09, 0.05, 0.09), m_split_glow, c_splitter, segments=16, rings=8)
+for i, (x, y, rz) in enumerate([(-0.5, -0.2, 0.4), (0.5, -0.2, -0.4), (0, 0.3, 0)]):
+    cylinder(f"splitter crack {i}", (x, y, 0.62), 0.025, 0.42, m_split_glow, c_splitter, rot=(math.radians(20), 0, rz), vertices=8)
+
+# ---------------------------------------------------------------------------
+# BULWARK · shielded brute
+# ---------------------------------------------------------------------------
+sphere("bulwark body", (0, 0, 0.7), (1.05, 0.85, 0.62), m_bronze, c_bulwark)
+sphere("bulwark head", (0, -0.8, 0.62), (0.42, 0.42, 0.38), m_bone_plate, c_bulwark)
+cube("bulwark brow", (0, -1.08, 0.8), (0.6, 0.18, 0.14), m_shield_plate, c_bulwark, bevel=0.04)
+for x in (-0.28, 0.28):
+    cone("bulwark horn", (x, -0.92, 0.94), 0.1, 0.005, 0.4, m_bone_plate, c_bulwark, rot=(math.radians(-30), 0, 0), vertices=8)
+for x in (-0.62, 0.62):
+    cube("bulwark plate", (x, -0.12, 1.0), (0.34, 0.62, 0.16), m_shield_plate, c_bulwark, bevel=0.04)
+    for y in (-0.45, 0.4):
+        cylinder("bulwark leg", (x * 0.8, y, 0.32), 0.12, 0.58, m_shield_plate, c_bulwark, vertices=10)
+sphere("bulwark core", (0, -0.86, 0.4), (0.2, 0.12, 0.2), m_shield_glow, c_bulwark)
+
+# ---------------------------------------------------------------------------
+# BURROWER · drill worm
+# ---------------------------------------------------------------------------
+for i, y in enumerate([0.62, 0.34, 0.05, -0.24, -0.5]):
+    sphere(f"burrower segment {i}", (0, y, 0.45), (0.52 - i * 0.04, 0.3, 0.42 - i * 0.03), m_drill_metal, c_burrower)
+cone("burrower drill", (0, -0.95, 0.45), 0.34, 0.01, 0.55, m_drill_metal, c_burrower, rot=(math.radians(-90), 0, 0), vertices=12)
+torus("burrower drill ring", (0, -0.82, 0.45), 0.28, 0.035, m_drill_glow, c_burrower, rot=(math.radians(90), 0, 0))
+for x in (-0.42, 0.42):
+    sphere("burrower eye", (x, -0.7, 0.68), (0.07, 0.04, 0.07), m_drill_glow, c_burrower, segments=12, rings=6)
+for i, (x, y, rz) in enumerate([(-0.5, 0.3, 0.7), (0.5, 0.3, -0.7), (-0.4, -0.1, 0.5), (0.4, -0.1, -0.5)]):
+    cone(f"burrower spike {i}", (x, y, 0.72), 0.08, 0.004, 0.32, m_drill_glow, c_burrower, rot=(0, math.radians(60), rz), vertices=8)
+
+# ---------------------------------------------------------------------------
+# ARTILLERY · tripod cannon
+# ---------------------------------------------------------------------------
+for i, ang in enumerate([0, math.radians(120), math.radians(240)]):
+    x = math.cos(ang) * 0.48
+    y = math.sin(ang) * 0.48
+    cylinder(f"artillery leg {i}", (x, y, 0.35), 0.09, 0.7, m_drill_metal, c_artillery, rot=(math.radians(12), 0, -ang), vertices=10)
+sphere("artillery body", (0, 0, 0.82), (0.52, 0.42, 0.42), m_cannon, c_artillery)
+cylinder("artillery barrel", (0, -0.74, 0.92), 0.16, 0.9, m_cannon, c_artillery, rot=(math.radians(90), 0, 0), vertices=16)
+sphere("artillery muzzle", (0, -1.2, 0.92), (0.19, 0.1, 0.19), m_cannon_glow, c_artillery)
+for x in (-0.42, 0.42):
+    cylinder("artillery canister", (x, 0.28, 0.94), 0.13, 0.52, m_shield_steel, c_artillery, vertices=12)
+torus("artillery ring", (0, -0.74, 0.92), 0.24, 0.028, m_drill_glow, c_artillery, rot=(math.radians(90), 0, 0))
+
+# ---------------------------------------------------------------------------
+# MIRROR · mirror shard caster
+# ---------------------------------------------------------------------------
+cone("mirror cloak", (0, 0, 0.82), 0.55, 0.18, 1.25, m_mirror_frame, c_mirror, vertices=16, smooth=True)
+sphere("mirror head", (0, -0.05, 1.5), (0.22, 0.2, 0.22), m_void, c_mirror)
+cube("mirror glass", (0, -0.32, 0.9), (0.5, 0.06, 0.82), m_mirror, c_mirror, rot=(math.radians(-8), 0, 0), bevel=0.03)
+torus("mirror rim", (0, -0.4, 0.9), 0.4, 0.035, m_shield_glow, c_mirror, rot=(math.radians(90), 0, 0))
+for i, (x, z, sc) in enumerate([(-0.55, 1.3, 0.16), (0.52, 1.1, 0.12), (-0.45, 0.3, 0.09), (0.5, 0.45, 0.1)]):
+    cube(f"mirror shard {i}", (x, 0.1, z), (sc, sc, sc * 3), m_shield_glow, c_mirror, rot=(0, math.radians(30), math.radians(20 * i)), bevel=0.01)
+
+# ---------------------------------------------------------------------------
+# HEXER · hex caster
+# ---------------------------------------------------------------------------
+cone("hexer robe", (0, 0, 0.78), 0.62, 0.2, 1.25, m_hex_robe, c_hexer, vertices=18, smooth=True)
+sphere("hexer hood", (0, -0.05, 1.48), (0.3, 0.26, 0.32), m_hex_robe, c_hexer)
+sphere("hexer face", (0, -0.24, 1.47), (0.16, 0.06, 0.16), m_void, c_hexer)
+for x in (-0.06, 0.06):
+    sphere("hexer eye", (x, -0.3, 1.5), (0.025, 0.02, 0.035), m_hex_glow, c_hexer, segments=12, rings=6)
+cylinder("hexer staff", (0.5, -0.15, 0.95), 0.035, 1.4, m_drill_metal, c_hexer, rot=(0, math.radians(-8), 0), vertices=10)
+sphere("hexer orb", (0.42, -0.15, 1.7), (0.14, 0.14, 0.14), m_hex_glow, c_hexer)
+for i, (x, z, r) in enumerate([(-0.45, 1.15, 0.09), (0.58, 0.6, 0.07), (-0.4, 0.55, 0.06)]):
+    torus(f"hexer rune {i}", (x, -0.15, z), r, 0.012, m_hex_glow, c_hexer, rot=(math.radians(90), 0, 0))
+
+# ---------------------------------------------------------------------------
+# COVER · wasteland obelisk
+# ---------------------------------------------------------------------------
+cylinder("cover base", (0, 0, 0.14), 0.72, 0.28, m_cover_stone, c_cover, vertices=14)
+cone("cover shaft", (0, 0, 1.0), 0.48, 0.26, 1.7, m_cover_stone, c_cover, vertices=7, smooth=False)
+cube("cover cap", (0, 0, 1.86), (0.4, 0.4, 0.14), m_cover_stone, c_cover, rot=(0, 0, math.radians(18)), bevel=0.03)
+torus("cover rune", (0, -0.34, 0.9), 0.22, 0.025, m_cover_rune, c_cover, rot=(math.radians(90), 0, 0))
+for i, (x, y, rot) in enumerate([(-0.35, -0.2, 0.3), (0.3, -0.15, -0.25), (-0.15, 0.25, 0.15)]):
+    cylinder(f"cover crack {i}", (x, y, 1.05), 0.02, 0.5, m_cover_rune, c_cover, rot=(rot, 0.4, 0), vertices=6)
+
 # ---------------------------------------------------------------------------
 # camera / lights / render setup
 # ---------------------------------------------------------------------------
@@ -621,14 +794,24 @@ ASSETS = [
     ("SLIME", c_slime, "slime_raw.png", 3.0, 512, 0.6),
     ("WISP", c_wisp, "wisp_raw.png", 3.6, 512, 1.1),
     ("BOMBER", c_bomber, "bomber_raw.png", 3.1, 512, 0.7),
+    ("WARDEN", c_warden, "warden_raw.png", 3.4, 512, 0.9),
+    ("BROOD", c_brood, "brood_raw.png", 3.4, 512, 0.9),
+    ("SPAWNLING", c_spawnling, "spawnling_raw.png", 2.2, 256, 0.5),
+    ("SPLITTER", c_splitter, "splitter_raw.png", 3.0, 512, 0.65),
+    ("BULWARK", c_bulwark, "bulwark_raw.png", 3.8, 512, 0.75),
+    ("BURROWER", c_burrower, "burrower_raw.png", 3.6, 512, 0.55),
+    ("ARTILLERY", c_artillery, "artillery_raw.png", 3.4, 512, 0.8),
+    ("MIRROR", c_mirror, "mirror_raw.png", 3.6, 512, 1.0),
+    ("HEXER", c_hexer, "hexer_raw.png", 3.6, 512, 1.0),
+    ("COVER", c_cover, "cover_raw.png", 3.2, 512, 1.0),
 ]
 
 HIDE = [s.strip().lower() for s in os.environ.get("HIDE", "").split(",") if s.strip()]
-ONLY = os.environ.get("ONLY", "").strip().upper()
-ALL_COLLECTIONS = (c_player, c_beetle, c_bat, c_boss, c_spore, c_slime, c_wisp, c_bomber)
+ONLY = {x.strip().upper() for x in os.environ.get("ONLY", "").split(",") if x.strip()}
+ALL_COLLECTIONS = (c_player, c_beetle, c_bat, c_boss, c_spore, c_slime, c_wisp, c_bomber, c_warden, c_brood, c_spawnling, c_splitter, c_bulwark, c_burrower, c_artillery, c_mirror, c_hexer, c_cover)
 
 for name, coll, filename, ortho, resolution, target_z in ASSETS:
-    if ONLY and name != ONLY:
+    if ONLY and name not in ONLY:
         continue
     for c in ALL_COLLECTIONS:
         c.hide_render = c != coll

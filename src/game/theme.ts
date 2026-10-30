@@ -24,7 +24,17 @@ export const ASSETS = {
   slime: './assets/sprites/slime.png',
   wisp: './assets/sprites/wisp.png',
   bomber: './assets/sprites/bomber.png',
-  boss: './assets/sprites/boss.png'
+  boss: './assets/sprites/boss.png',
+  warden: './assets/sprites/warden.png',
+  brood: './assets/sprites/brood.png',
+  spawnling: './assets/sprites/spawnling.png',
+  splitter: './assets/sprites/splitter.png',
+  bulwark: './assets/sprites/bulwark.png',
+  burrower: './assets/sprites/burrower.png',
+  artillery: './assets/sprites/artillery.png',
+  mirror: './assets/sprites/mirror.png',
+  hexer: './assets/sprites/hexer.png',
+  cover: './assets/sprites/cover.png'
 } as const;
 
 export function formatTime(totalSeconds: number): string {

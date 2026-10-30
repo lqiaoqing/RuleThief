@@ -1792,3 +1792,12 @@ body.boss-active .rule-toast {
     top: 8%;
   }
 }
+
+.room-enemy-more,
+.route-enemy-more {
+  align-self: center;
+  color: #8fa6bc;
+  font-family: "Bahnschrift", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}

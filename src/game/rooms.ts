@@ -234,7 +234,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 1400,
     radius: 52,
     speed: 0,
-    sprite: 'spore',
+    sprite: 'brood',
     displaySize: 220,
     elite: true
   },
@@ -246,7 +246,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 1700,
     radius: 56,
     speed: 30,
-    sprite: 'sunder',
+    sprite: 'warden',
     displaySize: 220,
     elite: true
   },
@@ -271,7 +271,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 260,
     radius: 38,
     speed: 0,
-    sprite: 'spore',
+    sprite: 'brood',
     displaySize: 150
   },
   spawnling: {
@@ -282,7 +282,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 18,
     radius: 14,
     speed: 108,
-    sprite: 'bat',
+    sprite: 'spawnling',
     displaySize: 54
   },
   splitter: {
@@ -293,7 +293,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 76,
     radius: 28,
     speed: 52,
-    sprite: 'slime',
+    sprite: 'splitter',
     displaySize: 100
   },
   bulwark: {
@@ -304,7 +304,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 190,
     radius: 38,
     speed: 36,
-    sprite: 'sunder',
+    sprite: 'bulwark',
     displaySize: 148
   },
   burrower: {
@@ -315,7 +315,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 68,
     radius: 28,
     speed: 62,
-    sprite: 'beetle',
+    sprite: 'burrower',
     displaySize: 98
   },
   artillery: {
@@ -326,7 +326,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 92,
     radius: 30,
     speed: 24,
-    sprite: 'sentry',
+    sprite: 'artillery',
     displaySize: 132
   },
   mirror: {
@@ -337,7 +337,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 58,
     radius: 24,
     speed: 60,
-    sprite: 'wisp',
+    sprite: 'mirror',
     displaySize: 108
   },
   hexer: {
@@ -348,7 +348,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 84,
     radius: 26,
     speed: 48,
-    sprite: 'wisp',
+    sprite: 'hexer',
     displaySize: 120
   },
   warden: {
@@ -359,7 +359,7 @@ export const ENEMY_SPECS: Record<EnemyKind, EnemySpec> = {
     hp: 150,
     radius: 38,
     speed: 52,
-    sprite: 'sunder',
+    sprite: 'warden',
     displaySize: 132
   }
 };
@@ -1200,17 +1200,34 @@ const WASTE_ROOMS: readonly RoomDef[] = [
 
 export const ROOMS: readonly RoomDef[] = [...BASE_ROOMS, ...WASTE_ROOMS];
 
+export const FRONTIER_KINDS: readonly EnemyKind[] = [
+  'brood',
+  'spawnling',
+  'splitter',
+  'bulwark',
+  'burrower',
+  'artillery',
+  'mirror',
+  'hexer'
+];
+
 export function getRoomRuleKeys(room: RoomDef): RuleKey[] {
   const keys = new Set<RuleKey>();
-  for (const entry of room.mix) {
-    keys.add(ENEMY_SPECS[entry.kind].rule);
+  const source = room.arenaSize && room.arenaSize > 1000 && !room.boss
+    ? FRONTIER_KINDS
+    : room.mix.map((entry) => entry.kind);
+  for (const kind of source) {
+    keys.add(ENEMY_SPECS[kind].rule);
   }
   if (room.leader) keys.add(ENEMY_SPECS[room.leader].rule);
   return [...keys];
 }
 
 export function getRoomEnemyKinds(room: RoomDef): EnemyKind[] {
-  const kinds = room.mix.map((entry) => entry.kind);
+  const kinds =
+    room.arenaSize && room.arenaSize > 1000 && !room.boss
+      ? [...FRONTIER_KINDS]
+      : room.mix.map((entry) => entry.kind);
   if (room.leader && !kinds.includes(room.leader)) kinds.push(room.leader);
   if (room.boss && !kinds.includes(room.boss)) kinds.push(room.boss);
   return kinds;
